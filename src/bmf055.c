@@ -101,12 +101,21 @@ void bmf055_sensors_initialize (void)
 {
 	/* Initialize BMA280 */
 	bma_init();
-	
+	bma2x2_set_range(BMA2x2_RANGE_8G);
+    bma2x2_set_bw(BMA2x2_BW_500HZ);
+    bma2x2_set_power_mode(BMA2x2_MODE_NORMAL);
 	/* Initialize BMG160 */
 	bmg_init();
+    bmg160_set_range_reg(0x00);
+    bmg160_set_bw(C_BMG160_BW_116HZ_U8X);
+    bmg160_set_power_mode(BMG160_MODE_NORMAL);
 	
 	/* Initialize BMM150 */
 	bmm_init();
+    bmm050_set_data_rate(BMM050_DR_10HZ);
+    bmm050_set_presetmode(BMM050_PRESETMODE_REGULAR);
+    bmm050_set_functional_state(BMM050_NORMAL_MODE);
+
 }
 
 
@@ -130,17 +139,30 @@ void bmf055_sensors_data_print (void)
 	
 	/* Read magnetometer's data */
 	bmm050_get_raw_xyz(&bmm050_mag_data);
+    
+    uint16_t acc_1g = 1024;
+    float ax = (float)bma2x2_accel_data.x/acc_1g;
+    float ay = (float)bma2x2_accel_data.y/acc_1g;
+    float az = (float)bma2x2_accel_data.z/acc_1g;
+    
+    float gyro_scale = 16.3835f;
+    float gx = (float)bmg160_gyro_data.datax/gyro_scale;
+    float gy = (float)bmg160_gyro_data.datay/gyro_scale;
+    float gz = (float)bmg160_gyro_data.dataz/gyro_scale;
+    
 	
 	uint8_t usart_buffer_tx[81] = {0};
 	
 	/* Convert integer values to string and form the packet to be sent on USART */
-	sprintf((char *)usart_buffer_tx, "\r\nAcc:%6d %6d %6d\r\nGyr:%6d %6d %6d\r\nMag:%6d %6d %6d\r\n",
-									bma2x2_accel_data.x, bma2x2_accel_data.y, bma2x2_accel_data.z,
-									bmg160_gyro_data.datax, bmg160_gyro_data.datay, bmg160_gyro_data.dataz,
-									bmm050_mag_data.datax, bmm050_mag_data.datay, bmm050_mag_data.dataz);
+	//sprintf((char *)usart_buffer_tx, "  Acc:%6d %6d %6d  Gyr:%6d %6d %6d  Mag:%6d %6d %6d\r ",
+	//								bma2x2_accel_data.x, bma2x2_accel_data.y, bma2x2_accel_data.z,
+	//								bmg160_gyro_data.datax, bmg160_gyro_data.datay, bmg160_gyro_data.dataz,
+	//								bmm050_mag_data.datax, bmm050_mag_data.datay, bmm050_mag_data.dataz);
 	
 	/* Print data on USART */
-	usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+	//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+	sprintf((char *)usart_buffer_tx, "Acc:%.3f %.3f %.3f  Mag:%6d %6d %6d Gyro:%.0f %.0f %.0f \r\n",ax,ay,az,bmm050_mag_data.datax, bmm050_mag_data.datay, bmm050_mag_data.dataz,gx,gy,gz);
+    usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
 }
 
 

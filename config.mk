@@ -73,7 +73,8 @@ CPPFLAGS = \
        -D TC_ASYNC=true
 
 # Extra flags to use when linking
-LDFLAGS = \
+LDFLAGS = -u _printf_float
+
 
 # Pre- and post-build commands
 PREBUILD_CMD = 
