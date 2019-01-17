@@ -24,6 +24,7 @@
 *.lai
 *.la
 *.a
+!src/ASF/thirdparty/CMSIS/Lib/GCC/libarm_cortexM0l_math.a
 *.lib
 
 # Executables
