@@ -70,6 +70,8 @@
 /************************************************************************/
 
 #include "bmf055.h"
+#include "MahonyAHRS.h"
+#include <math.h>
 
 /************************************************************************/
 /* Main Function Definition                                             */
@@ -88,6 +90,12 @@ int main(void)
 	/********************* Initialize global variables **********************/
 	
 	bmf055_input_state = USART_INPUT_STATE_PRINT_DATA;
+	/*! This structure holds acceleration data of x, y and z axes. */
+	struct bma2x2_accel_data accel_data;
+	/*! This structure holds angular velocity data of x, y and z axes. */
+	struct bmg160_data_t gyro_data;
+	/*! This structure holds magnetic field data of x, y and z axes. */
+	struct bmm050_mag_data_float_t mag_data;
 	
 	/************************* Initializations ******************************/
 	
@@ -128,7 +136,44 @@ int main(void)
 		/* Print sensor data periodically regarding TC6 interrupt flag (Default Period 100 ms)*/
 		if (READ_SENSORS_FLAG)
 		{
-			bmf055_sensors_data_print();
+
+			/* Read accelerometer's data */
+			bma2x2_read_accel_xyz(&accel_data);
+
+			/* Read gyroscope's data */
+			bmg160_get_data_XYZ(&gyro_data);
+
+			/* Read magnetometer's data */
+			bmm050_read_mag_data_XYZ_float(&mag_data);
+
+			uint16_t acc_1g = 1024;
+			float ax = (float)accel_data.x/acc_1g;
+			float ay = (float)accel_data.y/acc_1g;
+			float az = (float)accel_data.z/acc_1g;
+
+			float gyro_scale = 16.3835f;
+			float gx = (float)gyro_data.datax/gyro_scale;
+			float gy = (float)gyro_data.datay/gyro_scale;
+			float gz = (float)gyro_data.dataz/gyro_scale;
+
+			float mx = (float)mag_data.datay;
+			float my = (float)mag_data.datax;
+			float mz = (float)mag_data.dataz;
+
+			MahonyAHRSupdate(gx,gy,gz,ax,ay,az,0.0,0.0,0.0);//mx,my,mz);
+			attitude_t att;
+
+			//att.pitch = 180 * atan (ax/sqrt(ay*ay + az*az))/M_PI;
+			//att.roll = 180 * atan (ay/sqrt(ax*ax + az*az))/M_PI;
+			//att.yaw = 180 * atan (az/sqrt(ax*ax + az*az))/M_PI;
+			getMahAttitude(&att);
+			uint8_t usart_buffer_tx[81] = {0};
+			sprintf((char *)usart_buffer_tx, "%.0f %.0f %.0f || ",att.pitch,att.roll,att.yaw);
+			usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+			sprintf((char *)usart_buffer_tx, "Ac:%.3f %.3f %.3f  Mag:%.3f %.3f %.3f Gyro:%.0f %.0f %.0f \r\n",ax,ay,az,mx, my, mz,gx,gy,gz);
+			usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+
+			//bmf055_sensors_data_print();
 			
 			/* Reset TC flag */
 			READ_SENSORS_FLAG = false;

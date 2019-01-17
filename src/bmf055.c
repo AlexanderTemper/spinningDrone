@@ -80,7 +80,7 @@ static struct bma2x2_accel_data bma2x2_accel_data;
 /*! This structure holds angular velocity data of x, y and z axes. */
 static struct bmg160_data_t bmg160_gyro_data;
 /*! This structure holds magnetic field data of x, y and z axes. */
-static struct bmm050_mag_data_s16_t bmm050_mag_data;
+static struct bmm050_mag_data_float_t bmm050_mag_data;
 
 
 /************************************************************************/
@@ -138,17 +138,17 @@ void bmf055_sensors_data_print (void)
 	bmg160_get_data_XYZ(&bmg160_gyro_data);
 	
 	/* Read magnetometer's data */
-	bmm050_get_raw_xyz(&bmm050_mag_data);
+	bmm050_read_mag_data_XYZ_float(&bmm050_mag_data);
     
-    uint16_t acc_1g = 1024;
-    float ax = (float)bma2x2_accel_data.x/acc_1g;
-    float ay = (float)bma2x2_accel_data.y/acc_1g;
-    float az = (float)bma2x2_accel_data.z/acc_1g;
+    //uint16_t acc_1g = 1024;
+    float ax = (float)bma2x2_accel_data.x;
+    float ay = (float)bma2x2_accel_data.y;
+    float az = (float)bma2x2_accel_data.z;
     
-    float gyro_scale = 16.3835f;
-    float gx = (float)bmg160_gyro_data.datax/gyro_scale;
-    float gy = (float)bmg160_gyro_data.datay/gyro_scale;
-    float gz = (float)bmg160_gyro_data.dataz/gyro_scale;
+    //float gyro_scale = 16.3835f;
+    float gx = (float)bmg160_gyro_data.datax;
+    float gy = (float)bmg160_gyro_data.datay;
+    float gz = (float)bmg160_gyro_data.dataz;
     
 	
 	uint8_t usart_buffer_tx[81] = {0};
@@ -161,7 +161,7 @@ void bmf055_sensors_data_print (void)
 	
 	/* Print data on USART */
 	//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
-	sprintf((char *)usart_buffer_tx, "Acc:%.3f %.3f %.3f  Mag:%6d %6d %6d Gyro:%.0f %.0f %.0f \r\n",ax,ay,az,bmm050_mag_data.datax, bmm050_mag_data.datay, bmm050_mag_data.dataz,gx,gy,gz);
+	sprintf((char *)usart_buffer_tx, "Ac:%.3f %.3f %.3f  Mag:%.3f %.3f %.3f Gyro:%.0f %.0f %.0f \r\n",ax,ay,az,bmm050_mag_data.datax, bmm050_mag_data.datay, bmm050_mag_data.dataz,gx,gy,gz);
     usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
 }
 
