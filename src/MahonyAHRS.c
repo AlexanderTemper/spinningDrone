@@ -20,7 +20,7 @@
 //---------------------------------------------------------------------------------------------------
 // Definitions
 
-#define sampleFreq	116.0f			// sample frequency in Hz
+#define sampleFreq	100.0f			// sample frequency in Hz
 #define twoKpDef	(2.0f * 0.5f)	// 2 * proportional gain
 #define twoKiDef	(2.0f * 0.0f)	// 2 * integral gain
 
@@ -228,15 +228,11 @@ float invSqrt(float x) {
 }
 
 void getMahAttitude(attitude_t *attp) {
-  float y1 = 2 * q2 * q3 + 2 * q0 * q1;
-  float x1 = q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3;
-  float z2 = -2 * q1 * q3 + 2 * q0 * q2;
-  float y3 = 2 * q1 * q2 + 2 * q0 * q3;
-  float x3 = q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3;
 
-  attp->roll = (180* atan2(y1, x1))/M_PI;
-  attp->pitch = (180*asin(z2))/M_PI;
-  attp->yaw = (180*atan2(y3, x3))/M_PI;
+
+  attp->roll = (180* atan2(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2))/M_PI;
+  attp->pitch = (180*asin(-2.0f * (q1*q3 - q0*q2)))/M_PI;
+  attp->yaw = (180*atan2(q1*q2 + q0*q3, 0.5f - q2*q2 - q3*q3))/M_PI;
 }
 
 //====================================================================================================

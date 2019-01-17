@@ -90,7 +90,7 @@
 /*! TC6 count value to overflow after 10 milliseconds */
 #define TC6_PERIOD_10MS			COUNT_MAX_32BIT - UINT32_C(5000)
 /*! the value loaded onto TC6 count register */
-#define TC6_COUNT_VALUE			TC6_PERIOD_100MS
+#define TC6_COUNT_VALUE			TC6_PERIOD_10MS
 
 /************************************************************************/
 /* Global Variables                                                     */

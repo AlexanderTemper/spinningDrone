@@ -119,7 +119,7 @@ int main(void)
 	
 	/* Initialize the sensors */
 	bmf055_sensors_initialize();
-	
+	uint16_t timer = 0;
 	
 	/************************** Infinite Loop *******************************/
 	while (true)
@@ -132,8 +132,8 @@ int main(void)
 			/* Reset USART Flag */
 			USART_COMMAND_PROCESS_FLAG = false;
 		}
-		
-		/* Print sensor data periodically regarding TC6 interrupt flag (Default Period 100 ms)*/
+
+		/* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
 		if (READ_SENSORS_FLAG)
 		{
 
@@ -152,28 +152,40 @@ int main(void)
 			float az = (float)accel_data.z/acc_1g;
 
 			float gyro_scale = 16.3835f;
-			float gx = (float)gyro_data.datax/gyro_scale;
-			float gy = (float)gyro_data.datay/gyro_scale;
-			float gz = (float)gyro_data.dataz/gyro_scale;
+			float gx = (((float)gyro_data.datax/gyro_scale)*M_PI)/180;
+			float gy = (((float)gyro_data.datay/gyro_scale)*M_PI)/180;
+			float gz = (((float)gyro_data.dataz/gyro_scale)*M_PI)/180;
 
 			float mx = (float)mag_data.datay;
 			float my = (float)mag_data.datax;
 			float mz = (float)mag_data.dataz;
 
-			MahonyAHRSupdate(gx,gy,gz,ax,ay,az,0.0,0.0,0.0);//mx,my,mz);
+			MahonyAHRSupdate(gx,gy,gz,ax,ay,az,0.0,0.0,0.0);
 			attitude_t att;
 
 			//att.pitch = 180 * atan (ax/sqrt(ay*ay + az*az))/M_PI;
 			//att.roll = 180 * atan (ay/sqrt(ax*ax + az*az))/M_PI;
 			//att.yaw = 180 * atan (az/sqrt(ax*ax + az*az))/M_PI;
 			getMahAttitude(&att);
-			uint8_t usart_buffer_tx[81] = {0};
-			sprintf((char *)usart_buffer_tx, "%.0f %.0f %.0f || ",att.pitch,att.roll,att.yaw);
-			usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
-			sprintf((char *)usart_buffer_tx, "Ac:%.3f %.3f %.3f  Mag:%.3f %.3f %.3f Gyro:%.0f %.0f %.0f \r\n",ax,ay,az,mx, my, mz,gx,gy,gz);
-			usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
 
-			//bmf055_sensors_data_print();
+			if(att.yaw<0){
+				att.yaw += 360.0f;
+			}
+
+			// 10MS * 10 == 100ms
+			if(timer > 10){
+				uint8_t usart_buffer_tx[81] = {0};
+				sprintf((char *)usart_buffer_tx, "%.2f;%.2f;%.2f;\r\n",att.pitch,att.roll,att.yaw);
+				usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				//sprintf((char *)usart_buffer_tx, "Ac:%.3f %.3f %.3f  Mag:%.3f %.3f %.3f Gyro:%.0f %.0f %.0f \r\n",ax,ay,az,mx, my, mz,gx,gy,gz);
+				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+
+				//bmf055_sensors_data_print();
+				timer = 0;
+			} else {
+				timer++;
+			}
+
 			
 			/* Reset TC flag */
 			READ_SENSORS_FLAG = false;
