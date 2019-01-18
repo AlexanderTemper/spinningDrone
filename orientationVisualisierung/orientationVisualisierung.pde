@@ -4,6 +4,11 @@ Serial myPort;
 float yaw = 0.0;
 float pitch = 0.0;
 float roll = 0.0;
+float[] acc = {0,0,0};
+float[] gyro = {0,0,0};
+float[] mag = {0,0,0};
+
+PFont f;
 
 void setup()
 {
@@ -14,6 +19,8 @@ void setup()
 
   textSize(16); // set text size
   textMode(SHAPE); // set text mode to shape
+  f = createFont("Arial",12,true);
+  textFont(f,12);
 }
 
 void draw()
@@ -41,14 +48,31 @@ void draw()
   //drawArduino();
 
   popMatrix(); // end of object
-
+  text("roll: "+roll,-260,-200);   
+  text("pitch:"+-pitch,-260,-180);   
+  text("yaw:  "+yaw,-260,-160);  
+  
+  text("ACC",-260,140);   
+  text("x: "+acc[0],-260,160);   
+  text("y: "+acc[1],-260,180);   
+  text("z: "+acc[2],-260,200);  
+  text("Gyro",220,-220);   
+  text("x: "+gyro[0],220,-200);   
+  text("y: "+gyro[1],220,-180);   
+  text("z: "+gyro[2],220,-160);  
+  text("Mag",220,140);   
+  text("x: "+mag[0],220,160);   
+  text("y: "+mag[1],220,180);   
+  text("z: "+mag[2],220,200);  
+  
+ 
   // Print values to console
-  print(roll);
-  print("\t");
-  print(-pitch);
-  print("\t");
-  print(yaw);
-  println();
+  //print(roll);
+  //print("\t");
+  //print(-pitch);
+  //print("\t");
+  //print(yaw);
+  //println();
 }
 
 void serialEvent()
@@ -60,9 +84,24 @@ void serialEvent()
     if (message != null) {
       String[] list = split(trim(message), " ");
       if (list.length >= 4 && list[0].equals("Orientation:")) {
-        yaw = 360-float(list[1])-90; // convert to float yaw
+        yaw = 360-float(list[1]); // convert to float yaw
         pitch = float(list[2]); // convert to float pitch
         roll = float(list[3]); // convert to float roll
+      } else if (list.length >= 10 && list[0].equals("DATA:")){
+        acc[0]=float(list[1]);
+        acc[1]=float(list[2]);
+        acc[2]=float(list[3]);
+        
+        gyro[0]=float(list[4]);
+        gyro[1]=float(list[5]);
+        gyro[2]=float(list[6]);
+        
+        mag[0]=float(list[7]);
+        mag[1]=float(list[8]);
+        mag[2]=float(list[9]);
+      }
+      else {
+        println(message);
       }
     }
   } while (message != null);

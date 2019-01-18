@@ -72,6 +72,7 @@
 #include "bmf055.h"
 #include "MahonyAHRS.h"
 #include <math.h>
+#include <float.h>
 
 /************************************************************************/
 /* Main Function Definition                                             */
@@ -156,17 +157,20 @@ int main(void)
 			float gy = (((float)gyro_data.datay/gyro_scale)*M_PI)/180;
 			float gz = (((float)gyro_data.dataz/gyro_scale)*M_PI)/180;
 
-			float mx = mag_data.datay;
-			float my = mag_data.datax;
-			float mz = mag_data.dataz;
+			float mx = mag_data.datay*0.01;
+			float my = -mag_data.datax*0.01;
+			float mz = -mag_data.dataz*0.01;
 
-			MahonyAHRSupdate(gx,gy,gz,ax,ay,az,0.0,0.0,0.0);
+
+			MahonyAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
+
+
 			attitude_t att;
-
+			getMahAttitude(&att);
 			//att.pitch = 180 * atan (ax/sqrt(ay*ay + az*az))/M_PI;
 			//att.roll = 180 * atan (ay/sqrt(ax*ax + az*az))/M_PI;
 			//att.yaw = 180 * atan (az/sqrt(ax*ax + az*az))/M_PI;
-			getMahAttitude(&att);
+
 
 			if(att.yaw<0){
 				att.yaw += 360.0f;
@@ -176,11 +180,14 @@ int main(void)
 			if(timer > 5){
 				uint8_t usart_buffer_tx[81] = {0};
 				sprintf((char *)usart_buffer_tx, "Orientation: %.3f %.3f %.3f\r\n",att.yaw,att.pitch,att.roll);
-				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				sprintf((char *)usart_buffer_tx, "DATA: %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f\r\n",ax,ay,az,gx,gy,gz,mx*100, my*100, mz*100);
+				usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+
 				//sprintf((char *)usart_buffer_tx, "Ac:%.3f %.3f %.3f  Mag:%.3f %.3f %.3f Gyro:%.0f %.0f %.0f \r\n",ax,ay,az,mx, my, mz,gx,gy,gz);
 				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
 				//sprintf((char *)usart_buffer_tx, "Raw:%d,%d,%d,%d,%d,%d,%d,%d,%d\r\n",accel_data.x,accel_data.y,accel_data.z,gyro_data.datay,gyro_data.datax,gyro_data.dataz,mag_data.datay,mag_data.datax,mag_data.dataz);
-				usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
 				//bmf055_sensors_data_print();
 				timer = 0;
 			} else {
