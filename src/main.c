@@ -156,9 +156,9 @@ int main(void)
 			float gy = (((float)gyro_data.datay/gyro_scale)*M_PI)/180;
 			float gz = (((float)gyro_data.dataz/gyro_scale)*M_PI)/180;
 
-			float mx = (float)mag_data.datay;
-			float my = (float)mag_data.datax;
-			float mz = (float)mag_data.dataz;
+			float mx = mag_data.datay;
+			float my = mag_data.datax;
+			float mz = mag_data.dataz;
 
 			MahonyAHRSupdate(gx,gy,gz,ax,ay,az,0.0,0.0,0.0);
 			attitude_t att;
@@ -173,13 +173,14 @@ int main(void)
 			}
 
 			// 10MS * 10 == 100ms
-			if(timer > 10){
+			if(timer > 5){
 				uint8_t usart_buffer_tx[81] = {0};
-				sprintf((char *)usart_buffer_tx, "%.2f;%.2f;%.2f;\r\n",att.pitch,att.roll,att.yaw);
-				usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				sprintf((char *)usart_buffer_tx, "Orientation: %.3f %.3f %.3f\r\n",att.yaw,att.pitch,att.roll);
+				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
 				//sprintf((char *)usart_buffer_tx, "Ac:%.3f %.3f %.3f  Mag:%.3f %.3f %.3f Gyro:%.0f %.0f %.0f \r\n",ax,ay,az,mx, my, mz,gx,gy,gz);
 				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
-
+				//sprintf((char *)usart_buffer_tx, "Raw:%d,%d,%d,%d,%d,%d,%d,%d,%d\r\n",accel_data.x,accel_data.y,accel_data.z,gyro_data.datay,gyro_data.datax,gyro_data.dataz,mag_data.datay,mag_data.datax,mag_data.dataz);
+				usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
 				//bmf055_sensors_data_print();
 				timer = 0;
 			} else {
