@@ -37,8 +37,8 @@ void draw()
   float s1 = sin(radians(roll));
   float c2 = cos(radians(-pitch));
   float s2 = sin(radians(-pitch));
-  float c3 = cos(radians(yaw));
-  float s3 = sin(radians(yaw));
+  float c3 = cos(radians(360-yaw-90));
+  float s3 = sin(radians(360-yaw-90));
   applyMatrix( c2*c3, s1*s3+c1*c3*s2, c3*s1*s2-c1*s3, 0,
                -s2, c1*c2, c2*s1, 0,
                c2*s3, c1*s2*s3-c3*s1, c1*c3+s1*s2*s3, 0,
@@ -47,9 +47,11 @@ void draw()
   drawPropShield();
   //drawArduino();
 
+
+
   popMatrix(); // end of object
   text("roll: "+roll,-260,-200);   
-  text("pitch:"+-pitch,-260,-180);   
+  text("pitch:"+pitch,-260,-180);   
   text("yaw:  "+yaw,-260,-160);  
   
   text("ACC",-260,140);   
@@ -84,7 +86,7 @@ void serialEvent()
     if (message != null) {
       String[] list = split(trim(message), " ");
       if (list.length >= 4 && list[0].equals("Orientation:")) {
-        yaw = 360-float(list[1]); // convert to float yaw
+        yaw = float(list[1]); // convert to float yaw
         pitch = float(list[2]); // convert to float pitch
         roll = float(list[3]); // convert to float roll
       } else if (list.length >= 10 && list[0].equals("DATA:")){

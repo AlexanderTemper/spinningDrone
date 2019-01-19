@@ -74,18 +74,10 @@
 #include <math.h>
 #include <float.h>
 
-/************************************************************************/
-/* Main Function Definition                                             */
-/************************************************************************/
 
-/*!
-* @brief	Initializes the whole system and runs the desired application
-*
-* This is the main function of the project. It calls initialization functions
-* of the MCU and the sensors. In the infinite loop it repeatedly checks
-* the USART module read buffer and Streams sensor data periodically (100 ms) via USART.
-*
-*/
+uint16_t calc_hardiron(struct bmm050_mag_data_float_t* mag_data);
+void correct_mag(struct bmm050_mag_data_float_t* mag_data);
+
 int main(void)
 {
 	/********************* Initialize global variables **********************/
@@ -98,6 +90,8 @@ int main(void)
 	/*! This structure holds magnetic field data of x, y and z axes. */
 	struct bmm050_mag_data_float_t mag_data;
 	
+
+
 	/************************* Initializations ******************************/
 	
 	/*Initialize SAMD20 MCU*/
@@ -157,19 +151,18 @@ int main(void)
 			float gy = (((float)gyro_data.datay/gyro_scale)*M_PI)/180;
 			float gz = (((float)gyro_data.dataz/gyro_scale)*M_PI)/180;
 
-			float mx = mag_data.datay*0.01;
-			float my = -mag_data.datax*0.01;
-			float mz = -mag_data.dataz*0.01;
-
+			correct_mag(&mag_data);
+			float mx = mag_data.datax;
+			float my = mag_data.datay;
+			float mz = mag_data.dataz;
 
 			MahonyAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
-
-
 			attitude_t att;
+			//attitude_t att2;
 			getMahAttitude(&att);
-			//att.pitch = 180 * atan (ax/sqrt(ay*ay + az*az))/M_PI;
-			//att.roll = 180 * atan (ay/sqrt(ax*ax + az*az))/M_PI;
-			//att.yaw = 180 * atan (az/sqrt(ax*ax + az*az))/M_PI;
+			//att2.pitch = 180 * atan2 (mx,sqrt(mx*my + mz*mz))/M_PI;
+			//att2.roll = 180 * atan2 (my,sqrt(mx*mx + mz*mz))/M_PI;
+			//att2.yaw = 180 * atan2 (mz,sqrt(mx*mx + mz*mz))/M_PI;
 
 
 			if(att.yaw<0){
@@ -194,12 +187,83 @@ int main(void)
 				timer++;
 			}
 
-			
 			/* Reset TC flag */
 			READ_SENSORS_FLAG = false;
 		}
 		
 	} /* !while (true) */
 		
+}
+void correct_mag(struct bmm050_mag_data_float_t* mag_data){
+	/*! mag bias error x,y,z */
+	static float mag_bias[3] = {-4.651065, 3.3581262, -5.39154483};
+	float mag_temp[3] = {0.0, 0.0, 0.0};
+	mag_temp[0] = mag_data->datay;
+	mag_temp[1] = -mag_data->datax;
+	mag_temp[2] = -mag_data->dataz;
+
+	mag_data->datax = (mag_temp[0]-mag_bias[0])*0.01;
+	mag_data->datay = (mag_temp[1]-mag_bias[1])*0.01;
+	mag_data->dataz = (mag_temp[2]-mag_bias[2])*0.01;
+}
+
+uint16_t calc_hardiron(struct bmm050_mag_data_float_t* mag_data){
+	static uint16_t calibrate = 400;
+	static float mag_bias[3] = {0.0, 0.0, 0.0};
+	static float mag_max[3] = {-FLT_MAX, -FLT_MAX, -FLT_MAX},mag_min[3] = {FLT_MAX, FLT_MAX, FLT_MAX};
+	static int t = 0;
+
+	float mag_temp[3] = {0.0, 0.0, 0.0};
+
+
+	// remap sensor data
+	mag_temp[0] = mag_data->datay;
+	mag_temp[1] = -mag_data->datax;
+	mag_temp[2] = -mag_data->dataz;
+
+	if(t<10){
+		t++;
+	} else {
+		if(calibrate > 0){
+				for (int jj = 0; jj < 3; jj++) {
+				  if(mag_temp[jj] > mag_max[jj]) mag_max[jj] = mag_temp[jj];
+				  if(mag_temp[jj] < mag_min[jj]) mag_min[jj] = mag_temp[jj];
+				}
+
+				mag_bias[0]  = (mag_max[0] + mag_min[0])/2;  // get average x mag bias in counts
+				mag_bias[1]  = (mag_max[1] + mag_min[1])/2;  // get average y mag bias in counts
+				mag_bias[2]  = (mag_max[2] + mag_min[2])/2;  // get average z mag bias in counts
+
+				calibrate--;
+				uint8_t usart_buffer_tx[81] = {0};
+				if(calibrate == 0){
+
+					sprintf((char *)usart_buffer_tx, "Kalibrierung fertig %0.6f;%0.6f;%0.6f\r\n",mag_bias[0],mag_bias[1],mag_bias[2]);
+					usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				} else {
+					sprintf((char *)usart_buffer_tx, "Kalibriere %d %0.6f%0.6f %0.6f\r\n",calibrate,mag_bias[0],mag_bias[1],mag_bias[2]);
+					usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				}
+		}
+		t=0;
+	}
+
+
+	if(calibrate == 0){
+		mag_data->datax = mag_temp[0]-mag_bias[0];
+		mag_data->datay = mag_temp[1]-mag_bias[1];
+		mag_data->dataz = mag_temp[2]-mag_bias[2];
+
+	} else {
+		mag_data->datax = 0.0;
+		mag_data->datay = 0.0;
+		mag_data->dataz = 0.0;
+	}
+
+	mag_data->datax *= 0.01;
+	mag_data->datay *= 0.01;
+	mag_data->dataz *= 0.01;
+
+	return calibrate;
 }
 
