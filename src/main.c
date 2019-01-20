@@ -158,11 +158,11 @@ int main(void)
 
 			MahonyAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
 			attitude_t att;
-			//attitude_t att2;
+			attitude_t att2;
 			getMahAttitude(&att);
 			//att2.pitch = 180 * atan2 (mx,sqrt(mx*my + mz*mz))/M_PI;
-			//att2.roll = 180 * atan2 (my,sqrt(mx*mx + mz*mz))/M_PI;
-			//att2.yaw = 180 * atan2 (mz,sqrt(mx*mx + mz*mz))/M_PI;
+			////att2.roll = 180 * atan2 (my,sqrt(mx*mx + mz*mz))/M_PI;
+			att2.yaw = 180 * atan2 (my , mx)/M_PI;
 
 
 			if(att.yaw<0){
@@ -197,6 +197,7 @@ int main(void)
 void correct_mag(struct bmm050_mag_data_float_t* mag_data){
 	/*! mag bias error x,y,z */
 	static float mag_bias[3] = {-4.651065, 3.3581262, -5.39154483};
+	//static float mag_bias[3] = {0.0,0.0,0.0};
 	float mag_temp[3] = {0.0, 0.0, 0.0};
 	mag_temp[0] = mag_data->datay;
 	mag_temp[1] = -mag_data->datax;
