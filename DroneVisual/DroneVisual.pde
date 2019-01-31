@@ -13,6 +13,7 @@ float roll = 0.0;
 float[] acc = {0,0,0};
 float[] gyro = {0,0,0};
 float[] mag = {0,0,0};
+float[] att = {0,0,0}; // {yaw,pitch,roll}
 
 // interface stuff
 ControlP5 cp5;
@@ -23,7 +24,7 @@ int GyroGraphMin = -10;
 int GyroGraphMax = 10;
 int vGyro[] = {1,1,1};
 float sGyro[] = {1,1,1};
-Graph GyroGraph = new Graph(GyroGraphX+220, GyroGraphY, 550, 120, color (20, 20, 200));
+Graph GyroGraph = new Graph(GyroGraphX+220, GyroGraphY, 450, 120, color (20, 20, 200));
 
 int AccGraphX = 10;
 int AccGraphY = 350;
@@ -31,7 +32,7 @@ int AccGraphMin = -1;
 int AccGraphMax = 1;
 int vAcc[] = {1,1,1};
 float sAcc[] = {1,1,1};
-Graph AccGraph = new Graph(AccGraphX+220, AccGraphY, 550, 120, color (20, 20, 200));
+Graph AccGraph = new Graph(AccGraphX+220, AccGraphY, 450, 120, color (20, 20, 200));
 
 int MagGraphX = 10;
 int MagGraphY = 620;
@@ -39,19 +40,28 @@ int MagGraphMin = -50;
 int MagGraphMax = 50;
 int vMag[] = {1,1,1};
 float sMag[] = {0.0625,0.0625,0.0625};
-Graph MagGraph = new Graph(MagGraphX+220, MagGraphY, 550, 120, color (20, 20, 200));
+Graph MagGraph = new Graph(MagGraphX+220, MagGraphY, 450, 120, color (20, 20, 200));
+
+int AttGraphX = 760;
+int AttGraphY = 80;
+int AttGraphMin = -180;
+int AttGraphMax = 360;
+int vAtt[] = {1,1,1};
+float sAtt[] = {1,1,1};
+Graph AttGraph = new Graph(AttGraphX+220, AttGraphY, 550, 600 ,color (20, 20, 200));
 
 // plots
 float[][] GyroGraphValues = new float[3][100];
 float[][] AccGraphValues = new float[3][100];
 float[][] MagGraphValues = new float[3][100];
+float[][] AttGraphValues = new float[3][100];
 float[] lineGraphSampleNumbers = new float[100];
 color[] graphColors = new color[3];
 
 PFont f;
 
 public void settings() {
-  size(800, 860);
+  size(1600, 860);
 }
 
 
@@ -123,32 +133,53 @@ void setup() {
   cp5.addToggle("vMagx").setPosition(x=x-50, y=MagGraphY).setValue(vMag[0]).setMode(ControlP5.SWITCH).setColorActive(graphColors[0]);
   cp5.addToggle("vMagy").setPosition(x, y=y+40).setValue(vMag[1]).setMode(ControlP5.SWITCH).setColorActive(graphColors[1]);
   cp5.addToggle("vMagz").setPosition(x, y=y+40).setValue(vMag[2]).setMode(ControlP5.SWITCH).setColorActive(graphColors[2]);
+  
+  x = AttGraphX;
+  y = AttGraphY;
+  
+  cp5.addTextfield("AttMax").setPosition(x+200, y-40).setText(AttGraphMax+"").setWidth(40).setAutoClear(false);
+  cp5.addTextfield("AttMin").setPosition(x+200, y+640).setText(AttGraphMin+"").setWidth(40).setAutoClear(false);
+  cp5.addTextlabel("on/off/Att").setText("on/off").setPosition(AttGraphX +13, AttGraphY -20).setColor(0);
+  cp5.addTextlabel("multipliers/Att").setText("multipliers").setPosition( AttGraphX + 55, AttGraphY-20).setColor(0);
+  cp5.addTextfield("sAttx").setPosition(x=AttGraphX+50, y=AttGraphY).setText(sAtt[0]+"").setColorCaptionLabel(0).setWidth(40).setAutoClear(false);
+  cp5.addTextfield("sAtty").setPosition(x, y=y+40).setText(sAtt[1]+"").setColorCaptionLabel(0).setWidth(40).setAutoClear(false);
+  cp5.addTextfield("sAttz").setPosition(x, y=y+40).setText(sAtt[2]+"").setColorCaptionLabel(0).setWidth(40).setAutoClear(false);
+  cp5.addToggle("vAttx").setPosition(x=x-50, y=AttGraphY).setValue(vAtt[0]).setMode(ControlP5.SWITCH).setColorActive(graphColors[0]);
+  cp5.addToggle("vAtty").setPosition(x, y=y+40).setValue(vAtt[1]).setMode(ControlP5.SWITCH).setColorActive(graphColors[1]);
+  cp5.addToggle("vAttz").setPosition(x, y=y+40).setValue(vAtt[2]).setMode(ControlP5.SWITCH).setColorActive(graphColors[2]);
 }
 
 void updateGraphs(){
   for (i=0; i<3; i++) {
-      // update Gyro
-        if (i<GyroGraphValues.length) {
-          for (int k=0; k<GyroGraphValues[i].length-1; k++) {
-            GyroGraphValues[i][k] = GyroGraphValues[i][k+1];
-          }
-          GyroGraphValues[i][GyroGraphValues[i].length-1] = gyro[i] * sGyro[i];// Muilltiply
-        }      
-      // update Acc
-        if (i<AccGraphValues.length) {
-          for (int k=0; k<AccGraphValues[i].length-1; k++) {
-            AccGraphValues[i][k] = AccGraphValues[i][k+1];
-          }
-          AccGraphValues[i][AccGraphValues[i].length-1] = acc[i]* sAcc[i];
-        }
-      // update Mag
-        if (i<MagGraphValues.length) {
-          for (int k=0; k<MagGraphValues[i].length-1; k++) {
-            MagGraphValues[i][k] = MagGraphValues[i][k+1];
-          }
-          MagGraphValues[i][MagGraphValues[i].length-1] = mag[i] * sMag[i];
+    // update Gyro
+    if (i<GyroGraphValues.length) {
+      for (int k=0; k<GyroGraphValues[i].length-1; k++) {
+        GyroGraphValues[i][k] = GyroGraphValues[i][k+1];
       }
+      GyroGraphValues[i][GyroGraphValues[i].length-1] = gyro[i] * sGyro[i];// Muilltiply
+    }      
+    // update Acc
+    if (i<AccGraphValues.length) {
+      for (int k=0; k<AccGraphValues[i].length-1; k++) {
+        AccGraphValues[i][k] = AccGraphValues[i][k+1];
+      }
+      AccGraphValues[i][AccGraphValues[i].length-1] = acc[i]* sAcc[i];
     }
+    // update Mag
+    if (i<MagGraphValues.length) {
+      for (int k=0; k<MagGraphValues[i].length-1; k++) {
+        MagGraphValues[i][k] = MagGraphValues[i][k+1];
+      }
+      MagGraphValues[i][MagGraphValues[i].length-1] = mag[i] * sMag[i];
+    }
+    // update Att
+    if (i<AttGraphValues.length) {
+      for (int k=0; k<AttGraphValues[i].length-1; k++) {
+        AttGraphValues[i][k] = AttGraphValues[i][k+1];
+      }
+      AttGraphValues[i][AttGraphValues[i].length-1] = att[i] * sAtt[i];
+    }
+  }
 }
 
 int i = 0; // loop variable
@@ -161,9 +192,9 @@ void draw() {
     if (message != null) {
       String[] list = split(trim(message), " ");
       if (list.length >= 4 && list[0].equals("Orientation:")) {
-        yaw = float(list[1]); // convert to float yaw
-        pitch = float(list[2]); // convert to float pitch
-        roll = float(list[3]); // convert to float roll
+        att[0] = yaw = float(list[1]); // convert to float yaw
+        att[1] = pitch = float(list[2]); // convert to float pitch
+        att[2] = roll = float(list[3]); // convert to float roll
       } else if (list.length >= 10 && list[0].equals("DATA:")){
         acc[0]=float(list[1]);
         acc[1]=float(list[2]);
@@ -201,12 +232,19 @@ void draw() {
       AccGraph.LineGraph(lineGraphSampleNumbers, AccGraphValues[i]);
   }
   
-  // Mag
+  // mag
   MagGraph.DrawAxis();
   for (int i=0;i<MagGraphValues.length; i++) {
     MagGraph.GraphColor = graphColors[i];
     if (vMag[i]==1)
       MagGraph.LineGraph(lineGraphSampleNumbers, MagGraphValues[i]);
+  }
+  // att
+  AttGraph.DrawAxis();
+  for (int i=0;i<AttGraphValues.length; i++) {
+    AttGraph.GraphColor = graphColors[i];
+    if (vAtt[i]==1)
+      AttGraph.LineGraph(lineGraphSampleNumbers, AttGraphValues[i]);
   }
   
 }
@@ -240,6 +278,14 @@ void setChartSettings() {
   MagGraph.yMax=MagGraphMax; 
   MagGraph.yMin=MagGraphMin;
  
+  AttGraph.xLabel=" Samples ";
+  AttGraph.yLabel="Att";
+  AttGraph.Title="";  
+  AttGraph.xDiv=20;  
+  AttGraph.xMax=0; 
+  AttGraph.xMin=-100;  
+  AttGraph.yMax=AttGraphMax; 
+  AttGraph.yMin=AttGraphMin;
 }
 
 // handle gui actions
@@ -270,6 +316,12 @@ void controlEvent(ControlEvent theEvent) {
       vMag[1]=int(value);
     } else if(parameter == "vMagz"){
       vMag[2]=int(value);
+    } else if(parameter == "vAttx"){
+      vAtt[0]=int(value);
+    } else if(parameter == "vAtty"){
+      vAtt[1]=int(value);
+    } else if(parameter == "vAttz"){
+      vAtt[2]=int(value);
     }
     
     if(parameter == "GyroMax"){
@@ -284,6 +336,10 @@ void controlEvent(ControlEvent theEvent) {
       MagGraphMax=int(value);
     } else if(parameter == "MagMin"){
       MagGraphMin=int(value);
+    } else if(parameter == "AttMax"){
+      AttGraphMax=int(value);
+    } else if(parameter == "AttMin"){
+      AttGraphMin=int(value);
     }
     
     
@@ -305,86 +361,14 @@ void controlEvent(ControlEvent theEvent) {
       sMag[1]=float(value);
     } else if(parameter == "sMagz"){
       sMag[2]=float(value);
+    } else if(parameter == "sAttx"){
+      sAtt[0]=float(value);
+    } else if(parameter == "sAtty"){
+      sAtt[1]=float(value);
+    } else if(parameter == "sAttz"){
+      sAtt[2]=float(value);
     }
     
   }
   setChartSettings();
-}
-
-void drawPropShield()
-{
-  // 3D art by Benjamin Rheinland
-  stroke(0); // black outline
-  fill(0, 128, 0); // fill color PCB green
-  box(190, 6, 70); // PCB base shape
-
-  fill(255, 215, 0); // gold color
-  noStroke();
-
-  //draw 14 contacts on Y- side
-  translate(65, 0, 30);
-  for (int i=0; i<14; i++) {
-    sphere(4.5); // draw gold contacts
-    translate(-10, 0, 0); // set new position
-  }
-
-  //draw 14 contacts on Y+ side
-  translate(10, 0, -60);
-  for (int i=0; i<14; i++) {
-    sphere(4.5); // draw gold contacts
-    translate(10, 0, 0); // set position
-  }
-
-  //draw 5 contacts on X+ side (DAC, 3v3, gnd)
-  translate(-10,0,10);
-  for (int i=0; i<5; i++) {
-    sphere(4.5);
-    translate(0,0,10);
-  }
-
-  //draw 4 contacts on X+ side (G C D 5)
-  translate(25,0,-15);
-  for (int i=0; i<4; i++) {
-    sphere(4.5);
-    translate(0,0,-10);
-  }
-
-  //draw 4 contacts on X- side (5V - + GND)
-  translate(-180,0,10);
-  for (int i=0; i<4; i++) {
-    sphere(4.5);
-    translate(0,0,10);
-  }
-
-  //draw audio amp IC
-  stroke(128);
-  fill(24);    //Epoxy color
-  translate(30,-6,-25);
-  box(13,6,13);
-
-  //draw pressure sensor IC
-  stroke(64);
-  translate(32,0,0);
-  fill(192);
-  box(10,6,18);
-
-  //draw gyroscope IC
-  stroke(128);
-  translate(27,0,0);
-  fill(24);
-  box(16,6,16);
-
-  //draw flash memory IC
-  translate(40,0,-15);
-  box(20,6,20);
-
-  //draw accelerometer/magnetometer IC
-  translate(-5,0,25);
-  box(12,6,12);
-
-  //draw 5V level shifter ICs
-  translate(42.5,2,0);
-  box(6,4,8);
-  translate(0,0,-20);
-  box(6,4,8);
 }
