@@ -16,6 +16,9 @@ class Orientation extends PApplet {
   }
 
   void draw() {
+    float roll = att[2];
+    float pitch = att[1];
+    float yaw = att[0];
     background(255); // set background to white
     lights();
   
@@ -42,13 +45,13 @@ class Orientation extends PApplet {
     text("yaw:  "+yaw,-260,-160);  
     
     text("ACC",-260,140);   
-    text("x: "+acc[0],-260,160);   
-    text("y: "+acc[1],-260,180);   
-    text("z: "+acc[2],-260,200);  
+    text("x: "+nf(acc[0],1,3),-260,160);   
+    text("y: "+nf(acc[1],1,3),-260,180);   
+    text("z: "+nf(acc[2],1,3),-260,200);  
     text("Gyro",220,-220);   
-    text("x: "+gyro[0],220,-200);   
-    text("y: "+gyro[1],220,-180);   
-    text("z: "+gyro[2],220,-160);  
+    text("x: "+nf(gyro[0],1,3),220,-200);   
+    text("y: "+nf(gyro[1],1,3),220,-180);   
+    text("z: "+nf(gyro[2],1,3),220,-160);  
     text("Mag",220,140);   
     text("x: "+nf(mag[0]/16,2,3),220,160);   
     text("y: "+nf(mag[1]/16,2,3),220,180);   

@@ -74,10 +74,27 @@
 #include <math.h>
 #include <float.h>
 
+typedef struct {
+	int32_t roll;
+	int32_t pitch;
+	int32_t yaw;
+} attitude_32;
+
+
+typedef struct {
+	int32_t x;
+	int32_t y;
+	int32_t z;
+} sensor_32;
+
+
+
 
 uint16_t calc_hardiron(struct bmm050_mag_s32_data_t* mag_data);
 void correct_mag(struct bmm050_mag_s32_data_t* mag_data);
-int16_t yaw_offset(int16_t yaw);
+float yaw_offset(float yaw);
+void gets32att(attitude_32 *att32, attitude_t *attf);
+void toSensor(sensor_32 * sensor,float x, float y, float z);
 
 int main(void)
 {
@@ -91,6 +108,12 @@ int main(void)
 	/*! This structure holds magnetic field data of x, y and z axes. */
 	struct bmm050_mag_s32_data_t mag_data;
 	
+	attitude_t att;
+	attitude_32 att32;
+	sensor_32 gyro;
+	sensor_32 acc;
+	sensor_32 mag;
+
 
 
 	/************************* Initializations ******************************/
@@ -143,10 +166,10 @@ int main(void)
 			/* Read magnetometer's data */
 			bmm050_read_mag_data_XYZ_s32(&mag_data);
 
-			uint16_t acc_1g = 1024;
-			float ax = (float)accel_data.x/acc_1g;
-			float ay = (float)accel_data.y/acc_1g;
-			float az = (float)accel_data.z/acc_1g;
+			//uint16_t acc_1g = 1024;
+			float ax = (float)accel_data.x;///acc_1g;
+			float ay = (float)accel_data.y;///acc_1g;
+			float az = (float)accel_data.z;///acc_1g;
 
 			float gyro_scale = 16.3835f;
 			float gx = (((float)gyro_data.datax/gyro_scale)*M_PI)/180;
@@ -161,11 +184,11 @@ int main(void)
 
 
 			MahonyAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
-			attitude_t att;
+
 			getMahAttitude(&att);
 
 			if(att.yaw<0){
-				att.yaw += 360.0f;
+				att.yaw += 360;
 			}
 
 			if(startup < 100){
@@ -174,17 +197,31 @@ int main(void)
 				twoKp = 5.0f;
 				startup ++;
 			} else {
-				att.yaw = yaw_offset((int16_t)att.yaw);
+				att.yaw = yaw_offset(att.yaw);
 			}
 
 
+			gets32att(&att32, &att);
+			toSensor(&gyro,gx*1000, gy*1000, gz*1000);
+			toSensor(&acc,ax, ay, az);
+			toSensor(&mag,mx, my, mz);
+
 			// 10MS * 10 == 100ms
 			if(timer > 5){
-				uint8_t usart_buffer_tx[81] = {0};
-				sprintf((char *)usart_buffer_tx, "Orientation: %.3f %.3f %.3f\r\n",att.yaw,att.pitch,att.roll);
-				usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
-				sprintf((char *)usart_buffer_tx, "DATA: %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f\r\n",ax,ay,az,gx,gy,gz,mx, my, mz);
-				usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				//uint8_t usart_buffer_tx[81] = {0};
+				//sprintf((char *)usart_buffer_tx, "%.3f %.3f %.3f \r\n",att.yaw,att.pitch,att.roll);
+				//sprintf((char *)usart_buffer_tx, "%3ld %3ld %3ld \r\n",att32.yaw,att32.pitch,att32.roll);
+				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				//sprintf((char *)usart_buffer_tx, "DATA: %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f\r\n",ax,ay,az,gx,gy,gz,mx, my, mz);
+				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABO",3);
+				usart_write_buffer_wait(&usart_instance, (uint8_t *)&att32,sizeof(att32));
+				usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABG",3);
+				usart_write_buffer_wait(&usart_instance, (uint8_t *)&gyro,sizeof(gyro));
+				usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABR",3);
+				usart_write_buffer_wait(&usart_instance, (uint8_t *)&acc,sizeof(acc));
+				usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABM",3);
+				usart_write_buffer_wait(&usart_instance, (uint8_t *)&mag,sizeof(mag));
 				timer = 0;
 			} else {
 				timer++;
@@ -198,12 +235,12 @@ int main(void)
 		
 }
 
-int16_t yaw_offset(int16_t yaw){
+float yaw_offset(float yaw){
 	static uint8_t counter = 0;
 
-	static int16_t yaw_bias = 0;
-	static int16_t yaw_min = 360;
-	static int16_t yaw_max = 0;
+	static float yaw_bias = 0;
+	static float yaw_min = 360;
+	static float yaw_max = 0;
 
 
 	if(counter <40){
@@ -234,6 +271,19 @@ void correct_mag(struct bmm050_mag_s32_data_t* mag_data){
 	mag_data->datax = (mag_temp[0]-mag_bias[0]);
 	mag_data->datay = (mag_temp[1]-mag_bias[1]);
 	mag_data->dataz = (mag_temp[2]-mag_bias[2]);
+}
+
+void gets32att(attitude_32 *att32, attitude_t *attf) {
+	att32->roll = (int32_t)(attf->roll*100);
+	att32->pitch = (int32_t)(attf->pitch*100);
+	att32->yaw = (int32_t)(attf->yaw*100);
+}
+
+
+void toSensor(sensor_32 * sensor,float x, float y, float z){
+	sensor->x = (int32_t)x;
+	sensor->y = (int32_t)y;
+	sensor->z = (int32_t)z;
 }
 
 uint16_t calc_hardiron(struct bmm050_mag_s32_data_t* mag_data){

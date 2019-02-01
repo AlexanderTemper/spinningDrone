@@ -19,6 +19,8 @@ typedef struct {
   float yaw;
 } attitude_t;
 
+#define radiansToDegrees(angleRadians) ((angleRadians) * 57.2957795131f)
+
 //----------------------------------------------------------------------------------------------------
 // Variable declaration
 

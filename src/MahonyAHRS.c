@@ -229,10 +229,9 @@ float invSqrt(float x) {
 
 void getMahAttitude(attitude_t *attp) {
 
-
-  attp->roll = (180* atan2(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2))/M_PI;
-  attp->pitch = (180*asin(-2.0f * (q1*q3 - q0*q2)))/M_PI;
-  attp->yaw = (180*atan2(q1*q2 + q0*q3, 0.5f - q2*q2 - q3*q3))/M_PI;
+  attp->roll = radiansToDegrees(atan2(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2));
+  attp->pitch = radiansToDegrees(asin(-2.0f * (q1*q3 - q0*q2)));
+  attp->yaw = radiansToDegrees(atan2(q1*q2 + q0*q3, 0.5f - q2*q2 - q3*q3));
   /*attp->roll = (180* atan2(2.0f*q2*q3 - 2.0f*q0*q1, 2.0f*q0*q0 + 2.0f*q3*q3 -1.0f))/M_PI;
   attp->pitch = (180*-asin(2.0f * (q1*q3 + q0*q2)))/M_PI;
   attp->yaw = (180*atan2(2.0f*q1*q2 - 2.0f*q0*q3, 2.0f*q2*q2 + 2.0f*q3*q3 -1.0f))/M_PI;*/

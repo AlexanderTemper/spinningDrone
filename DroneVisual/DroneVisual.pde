@@ -7,9 +7,13 @@ Orientation orientation;
 String serialPortName = "/dev/ttyUSB0";
 Serial serialPort; // Serial port object
 
-float yaw = 0.0;
-float pitch = 0.0;
-float roll = 0.0;
+// Serial Protokoll Parse
+int readtoBuffer = 0;
+byte[] inBuffer = new byte[200];
+int nextBuffer = 0;
+int lastread = 0;
+
+
 float[] acc = {0,0,0};
 float[] gyro = {0,0,0};
 float[] mag = {0,0,0};
@@ -149,8 +153,8 @@ void setup() {
   cp5.addToggle("vAttz").setPosition(x, y=y+40).setValue(vAtt[2]).setMode(ControlP5.SWITCH).setColorActive(graphColors[2]);
 }
 
-void updateGraphs(){
-  for (i=0; i<3; i++) {
+void updateGyroGraph(){
+  for (int i=0; i<3; i++) {
     // update Gyro
     if (i<GyroGraphValues.length) {
       for (int k=0; k<GyroGraphValues[i].length-1; k++) {
@@ -158,6 +162,10 @@ void updateGraphs(){
       }
       GyroGraphValues[i][GyroGraphValues[i].length-1] = gyro[i] * sGyro[i];// Muilltiply
     }      
+  }
+}
+void updateAccGraph(){
+  for (int i=0; i<3; i++) {
     // update Acc
     if (i<AccGraphValues.length) {
       for (int k=0; k<AccGraphValues[i].length-1; k++) {
@@ -165,56 +173,34 @@ void updateGraphs(){
       }
       AccGraphValues[i][AccGraphValues[i].length-1] = acc[i]* sAcc[i];
     }
-    // update Mag
+  }
+}
+void updateMagGraph(){
+  for (int i=0; i<3; i++) {
+    /// update Mag
     if (i<MagGraphValues.length) {
       for (int k=0; k<MagGraphValues[i].length-1; k++) {
         MagGraphValues[i][k] = MagGraphValues[i][k+1];
       }
       MagGraphValues[i][MagGraphValues[i].length-1] = mag[i] * sMag[i];
-    }
+    }  
+  }
+}
+void updateAttGraph(){
+  for (int i=0; i<3; i++) {
     // update Att
     if (i<AttGraphValues.length) {
       for (int k=0; k<AttGraphValues[i].length-1; k++) {
         AttGraphValues[i][k] = AttGraphValues[i][k+1];
       }
       AttGraphValues[i][AttGraphValues[i].length-1] = att[i] * sAtt[i];
-    }
+    }   
   }
 }
 
-int i = 0; // loop variable
 void draw() {
-  int newLine = 13; // new line character in ASCII
-  String message;
-  // pars serial
-  do {
-    message = serialPort.readStringUntil(newLine); // read from port until new line
-    if (message != null) {
-      String[] list = split(trim(message), " ");
-      if (list.length >= 4 && list[0].equals("Orientation:")) {
-        att[0] = yaw = float(list[1]); // convert to float yaw
-        att[1] = pitch = float(list[2]); // convert to float pitch
-        att[2] = roll = float(list[3]); // convert to float roll
-      } else if (list.length >= 10 && list[0].equals("DATA:")){
-        acc[0]=float(list[1]);
-        acc[1]=float(list[2]);
-        acc[2]=float(list[3]);
-        
-        gyro[0]=float(list[4]);
-        gyro[1]=float(list[5]);
-        gyro[2]=float(list[6]);
-        
-        mag[0]=float(list[7]);
-        mag[1]=float(list[8]);
-        mag[2]=float(list[9]);
-        updateGraphs();
-      }
-      else {
-        println(message);
-      }
-    }
-  } while (message != null);
-  
+
+  processSerial();
   background(255);
   // gyro
  GyroGraph.DrawAxis();
@@ -247,6 +233,54 @@ void draw() {
       AttGraph.LineGraph(lineGraphSampleNumbers, AttGraphValues[i]);
   }
   
+}
+
+void processSerial(){
+  int r = 0;
+  while(serialPort.available()>0){
+    r = serialPort.read(); 
+    if(lastread == 'A' && r == 'B'){ // next Frame Starts 
+      if(nextBuffer == 13){
+        int i=1;
+        if(inBuffer[0] == 'O'){
+          att[2] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++])/100;
+          att[1] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++])/100;
+          att[0] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++])/100;
+          updateAttGraph();
+        } else if(inBuffer[0] == 'G'){
+          gyro[0]= getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++])/1000;
+          gyro[1] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++])/1000;
+          gyro[2] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++])/1000;
+          updateGyroGraph();
+        } else if(inBuffer[0] == 'R'){
+          acc[0] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++])/1024;
+          acc[1] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++])/1024;
+          acc[2] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++])/1024;
+          updateAccGraph();
+        } else if(inBuffer[0] == 'M'){
+          mag[0] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++]);
+          mag[1] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++]);
+          mag[2] = getfloat(inBuffer[i++],inBuffer[i++],inBuffer[i++],inBuffer[i++]);
+          updateMagGraph();
+        }
+      }
+      nextBuffer = 0;
+    } else if(lastread == 'A'){ // false Alarm 
+      inBuffer[nextBuffer++] = (byte)lastread;
+      inBuffer[nextBuffer++] = (byte)r;
+    }else if(r != 'A'){
+      inBuffer[nextBuffer++] = (byte)r;
+    }
+    lastread = r;
+  }
+}
+
+float getfloat(byte a,byte b,byte c,byte d){
+  long value = a & 0xFF;
+    value |= (b << 8) & 0xFFFF;
+    value |= (c << 16) & 0xFFFFFF;
+    value |= (d << 24) & 0xFFFFFFFF;
+    return (float)value;
 }
 
 // called each time the chart settings are changed by the user 
