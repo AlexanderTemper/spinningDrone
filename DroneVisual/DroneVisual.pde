@@ -92,7 +92,7 @@ void setup() {
     }
   }
 
-  serialPort = new Serial(this, serialPortName, 115200);
+  serialPort = new Serial(this, serialPortName, 9600);
 
 
   // build the gui
@@ -239,6 +239,8 @@ void processSerial(){
   int r = 0;
   while(serialPort.available()>0){
     r = serialPort.read(); 
+   // byte[]  t = {(byte)r};
+   // print(new String(t));
     if(lastread == 'A' && r == 'B'){ // next Frame Starts 
       if(nextBuffer == 13){
         int i=1;

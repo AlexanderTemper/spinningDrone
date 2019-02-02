@@ -1,74 +1,3 @@
-/**\mainpage
-*
-*
-**************************************************************************
-* Copyright (C) 2015 Bosch Sensortec GmbH. All Rights Reserved.
-*
-* File:		main.c
-*
-* Date:		2015/02/02
-*
-* Revision:	1.0
-*
-* Usage:	Part of BMF055 Data Stream Project
-*
-**************************************************************************
-* \section License
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*
-*   Redistributions of source code must retain the above copyright
-*   notice, this list of conditions and the following disclaimer.
-*
-*   Redistributions in binary form must reproduce the above copyright
-*   notice, this list of conditions and the following disclaimer in the
-*   documentation and/or other materials provided with the distribution.
-*
-*   Neither the name of the copyright holder nor the names of the
-*   contributors may be used to endorse or promote products derived from
-*   this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
-* CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-* DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDER
-* OR CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-* OR CONSEQUENTIAL DAMAGES(INCLUDING, BUT NOT LIMITED TO,
-* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-* ANY WAY OUT OF THE USE OF THIS
-* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
-*
-* The information provided is believed to be accurate and reliable.
-* The copyright holder assumes no responsibility
-* for the consequences of use
-* of such information nor for any infringement of patents or
-* other rights of third parties which may result from its use.
-* No license is granted by implication or otherwise under any patent or
-* patent rights of the copyright holder.
-*
-*
-*************************************************************************/
-/*!
-*
-* @file		main.c
-* @author	Bosch Sensortec
-*
-* @brief	Main Source File
-*
-*/
-
-
-/************************************************************************/
-/* Includes                                                             */
-/************************************************************************/
-
 #include "bmf055.h"
 #include "MahonyAHRS.h"
 #include <math.h>
@@ -95,6 +24,7 @@ void correct_mag(struct bmm050_mag_s32_data_t* mag_data);
 float yaw_offset(float yaw);
 void gets32att(attitude_32 *att32, attitude_t *attf);
 void toSensor(sensor_32 * sensor,float x, float y, float z);
+enum status_code sendData(attitude_t *att,float gx,float gy,float gz,float ax, float ay, float az, float mx, float my , float mz);
 
 int main(void)
 {
@@ -109,12 +39,9 @@ int main(void)
 	struct bmm050_mag_s32_data_t mag_data;
 	
 	attitude_t att;
-	attitude_32 att32;
-	sensor_32 gyro;
-	sensor_32 acc;
-	sensor_32 mag;
-
-
+	uint16_t timer = 0;
+	uint16_t startup = 0;
+	twoKp = 100.0f;
 
 	/************************* Initializations ******************************/
 	
@@ -138,9 +65,7 @@ int main(void)
 	
 	/* Initialize the sensors */
 	bmf055_sensors_initialize();
-	uint16_t timer = 0;
-	uint16_t startup = 0;
-	twoKp = 100.0f;
+
 	/************************** Infinite Loop *******************************/
 	while (true)
 	{
@@ -200,28 +125,33 @@ int main(void)
 				att.yaw = yaw_offset(att.yaw);
 			}
 
-
+			/*attitude_32 att32;
+			sensor_32 gyro;
+			sensor_32 acc;
+			sensor_32 mag;
 			gets32att(&att32, &att);
 			toSensor(&gyro,gx*1000, gy*1000, gz*1000);
 			toSensor(&acc,ax, ay, az);
-			toSensor(&mag,mx, my, mz);
+			toSensor(&mag,mx, my, mz);*/
+
 
 			// 10MS * 10 == 100ms
 			if(timer > 5){
-				//uint8_t usart_buffer_tx[81] = {0};
-				//sprintf((char *)usart_buffer_tx, "%.3f %.3f %.3f \r\n",att.yaw,att.pitch,att.roll);
-				//sprintf((char *)usart_buffer_tx, "%3ld %3ld %3ld \r\n",att32.yaw,att32.pitch,att32.roll);
-				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
-				//sprintf((char *)usart_buffer_tx, "DATA: %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f\r\n",ax,ay,az,gx,gy,gz,mx, my, mz);
-				//usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
-				usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABO",3);
+
+				sendData(&att, gx, gy, gz, ax, ay, az, mx, my , mz);
+				/*usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABO",3);
 				usart_write_buffer_wait(&usart_instance, (uint8_t *)&att32,sizeof(att32));
 				usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABG",3);
 				usart_write_buffer_wait(&usart_instance, (uint8_t *)&gyro,sizeof(gyro));
 				usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABR",3);
 				usart_write_buffer_wait(&usart_instance, (uint8_t *)&acc,sizeof(acc));
 				usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABM",3);
-				usart_write_buffer_wait(&usart_instance, (uint8_t *)&mag,sizeof(mag));
+				usart_write_buffer_wait(&usart_instance, (uint8_t *)&mag,sizeof(mag));*/
+				//sprintf((char *)usart_buffer_tx, "%3ld %3ld %3ld \r\n",att32.yaw,att32.pitch,att32.roll);
+				//usart_write_buffer_job(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+				//sprintf((char *)usart_buffer_tx, "DATA: %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f\r\n",ax,ay,az,gx,gy,gz,mx, my, mz);
+				//usart_write_buffer_job(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+
 				timer = 0;
 			} else {
 				timer++;
@@ -233,6 +163,39 @@ int main(void)
 		
 	} /* !while (true) */
 		
+}
+
+enum status_code sendData(attitude_t *att,float gx,float gy,float gz,float ax, float ay, float az, float mx, float my , float mz){
+
+	if(usart_callback_transmit_flag){
+		attitude_32 att32;
+		sensor_32 gyro;
+		sensor_32 acc;
+		sensor_32 mag;
+		static uint8_t buffer[60];
+
+		gets32att(&att32, att);
+		toSensor(&gyro,gx*1000, gy*1000, gz*1000);
+		toSensor(&acc,ax, ay, az);
+		toSensor(&mag,mx, my, mz);
+
+		memcpy(&buffer[0],"ABO",3);
+		memcpy(&buffer[3],(uint8_t *)&att32,sizeof(attitude_32));
+
+		memcpy(&buffer[15],"ABG",3);
+		memcpy(&buffer[18],(uint8_t *)&gyro,sizeof(sensor_32));
+
+		memcpy(&buffer[30],"ABR",3);
+		memcpy(&buffer[33],(uint8_t *)&acc,sizeof(sensor_32));
+
+		memcpy(&buffer[45],"ABM",3);
+		memcpy(&buffer[48],(uint8_t *)&mag,sizeof(sensor_32));
+
+		usart_callback_transmit_flag = false;
+		return usart_write_buffer_job(&usart_instance, buffer,60);
+	}
+
+	return STATUS_BUSY;
 }
 
 float yaw_offset(float yaw){
@@ -263,14 +226,11 @@ void correct_mag(struct bmm050_mag_s32_data_t* mag_data){
 	/*! mag bias error x,y,z */
 	static int32_t mag_bias[3] = {188, 33, -38};
 	//static int32_t mag_bias[3] = {0.0,0.0,0.0};
-	int32_t mag_temp[3] = {0.0, 0.0, 0.0};
-	mag_temp[0] = mag_data->datay;
-	mag_temp[1] = -mag_data->datax;
-	mag_temp[2] = -mag_data->dataz;
+	int32_t tempx = mag_data->datax;
 
-	mag_data->datax = (mag_temp[0]-mag_bias[0]);
-	mag_data->datay = (mag_temp[1]-mag_bias[1]);
-	mag_data->dataz = (mag_temp[2]-mag_bias[2]);
+	mag_data->datax = (mag_data->datay-mag_bias[0]);
+	mag_data->datay = (-tempx-mag_bias[1]);
+	mag_data->dataz = (-mag_data->dataz-mag_bias[2]);
 }
 
 void gets32att(attitude_32 *att32, attitude_t *attf) {

@@ -64,7 +64,7 @@
 *
 * USART support uses ASF USART driver modules and defines
 * initialization, configuration and callback functions for
-* the microcontroller’s USART peripheral that is needed
+* the microcontrollerï¿½s USART peripheral that is needed
 * to communicate with an external device (here a serial terminal).
 *
 */
@@ -86,8 +86,10 @@
 
 /*! value of 115200 that is used to set USART baud rate */
 #define USART_BAUDRATE_115200	UINT32_C(115200)
+/*! value of 9600 that is used to set USART baud rate */
+#define USART_BAUDRATE_9600	UINT32_C(9600)
 /*! loaded onto USART baud rate register initially */
-#define USART_BAUDRATE			USART_BAUDRATE_115200
+#define USART_BAUDRATE			USART_BAUDRATE_9600
 
 /************************************************************************/
 /* Global Variables                                                     */
