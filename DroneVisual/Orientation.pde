@@ -53,9 +53,9 @@ class Orientation extends PApplet {
     text("y: "+nf(gyro[1],1,3),220,-180);   
     text("z: "+nf(gyro[2],1,3),220,-160);  
     text("Mag",220,140);   
-    text("x: "+nf(mag[0]/16,2,3),220,160);   
-    text("y: "+nf(mag[1]/16,2,3),220,180);   
-    text("z: "+nf(mag[2]/16,2,3),220,200);  
+    text("x: "+nf(mag[0],2,3),220,160);   
+    text("y: "+nf(mag[1],2,3),220,180);   
+    text("z: "+nf(mag[2],2,3),220,200);  
   }
   
   

@@ -3,10 +3,14 @@ import controlP5.*; // http://www.sojamo.de/libraries/controlP5/
 import processing.serial.*;
 
 Orientation orientation;
+SimbleeDaten simblee;
 // Serial port to connect to
 String serialPortName = "/dev/ttyUSB0";
 Serial serialPort; // Serial port object
 
+
+// Data from Socket 
+BufferedReader in;
 // Serial Protokoll Parse
 int readtoBuffer = 0;
 byte[] inBuffer = new byte[200];
@@ -43,7 +47,7 @@ int MagGraphY = 620;
 int MagGraphMin = -50;
 int MagGraphMax = 50;
 int vMag[] = {1,1,1};
-float sMag[] = {0.0625,0.0625,0.0625};
+float sMag[] = {1,1,1};
 Graph MagGraph = new Graph(MagGraphX+220, MagGraphY, 450, 120, color (20, 20, 200));
 
 int AttGraphX = 760;
@@ -70,7 +74,9 @@ public void settings() {
 
 
 void setup() {
+  
   orientation = new Orientation();
+  simblee = new SimbleeDaten();
   surface.setTitle("BMF055");
 
   // set line graph colors
@@ -92,7 +98,7 @@ void setup() {
     }
   }
 
-  serialPort = new Serial(this, serialPortName, 9600);
+  //serialPort = new Serial(this, serialPortName, 9600);
 
 
   // build the gui
@@ -199,8 +205,8 @@ void updateAttGraph(){
 }
 
 void draw() {
-
-  processSerial();
+ 
+  //processSerial();
   background(255);
   // gyro
  GyroGraph.DrawAxis();
@@ -234,6 +240,8 @@ void draw() {
   }
   
 }
+
+
 
 void processSerial(){
   int r = 0;
@@ -277,12 +285,12 @@ void processSerial(){
   }
 }
 
-float getfloat(byte a,byte b,byte c,byte d){
+float getfloat(int a,int b,int c,int d){
   long value = a & 0xFF;
-    value |= (b << 8) & 0xFFFF;
-    value |= (c << 16) & 0xFFFFFF;
-    value |= (d << 24) & 0xFFFFFFFF;
-    return (float)value;
+  value |= (b << 8) & 0xFFFF;
+  value |= (c << 16) & 0xFFFFFF;
+  value |= (d << 24) & 0xFFFFFFFF;
+  return (float)value;
 }
 
 // called each time the chart settings are changed by the user 
