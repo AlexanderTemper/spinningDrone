@@ -44,25 +44,29 @@ class SimbleeDaten extends PApplet {
       if ((message = in.readLine()) != null) {
         String[] list = split(trim(message), " ");
         if (list.length >= 4 && list[0].equals("Att")) {
-            att[2] = float(list[1])/100;
-            att[1] = float(list[2])/100; 
-            att[0] = float(list[3])/100;
-            updateAttGraph();
+            attRaw[2] = float(list[1])/100;
+            attRaw[1] = float(list[2])/100; 
+            attRaw[0] = float(list[3])/100;
+            att.updateDiagramm(attRaw);
+            tofRaw[2] = float(list[1])/100;
+            tofRaw[1] = float(list[2])/100; 
+            tofRaw[0] = float(list[3])/100;
+            tof.updateDiagramm(tofRaw);
          } else if (list.length >= 4 && list[0].equals("Gyro")) {
-            gyro[0] = float(list[1])/1000;
-            gyro[1] = float(list[2])/1000; 
-            gyro[2] = float(list[3])/1000;
-            updateGyroGraph();
+            gyroRaw[0] = float(list[1])/1000;
+            gyroRaw[1] = float(list[2])/1000; 
+            gyroRaw[2] = float(list[3])/1000;
+            gyro.updateDiagramm(gyroRaw);
          } else if (list.length >= 4 && list[0].equals("Acc")) {
-            acc[0] = float(list[1])/1024;
-            acc[1] = float(list[2])/1024; 
-            acc[2] = float(list[3])/1024;
-            updateAccGraph();
+            accRaw[0] = float(list[1])/1024;
+            accRaw[1] = float(list[2])/1024; 
+            accRaw[2] = float(list[3])/1024;
+            acc.updateDiagramm(accRaw);
          } else if (list.length >= 4 && list[0].equals("Mag")) {
-            mag[0] = float(list[1])/16;
-            mag[1] = float(list[2])/16; 
-            mag[2] = float(list[3])/16;
-            updateMagGraph();
+            magRaw[0] = float(list[1])/16;
+            magRaw[1] = float(list[2])/16; 
+            magRaw[2] = float(list[3])/16;
+            mag.updateDiagramm(magRaw);
          }
       }
     }
