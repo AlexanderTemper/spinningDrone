@@ -94,7 +94,7 @@ void setup() {
   acc = new Sensor(0,height/3,(width/3)-90,height/3-40,-1.5,1.5,"Acc",graphColors,xLabel);
   mag = new Sensor(0,(2*height)/3,(width/3)-90,height/3-40,-50,50,"Mag",graphColors,xLabel);
   att = new Sensor((2*width/3)-80,0,(width/3)-90,height/3-40,-180,360,"Att",graphColors,xLabel);
-  tof = new Sensor((2*width/3)-80,height/2,(width/3)-90,height/3-40,-360,360,"Tof",graphColors,xLabel);
+  tof = new Sensor((2*width/3)-80,height/2,(width/3)-90,height/3-40,-100,100,"Tof",graphColors,xLabel);
 
   simblee = new SimbleeDaten();
   surface.setTitle("BMF055");

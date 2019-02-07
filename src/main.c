@@ -69,15 +69,6 @@ int main(void)
 	/************************** Infinite Loop *******************************/
 	while (true)
 	{
-		/* Process USART inputs */
-		if (USART_COMMAND_PROCESS_FLAG)
-		{
-			bmf055_usart_read_process(usart_rx_string[0]);
-			
-			/* Reset USART Flag */
-			USART_COMMAND_PROCESS_FLAG = false;
-		}
-
 		/* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
 		if (READ_SENSORS_FLAG)
 		{
@@ -172,7 +163,17 @@ enum status_code sendData(attitude_t *att,float gx,float gy,float gz,float ax, f
 		sensor_32 gyro;
 		sensor_32 acc;
 		sensor_32 mag;
-		static uint8_t buffer[60];
+		static uint8_t buffer[75];
+		static int32_t counter = 0;
+		counter ++;
+
+		if(counter > 100){
+			counter = 0;
+		}
+		sensor_32 tof;
+		tof.x = counter;
+		tof.y = -counter;
+		tof.z = 0;
 
 		gets32att(&att32, att);
 		toSensor(&gyro,gx*1000, gy*1000, gz*1000);
@@ -191,8 +192,11 @@ enum status_code sendData(attitude_t *att,float gx,float gy,float gz,float ax, f
 		memcpy(&buffer[45],"ABM",3);
 		memcpy(&buffer[48],(uint8_t *)&mag,sizeof(sensor_32));
 
+		memcpy(&buffer[60],"ABT",3);
+		memcpy(&buffer[63],(uint8_t *)&tof,sizeof(sensor_32));
+
 		usart_callback_transmit_flag = false;
-		return usart_write_buffer_job(&usart_instance, buffer,60);
+		return usart_write_buffer_job(&usart_instance, buffer,75);
 	}
 
 	return STATUS_BUSY;

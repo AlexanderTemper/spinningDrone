@@ -59,6 +59,11 @@ def sendData():
             y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
             z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
             send = "Mag %d %d %d \n" % (x,y,z)
+        elif inBuffer[0] == 84:#T
+            x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
+            y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
+            z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
+            send = "Tof %d %d %d \n" % (x,y,z)
         server.sendall(send)
 
 def handle_data(handle, value):

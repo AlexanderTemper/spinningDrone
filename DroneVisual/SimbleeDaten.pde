@@ -54,10 +54,6 @@ class SimbleeDaten extends PApplet {
             attRaw[1] = float(list[2])/100; 
             attRaw[0] = float(list[3])/100;
             att.updateDiagramm(attRaw);
-            tofRaw[2] = float(list[1])/100;
-            tofRaw[1] = float(list[2])/100; 
-            tofRaw[0] = float(list[3])/100;
-            tof.updateDiagramm(tofRaw);
          } else if (list.length >= 4 && list[0].equals("Gyro")) {
             gyroRaw[0] = float(list[1])/1000;
             gyroRaw[1] = float(list[2])/1000; 
@@ -73,6 +69,11 @@ class SimbleeDaten extends PApplet {
             magRaw[1] = float(list[2])/16; 
             magRaw[2] = float(list[3])/16;
             mag.updateDiagramm(magRaw);
+         }else if (list.length >= 4 && list[0].equals("Tof")) {
+            tofRaw[0] = float(list[1]);
+            tofRaw[1] = float(list[2]); 
+            tofRaw[2] = float(list[3]);
+            tof.updateDiagramm(tofRaw);
          } else if(list[0].equals("end")){
            println("Client closed connection");
            closed=true;

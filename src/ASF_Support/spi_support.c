@@ -102,16 +102,16 @@ void spi_configure_master(void)
 	/* set SPI Baudrate*/
 	config_spi_master.mode_specific.master.baudrate = SPI_BAUDRATE;
 	/* Configure pad 0 for data out (MOSI) */
-	config_spi_master.pinmux_pad0 = SERCOM3_PAD0_DEFAULT;
+	config_spi_master.pinmux_pad0 = PINMUX_PA16C_SERCOM1_PAD0;
 	/* Configure pad 1 as clock (SCKL) */
-	config_spi_master.pinmux_pad1 = SERCOM3_PAD1_DEFAULT;
+	config_spi_master.pinmux_pad1 = PINMUX_PA17C_SERCOM1_PAD1;
 	/* Configure pad 2 for unused */
 	config_spi_master.pinmux_pad2 = PINMUX_UNUSED;
 	/* Configure pad 3 for data in (MISO) */
-	config_spi_master.pinmux_pad3 = SERCOM3_PAD3_DEFAULT;
+	config_spi_master.pinmux_pad3 = PINMUX_PA19C_SERCOM1_PAD3;
 	
-	/* initialize SERCOM3 as an SPI master */
-	spi_init(&spi_master_instance, SERCOM3, &config_spi_master);
+	/* initialize SERCOM1 as an SPI master */
+	spi_init(&spi_master_instance, SERCOM1, &config_spi_master);
 	/* enable the SPI module */
 	spi_enable(&spi_master_instance);
 }
