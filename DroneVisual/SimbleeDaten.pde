@@ -3,30 +3,36 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.awt.Frame;
 
 class SimbleeDaten extends PApplet {
   private ServerSocket server;
+  private boolean closed = true;
   SimbleeDaten() {
     super();
     PApplet.runSketch(new String[] {this.getClass().getSimpleName()}, this);
   }
-
-  void settings() {
   
-  }
-
   void setup() {
     try{
       this.server = new ServerSocket(65432, 1, InetAddress.getByName("127.0.0.1"));
-      System.out.println("\r\nRunning Server:");
-      this.listen();
+      System.out.println("\rServer is running");
     }catch( Exception e){
-      println("Server geht ned");
+      println("server creation error");
     }
+    this.surface.setVisible(false);
   }
-
+  
   void draw() {
-   this.processTCP();
+    if(closed){
+      try{
+        this.listen();
+        closed = false;
+      }catch( Exception e){
+        println("client connection error");
+      }
+    }
+    this.processTCP();
   }
   
   private void listen() throws Exception {
@@ -37,7 +43,7 @@ class SimbleeDaten extends PApplet {
     in = new BufferedReader(new InputStreamReader(client.getInputStream(),"UTF-8"));   
   }
   
-  void processTCP(){
+  private void processTCP(){
     try
     {
       String message = null;
@@ -67,10 +73,12 @@ class SimbleeDaten extends PApplet {
             magRaw[1] = float(list[2])/16; 
             magRaw[2] = float(list[3])/16;
             mag.updateDiagramm(magRaw);
+         } else if(list[0].equals("end")){
+           println("Client closed connection");
+           closed=true;
          }
       }
     }
     catch (Exception e){}
   }
-
 }

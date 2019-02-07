@@ -106,7 +106,9 @@ try:
         
 except KeyboardInterrupt:
     print('kill signal')
-    
+ 
 finally:
+    print('sinding end to Server')
+    server.sendall("end\n")
     print('Adapter Stop')
     adapter.stop()
