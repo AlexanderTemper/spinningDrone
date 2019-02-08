@@ -78,6 +78,7 @@
 
 #include "clock_support.h"
 #include "spi_support.h"
+#include "i2c_support.h"
 #include "tc_support.h"
 #include "usart_support.h"
 
@@ -111,7 +112,7 @@ typedef enum usart_input_state_type
 /* Macro Definitions                                                    */
 /************************************************************************/
 
-/*! Sensors’ data are read in accordance with TC6 callback. */
+/*! Sensorsï¿½ data are read in accordance with TC6 callback. */
 #define READ_SENSORS_FLAG				tc6_callback_flag
 /*! USART command process is executed in accordance with USART receive callback. */
 #define USART_COMMAND_PROCESS_FLAG		usart_callback_receive_flag

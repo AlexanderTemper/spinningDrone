@@ -16,9 +16,9 @@ ASF_INC_PATH = \
 	$(ASF_PATH)/sam0/drivers/system/interrupt/system_interrupt_samd20 \
 	$(ASF_PATH)/sam0/drivers/system/pinmux                         \
 	$(ASF_PATH)/sam0/drivers/system/power                          \
-	$(ASF_PATH)/sam0/drivers/system/power/power_sam_d_r            \
+	$(ASF_PATH)/sam0/drivers/system/power/power_sam_d_r_h          \
 	$(ASF_PATH)/sam0/drivers/system/reset                          \
-	$(ASF_PATH)/sam0/drivers/system/reset/reset_sam_d_r            \
+	$(ASF_PATH)/sam0/drivers/system/reset/reset_sam_d_r_h          \
 	$(ASF_PATH)/sam0/drivers/port                                  \
 	$(ASF_PATH)/sam0/drivers/sercom                                \
 	$(ASF_PATH)/sam0/drivers/sercom/spi                            \
@@ -56,7 +56,7 @@ ASF_CSRCS = \
 	$(ASF_PATH)/sam0/drivers/system/interrupt/system_interrupt.c   \
 	$(ASF_PATH)/sam0/drivers/system/pinmux/pinmux.c                \
 	$(ASF_PATH)/sam0/drivers/system/system.c                       \
-	$(ASF_PATH)/sam0/drivers/tc/tc_sam_d_r/tc.c                    \
+	$(ASF_PATH)/sam0/drivers/tc/tc_sam_d_r_h/tc.c                  \
 	$(ASF_PATH)/sam0/drivers/tc/tc_interrupt.c                     \
 	$(ASF_PATH)/sam0/services/eeprom/emulator/main_array/eeprom.c  \
 	$(ASF_PATH)/sam0/utils/syscalls/gcc/syscalls.c                 \

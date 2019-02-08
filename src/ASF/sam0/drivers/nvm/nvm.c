@@ -3,45 +3,35 @@
  *
  * \brief SAM Non Volatile Memory driver
  *
- * Copyright (C) 2012-2015 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2012-2018 Microchip Technology Inc. and its subsidiaries.
  *
  * \asf_license_start
  *
  * \page License
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * Subject to your compliance with these terms, you may use Microchip
+ * software and any derivatives exclusively with Microchip products.
+ * It is your responsibility to comply with third party license terms applicable
+ * to your use of third party software (including open source software) that
+ * may accompany Microchip software.
  *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * 3. The name of Atmel may not be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * 4. This software may only be redistributed and used in connection with an
- *    Atmel microcontroller product.
- *
- * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
- * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES,
+ * WHETHER EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE,
+ * INCLUDING ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY,
+ * AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT WILL MICROCHIP BE
+ * LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, INCIDENTAL OR CONSEQUENTIAL
+ * LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND WHATSOEVER RELATED TO THE
+ * SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS BEEN ADVISED OF THE
+ * POSSIBILITY OR THE DAMAGES ARE FORESEEABLE.  TO THE FULLEST EXTENT
+ * ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN ANY WAY
+ * RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
+ * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
  *
  * \asf_license_stop
  *
  */
 /*
- * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
 #include "nvm.h"
 #include <system.h>
@@ -84,7 +74,7 @@ static struct _nvm_module _nvm_dev;
 /**
  * \brief Sets the up the NVM hardware module based on the configuration.
  *
- * Writes a given configuration of a NVM controller configuration to the
+ * Writes a given configuration of an NVM controller configuration to the
  * hardware module, and initializes the internal device struct.
  *
  * \param[in] config    Configuration settings for the NVM controller
@@ -109,7 +99,7 @@ enum status_code nvm_set_config(
 	/* Get a pointer to the module hardware instance */
 	Nvmctrl *const nvm_module = NVMCTRL;
 
-#if (SAML21) || (SAMC20) || (SAMC21)
+#if (SAML21) || (SAML22) || (SAMC20) || (SAMC21) || (SAMR30)
 	/* Turn on the digital interface clock */
 	system_apb_clock_set_mask(SYSTEM_CLOCK_APB_APBB, MCLK_APBBMASK_NVMCTRL);
 #else
@@ -118,7 +108,7 @@ enum status_code nvm_set_config(
 #endif
 
 	/* Clear error flags */
-	nvm_module->STATUS.reg |= NVMCTRL_STATUS_MASK;
+	nvm_module->STATUS.reg = NVMCTRL_STATUS_MASK;
 
 	/* Check if the module is busy */
 	if (!nvm_is_ready()) {
@@ -166,7 +156,7 @@ enum status_code nvm_set_config(
  * \brief Executes a command on the NVM controller.
  *
  * Executes an asynchronous command on the NVM controller, to perform a requested
- * action such as a NVM page read or write operation.
+ * action such as an NVM page read or write operation.
  *
  * \note The function will return before the execution of the given command is
  *       completed.
@@ -195,7 +185,7 @@ enum status_code nvm_execute_command(
 		const uint32_t address,
 		const uint32_t parameter)
 {
-	uint32_t temp;
+	uint32_t ctrlb_bak;
 
 	/* Check that the address given is valid  */
 	if (address > ((uint32_t)_nvm_dev.page_size * _nvm_dev.number_of_pages)
@@ -213,20 +203,22 @@ enum status_code nvm_execute_command(
 	/* Get a pointer to the module hardware instance */
 	Nvmctrl *const nvm_module = NVMCTRL;
 
-	/* turn off cache before issuing flash commands */
-	temp = nvm_module->CTRLB.reg;
+	/* Turn off cache before issuing flash commands */
+	ctrlb_bak = nvm_module->CTRLB.reg;
 #if (SAMC20) || (SAMC21)
-	nvm_module->CTRLB.reg = ((temp &(~(NVMCTRL_CTRLB_CACHEDIS(0x2)))) 
+	nvm_module->CTRLB.reg = ((ctrlb_bak &(~(NVMCTRL_CTRLB_CACHEDIS(0x2))))
 							| NVMCTRL_CTRLB_CACHEDIS(0x1));
 #else
-	nvm_module->CTRLB.reg = temp | NVMCTRL_CTRLB_CACHEDIS;
+	nvm_module->CTRLB.reg = ctrlb_bak | NVMCTRL_CTRLB_CACHEDIS;
 #endif
 
 	/* Clear error flags */
-	nvm_module->STATUS.reg |= NVMCTRL_STATUS_MASK;
+	nvm_module->STATUS.reg = NVMCTRL_STATUS_MASK;
 
 	/* Check if the module is busy */
 	if (!nvm_is_ready()) {
+		/* Restore the setting */
+		nvm_module->CTRLB.reg = ctrlb_bak;
 		return STATUS_BUSY;
 	}
 
@@ -238,6 +230,8 @@ enum status_code nvm_execute_command(
 
 			/* Auxiliary space cannot be accessed if the security bit is set */
 			if (nvm_module->STATUS.reg & NVMCTRL_STATUS_SB) {
+				/* Restore the setting */
+				nvm_module->CTRLB.reg = ctrlb_bak;
 				return STATUS_ERR_IO;
 			}
 
@@ -267,6 +261,8 @@ enum status_code nvm_execute_command(
 			break;
 
 		default:
+			/* Restore the setting */
+			nvm_module->CTRLB.reg = ctrlb_bak;
 			return STATUS_ERR_INVALID_ARG;
 	}
 
@@ -277,8 +273,8 @@ enum status_code nvm_execute_command(
 	while (!nvm_is_ready()) {
 	}
 
-	/* restore the setting */
-	nvm_module->CTRLB.reg = temp;
+	/* Restore the setting */
+	nvm_module->CTRLB.reg = ctrlb_bak;
 
 	return STATUS_OK;
 }
@@ -289,7 +285,7 @@ enum status_code nvm_execute_command(
  * Writes from a buffer to a given page in the NVM memory, retaining any
  * unmodified data already stored in the page.
  *
- * \note If manual write mode is enable, write command must be executed after
+ * \note If manual write mode is enable, the write command must be executed after
  * this function, otherwise the data will not write to NVM from page buffer.
  *
  * \warning This routine is unsafe if data integrity is critical; a system reset
@@ -449,7 +445,7 @@ enum status_code nvm_write_buffer(
 		return STATUS_ERR_BAD_ADDRESS;
 	}
 
-	/* Check if the write length is longer than a NVM page */
+	/* Check if the write length is longer than an NVM page */
 	if (length > _nvm_dev.page_size) {
 		return STATUS_ERR_INVALID_ARG;
 	}
@@ -471,7 +467,7 @@ enum status_code nvm_write_buffer(
 	}
 
 	/* Clear error flags */
-	nvm_module->STATUS.reg |= NVMCTRL_STATUS_MASK;
+	nvm_module->STATUS.reg = NVMCTRL_STATUS_MASK;
 
 	uint32_t nvm_address = destination_address / 2;
 
@@ -555,7 +551,7 @@ enum status_code nvm_read_buffer(
 		return STATUS_ERR_BAD_ADDRESS;
 	}
 
-	/* Check if the write length is longer than a NVM page */
+	/* Check if the write length is longer than an NVM page */
 	if (length > _nvm_dev.page_size) {
 		return STATUS_ERR_INVALID_ARG;
 	}
@@ -569,7 +565,7 @@ enum status_code nvm_read_buffer(
 	}
 
 	/* Clear error flags */
-	nvm_module->STATUS.reg |= NVMCTRL_STATUS_MASK;
+	nvm_module->STATUS.reg = NVMCTRL_STATUS_MASK;
 
 	uint32_t page_address = source_address / 2;
 
@@ -608,6 +604,7 @@ enum status_code nvm_read_buffer(
  * \retval STATUS_ERR_BAD_ADDRESS  The requested row address was outside the
  *                                 acceptable range of the NVM memory region or
  *                                 not aligned to the start of a row
+ * \retval STATUS_ABORTED          NVM erased error
  */
 enum status_code nvm_erase_row(
 		const uint32_t row_address)
@@ -644,7 +641,7 @@ enum status_code nvm_erase_row(
 	}
 
 	/* Clear error flags */
-	nvm_module->STATUS.reg |= NVMCTRL_STATUS_MASK;
+	nvm_module->STATUS.reg = NVMCTRL_STATUS_MASK;
 
 	/* Set address and command */
 	nvm_module->ADDR.reg  = (uintptr_t)&NVM_MEMORY[row_address / 4];
@@ -664,6 +661,11 @@ enum status_code nvm_erase_row(
 #endif
 
 	while (!nvm_is_ready()) {
+	}
+
+	/* There existed error in NVM erase operation */
+	if ((enum nvm_error)(nvm_module->STATUS.reg & NVM_ERRORS_MASK) != NVM_ERROR_NONE) {
+		return STATUS_ABORTED;
 	}
 
 	return STATUS_OK;
@@ -688,7 +690,7 @@ void nvm_get_parameters(
 	Nvmctrl *const nvm_module = NVMCTRL;
 
 	/* Clear error flags */
-	nvm_module->STATUS.reg |= NVMCTRL_STATUS_MASK;
+	nvm_module->STATUS.reg = NVMCTRL_STATUS_MASK;
 
 	/* Read out from the PARAM register */
 	uint32_t param_reg = nvm_module->PARAM.reg;
@@ -792,7 +794,7 @@ static void _nvm_translate_raw_fusebits_to_struct (
 			((raw_user_row[0] & NVMCTRL_FUSES_EEPROM_SIZE_Msk)
 			>> NVMCTRL_FUSES_EEPROM_SIZE_Pos);
 
-#if (SAML21)
+#if (SAML21) || (SAML22) || (SAMR30)
 	fusebits->bod33_level = (uint8_t)
 			((raw_user_row[0] & FUSES_BOD33USERLEVEL_Msk)
 			>> FUSES_BOD33USERLEVEL_Pos);
@@ -809,7 +811,7 @@ static void _nvm_translate_raw_fusebits_to_struct (
 			((raw_user_row[1] & FUSES_BOD33_HYST_Msk)
 			>> FUSES_BOD33_HYST_Pos);
 
-#elif (SAMD20) || (SAMD21) || (SAMR21)|| (SAMDA1)
+#elif (SAMD20) || (SAMD21) || (SAMR21)|| (SAMDA1) || (SAMD09) || (SAMD10) || (SAMD11) || (SAMHA1) || (SAMHA0)
 	fusebits->bod33_level = (uint8_t)
 			((raw_user_row[0] & FUSES_BOD33USERLEVEL_Msk)
 			>> FUSES_BOD33USERLEVEL_Pos);
@@ -839,23 +841,6 @@ static void _nvm_translate_raw_fusebits_to_struct (
 
 	fusebits->bodvdd_hysteresis = (raw_user_row[1] & FUSES_BODVDD_HYST_Msk)
 									>> FUSES_BODVDD_HYST_Pos;
-#else
-	fusebits->bod33_level = (uint8_t)
-				((raw_user_row[0] & SYSCTRL_FUSES_BOD33USERLEVEL_Msk)
-				>> SYSCTRL_FUSES_BOD33USERLEVEL_Pos);
-
-	fusebits->bod33_enable = (bool)
-			((raw_user_row[0] & SYSCTRL_FUSES_BOD33_EN_Msk)
-			>> SYSCTRL_FUSES_BOD33_EN_Pos);
-
-	fusebits->bod33_action = (enum nvm_bod33_action)
-			((raw_user_row[0] & SYSCTRL_FUSES_BOD33_ACTION_Msk)
-			>> SYSCTRL_FUSES_BOD33_ACTION_Pos);
-
-	fusebits->bod33_hysteresis = (bool)
-			((raw_user_row[1] & SYSCTRL_FUSES_BOD33_HYST_Msk)
-			>> SYSCTRL_FUSES_BOD33_HYST_Pos);
-
 #endif
 
 #ifdef FEATURE_BOD12
@@ -872,7 +857,7 @@ static void _nvm_translate_raw_fusebits_to_struct (
 #define FUSES_BOD12_ACTION_Pos 24
 #define FUSES_BOD12_ACTION_Msk (0x3ul << FUSES_BOD12_ACTION_Pos)
 #endif
-	
+
 	fusebits->bod12_level = (uint8_t)
 			((raw_user_row[0] & FUSES_BOD12USERLEVEL_Msk)
 			>> FUSES_BOD12USERLEVEL_Pos);
@@ -899,7 +884,7 @@ static void _nvm_translate_raw_fusebits_to_struct (
 	fusebits->wdt_timeout_period = (uint8_t)
 			((raw_user_row[0] & WDT_FUSES_PER_Msk) >> WDT_FUSES_PER_Pos);
 
-#if (SAML21) || (SAMC20) || (SAMC21)
+#if (SAML21) || (SAML22) || (SAMC20) || (SAMC21) || (SAMR30)
 	fusebits->wdt_window_timeout = (enum nvm_wdt_window_timeout)
 			((raw_user_row[1] & WDT_FUSES_WINDOW_Msk) >> WDT_FUSES_WINDOW_Pos);
 #else
@@ -998,7 +983,7 @@ enum status_code nvm_set_fuses(struct nvm_fusebits *fb)
 	fusebits[0] &= (~NVMCTRL_FUSES_EEPROM_SIZE_Msk);
 	fusebits[0] |= NVMCTRL_FUSES_EEPROM_SIZE(fb->eeprom_size);
 
-#if (SAML21)
+#if (SAML21) || (SAML22) || (SAMR30)
 	fusebits[0] &= (~FUSES_BOD33USERLEVEL_Msk);
 	fusebits[0] |= FUSES_BOD33USERLEVEL(fb->bod33_level);
 
@@ -1011,7 +996,7 @@ enum status_code nvm_set_fuses(struct nvm_fusebits *fb)
 	fusebits[1] &= (~FUSES_BOD33_HYST_Msk);
 	fusebits[1] |= fb->bod33_hysteresis << FUSES_BOD33_HYST_Pos;
 
-#elif (SAMD20) || (SAMD21) || (SAMR21) || (SAMDA1)
+#elif (SAMD20) || (SAMD21) || (SAMR21) || (SAMDA1) || (SAMD09) || (SAMD10) || (SAMD11) || (SAMHA1) || (SAMHA0)
 	fusebits[0] &= (~FUSES_BOD33USERLEVEL_Msk);
 	fusebits[0] |= FUSES_BOD33USERLEVEL(fb->bod33_level);
 
@@ -1037,19 +1022,6 @@ enum status_code nvm_set_fuses(struct nvm_fusebits *fb)
 	fusebits[1] &= (~FUSES_BODVDD_HYST_Msk);
 	fusebits[1] |= fb->bodvdd_hysteresis << FUSES_BODVDD_HYST_Pos;
 
-#else
-	fusebits[0] &= (~SYSCTRL_FUSES_BOD33USERLEVEL_Msk);
-	fusebits[0] |= SYSCTRL_FUSES_BOD33USERLEVEL(fb->bod33_level);
-
-	fusebits[0] &= (~SYSCTRL_FUSES_BOD33_EN_Msk);
-	fusebits[0] |= (fb->bod33_enable) << SYSCTRL_FUSES_BOD33_EN_Pos;
-
-	fusebits[0] &= (~SYSCTRL_FUSES_BOD33_ACTION_Msk);
-	fusebits[0] |= fb->bod33_action << SYSCTRL_FUSES_BOD33_ACTION_Pos;
-
-	fusebits[1] &= (~SYSCTRL_FUSES_BOD33_HYST_Msk);
-	fusebits[1] |= fb->bod33_hysteresis << SYSCTRL_FUSES_BOD33_HYST_Pos;
-
 #endif
 
 	fusebits[0] &= (~WDT_FUSES_ENABLE_Msk);
@@ -1061,7 +1033,7 @@ enum status_code nvm_set_fuses(struct nvm_fusebits *fb)
 	fusebits[0] &= (~WDT_FUSES_PER_Msk);
 	fusebits[0] |= fb->wdt_timeout_period << WDT_FUSES_PER_Pos;
 
-#if (SAML21) || (SAMC20) || (SAMC21)
+#if (SAML21) || (SAML22) || (SAMC20) || (SAMC21) || (SAMR30)
 	fusebits[1] &= (~WDT_FUSES_WINDOW_Msk);
 	fusebits[1] |= fb->wdt_window_timeout << WDT_FUSES_WINDOW_Pos;
 #else
@@ -1084,7 +1056,7 @@ enum status_code nvm_set_fuses(struct nvm_fusebits *fb)
 	fusebits[1] |= fb->lockbits << NVMCTRL_FUSES_REGION_LOCKS_Pos;
 
 #ifdef FEATURE_BOD12
-	
+
 #ifndef FUSES_BOD12USERLEVEL_Pos
 #define FUSES_BOD12USERLEVEL_Pos 17
 #define FUSES_BOD12USERLEVEL_Msk (0x3Ful << FUSES_BOD12USERLEVEL_Pos)
@@ -1097,9 +1069,9 @@ enum status_code nvm_set_fuses(struct nvm_fusebits *fb)
 #define FUSES_BOD12_ACTION_Pos 24
 #define FUSES_BOD12_ACTION_Msk (0x3ul << FUSES_BOD12_ACTION_Pos)
 #endif
-		
+
 	fusebits[0] &= (~FUSES_BOD12USERLEVEL_Msk);
-	fusebits[0] |= ((FUSES_BOD12USERLEVEL_Msk & ((fb->bod33_level) << 
+	fusebits[0] |= ((FUSES_BOD12USERLEVEL_Msk & ((fb->bod12_level) <<
 						FUSES_BOD12USERLEVEL_Pos)));
 
 	fusebits[0] &= (~FUSES_BOD12_DIS_Msk);

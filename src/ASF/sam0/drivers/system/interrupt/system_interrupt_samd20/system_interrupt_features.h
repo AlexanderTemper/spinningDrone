@@ -3,45 +3,35 @@
  *
  * \brief SAM D20 System Interrupt Driver
  *
- * Copyright (C) 2013-2015 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2013-2018 Microchip Technology Inc. and its subsidiaries.
  *
  * \asf_license_start
  *
  * \page License
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * Subject to your compliance with these terms, you may use Microchip
+ * software and any derivatives exclusively with Microchip products.
+ * It is your responsibility to comply with third party license terms applicable
+ * to your use of third party software (including open source software) that
+ * may accompany Microchip software.
  *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * 3. The name of Atmel may not be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * 4. This software may only be redistributed and used in connection with an
- *    Atmel microcontroller product.
- *
- * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
- * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES,
+ * WHETHER EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE,
+ * INCLUDING ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY,
+ * AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT WILL MICROCHIP BE
+ * LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, INCIDENTAL OR CONSEQUENTIAL
+ * LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND WHATSOEVER RELATED TO THE
+ * SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS BEEN ADVISED OF THE
+ * POSSIBILITY OR THE DAMAGES ARE FORESEEABLE.  TO THE FULLEST EXTENT
+ * ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN ANY WAY
+ * RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
+ * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
  *
  * \asf_license_stop
  *
  */
 /*
- * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
 
 #ifndef SYSTEM_INTERRUPT_FEATURES_H_INCLUDED
@@ -76,7 +66,7 @@
  * \brief Table of possible system interrupt/exception vector numbers.
  *
  * Table of all possible interrupt and exception vector indexes within the
- * SAMD20 device.
+ * SAM D20 device.
  */
 #if defined(__DOXYGEN__)
 /** \note The actual enumeration name is "system_interrupt_vector". */
@@ -84,30 +74,30 @@ enum system_interrupt_vector_samd20 {
 #else
 enum system_interrupt_vector {
 #endif
-	/** Interrupt vector index for a NMI interrupt. */
+	/** Interrupt vector index for a NMI interrupt */
 	SYSTEM_INTERRUPT_NON_MASKABLE      = NonMaskableInt_IRQn,
-	/** Interrupt vector index for a Hard Fault memory access exception. */
+	/** Interrupt vector index for a Hard Fault memory access exception */
 	SYSTEM_INTERRUPT_HARD_FAULT        = HardFault_IRQn,
-	/** Interrupt vector index for a Supervisor Call exception. */
+	/** Interrupt vector index for a Supervisor Call exception */
 	SYSTEM_INTERRUPT_SV_CALL           = SVCall_IRQn,
-	/** Interrupt vector index for a Pending Supervisor interrupt. */
+	/** Interrupt vector index for a Pending Supervisor interrupt */
 	SYSTEM_INTERRUPT_PENDING_SV        = PendSV_IRQn,
-	/** Interrupt vector index for a System Tick interrupt. */
+	/** Interrupt vector index for a System Tick interrupt */
 	SYSTEM_INTERRUPT_SYSTICK           = SysTick_IRQn,
 
-	/** Interrupt vector index for a Power Manager peripheral interrupt. */
+	/** Interrupt vector index for a Power Manager peripheral interrupt */
 	SYSTEM_INTERRUPT_MODULE_PM         = PM_IRQn,
-	/** Interrupt vector index for a System Control peripheral interrupt. */
+	/** Interrupt vector index for a System Control peripheral interrupt */
 	SYSTEM_INTERRUPT_MODULE_SYSCTRL    = SYSCTRL_IRQn,
-	/** Interrupt vector index for a Watch Dog peripheral interrupt. */
+	/** Interrupt vector index for a Watch Dog peripheral interrupt */
 	SYSTEM_INTERRUPT_MODULE_WDT        = WDT_IRQn,
-	/** Interrupt vector index for a Real Time Clock peripheral interrupt. */
+	/** Interrupt vector index for a Real Time Clock peripheral interrupt */
 	SYSTEM_INTERRUPT_MODULE_RTC        = RTC_IRQn,
-	/** Interrupt vector index for an External Interrupt peripheral interrupt. */
+	/** Interrupt vector index for an External Interrupt peripheral interrupt */
 	SYSTEM_INTERRUPT_MODULE_EIC        = EIC_IRQn,
-	/** Interrupt vector index for a Non Volatile Memory Controller interrupt. */
+	/** Interrupt vector index for a Non Volatile Memory Controller interrupt */
 	SYSTEM_INTERRUPT_MODULE_NVMCTRL    = NVMCTRL_IRQn,
-	/** Interrupt vector index for an Event System interrupt. */
+	/** Interrupt vector index for an Event System interrupt */
 	SYSTEM_INTERRUPT_MODULE_EVSYS      = EVSYS_IRQn,
 #if defined(__DOXYGEN__)
 	/** Interrupt vector index for a SERCOM peripheral interrupt.
@@ -130,11 +120,11 @@ enum system_interrupt_vector {
 	_SYSTEM_INTERRUPT_MODULES(SERCOM)
 	_SYSTEM_INTERRUPT_MODULES(TC)
 #endif
-	/** Interrupt vector index for an Analog Comparator peripheral interrupt. */
+	/** Interrupt vector index for an Analog Comparator peripheral interrupt */
 	SYSTEM_INTERRUPT_MODULE_AC         = AC_IRQn,
-	/** Interrupt vector index for an Analog-to-Digital peripheral interrupt. */
+	/** Interrupt vector index for an Analog-to-Digital peripheral interrupt */
 	SYSTEM_INTERRUPT_MODULE_ADC        = ADC_IRQn,
-	/** Interrupt vector index for a Digital-to-Analog peripheral interrupt. */
+	/** Interrupt vector index for a Digital-to-Analog peripheral interrupt */
 	SYSTEM_INTERRUPT_MODULE_DAC        = DAC_IRQn,
 };
 

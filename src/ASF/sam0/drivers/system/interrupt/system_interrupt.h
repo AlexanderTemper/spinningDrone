@@ -3,45 +3,35 @@
  *
  * \brief SAM System Interrupt Driver
  *
- * Copyright (C) 2012-2015 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2012-2018 Microchip Technology Inc. and its subsidiaries.
  *
  * \asf_license_start
  *
  * \page License
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * Subject to your compliance with these terms, you may use Microchip
+ * software and any derivatives exclusively with Microchip products.
+ * It is your responsibility to comply with third party license terms applicable
+ * to your use of third party software (including open source software) that
+ * may accompany Microchip software.
  *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * 3. The name of Atmel may not be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * 4. This software may only be redistributed and used in connection with an
- *    Atmel microcontroller product.
- *
- * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
- * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES,
+ * WHETHER EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE,
+ * INCLUDING ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY,
+ * AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT WILL MICROCHIP BE
+ * LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, INCIDENTAL OR CONSEQUENTIAL
+ * LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND WHATSOEVER RELATED TO THE
+ * SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS BEEN ADVISED OF THE
+ * POSSIBILITY OR THE DAMAGES ARE FORESEEABLE.  TO THE FULLEST EXTENT
+ * ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN ANY WAY
+ * RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
+ * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
  *
  * \asf_license_stop
  *
  */
 /*
- * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
 #ifndef SYSTEM_INTERRUPT_H_INCLUDED
 #define SYSTEM_INTERRUPT_H_INCLUDED
@@ -51,21 +41,23 @@ extern "C" {
 #endif
 
 /**
- * \defgroup asfdoc_sam0_system_interrupt_group SAM System Interrupt Driver (SYSTEM INTERRUPT)
+ * \defgroup asfdoc_sam0_system_interrupt_group SAM System Interrupt (SYSTEM INTERRUPT) Driver
  *
- * This driver for Atmel&reg; | SMART SAM devices provides an interface for the configuration
- * and management of internal software and hardware interrupts/exceptions.
+ * This driver for Atmel&reg; | SMART ARM&reg;-based microcontrollers provides
+ * an interface for the configuration and management of internal software and
+ * hardware interrupts/exceptions.
  *
- * The following peripherals are used by this module:
+ * The following peripheral is used by this module:
  *  - NVIC (Nested Vector Interrupt Controller)
  *
  * The following devices can use this module:
  *  - Atmel | SMART SAM D20/D21
  *  - Atmel | SMART SAM R21
- *  - Atmel | SMART SAM D10/D11
- *  - Atmel | SMART SAM L21
- *  - Atmel | SMART SAM DAx
+ *  - Atmel | SMART SAM D09/D10/D11
+ *  - Atmel | SMART SAM L21/L22
+ *  - Atmel | SMART SAM DA1
  *  - Atmel | SMART SAM C20/C21
+ *  - Atmel | SMART SAM HA1
  *
  * The outline of this documentation is as follows:
  *  - \ref asfdoc_sam0_system_interrupt_prerequisites
@@ -143,13 +135,13 @@ extern "C" {
  * device.
  */
 enum system_interrupt_priority_level {
-	/** Priority level 0, the highest possible interrupt priority. */
+	/** Priority level 0, the highest possible interrupt priority */
 	SYSTEM_INTERRUPT_PRIORITY_LEVEL_0  = 0,
-	/** Priority level 1. */
+	/** Priority level 1 */
 	SYSTEM_INTERRUPT_PRIORITY_LEVEL_1  = 1,
-	/** Priority level 2. */
+	/** Priority level 2 */
 	SYSTEM_INTERRUPT_PRIORITY_LEVEL_2  = 2,
-	/** Priority level 3, the lowest possible interrupt priority. */
+	/** Priority level 3, the lowest possible interrupt priority */
 	SYSTEM_INTERRUPT_PRIORITY_LEVEL_3  = 3,
 };
 
@@ -379,7 +371,7 @@ enum system_interrupt_priority_level system_interrupt_get_priority(
  * This is a list of the available Quick Start guides (QSGs) and example
  * applications for \ref asfdoc_sam0_system_interrupt_group. QSGs are simple examples with
  * step-by-step instructions to configure and use this driver in a selection of
- * use cases. Note that QSGs can be compiled as a standalone application or be
+ * use cases. Note that a QSG can be compiled as a standalone application or be
  * added to the user application.
  *
  *  - \subpage asfdoc_sam0_system_interrupt_critsec_use_case
@@ -389,32 +381,32 @@ enum system_interrupt_priority_level system_interrupt_get_priority(
  *
  * <table>
  *	<tr>
- *		<th>Doc. Rev.</td>
- *		<th>Date</td>
- *		<th>Comments</td>
+ *		<th>Doc. Rev.</th>
+ *		<th>Date</th>
+ *		<th>Comments</th>
  *	</tr>
  *	<tr>
- *		<td>E</td>
- *		<td>06/2015</td>
- *		<td>Add support for SAML21, SAMDAx, and SAMC20/C21.</td>
+ *		<td>42122E</td>
+ *		<td>12/2015</td>
+ *		<td>Added support for SAM L21/L22, SAM DA1, SAM D09, and SAM C20/C21</td>
  *	</tr>
  *	<tr>
- *		<td>D</td>
+ *		<td>42122D</td>
  *		<td>12/2014</td>
- *		<td>Add support for SAMR21 and SAMD10/D11.</td>
+ *		<td>Added support for SAM R21 and SAM D10/D11</td>
  *	</tr>
  *	<tr>
- *		<td>C</td>
+ *		<td>42122C</td>
  *		<td>01/2014</td>
- *		<td>Add support for SAMD21.</td>
+ *		<td>Added support for SAM D21</td>
  *	</tr>
  *	<tr>
- *		<td>B</td>
+ *		<td>42122B</td>
  *		<td>06/2013</td>
- *		<td>Corrected documentation typos.</td>
+ *		<td>Corrected documentation typos</td>
  *	</tr>
  *	<tr>
- *		<td>A</td>
+ *		<td>42122A</td>
  *		<td>06/2013</td>
  *		<td>Initial release</td>
  *	</tr>

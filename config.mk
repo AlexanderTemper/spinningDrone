@@ -43,7 +43,8 @@ LIB_PATH = src/ASF/thirdparty/CMSIS/Lib/GCC
 # List of libraries to use during linking.
 LIBS =  arm_cortexM0l_math                                
 
-       
+# Project type parameter: all, sram or flash
+PROJECT_TYPE        = flash 
 # Additional options for debugging. By default the common Makefile.in will
 # add -g3.
 DBGFLAGS = 

@@ -3,45 +3,35 @@
  *
  * \brief SAM SERCOM USART Driver
  *
- * Copyright (C) 2012-2015 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2012-2018 Microchip Technology Inc. and its subsidiaries.
  *
  * \asf_license_start
  *
  * \page License
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * Subject to your compliance with these terms, you may use Microchip
+ * software and any derivatives exclusively with Microchip products.
+ * It is your responsibility to comply with third party license terms applicable
+ * to your use of third party software (including open source software) that
+ * may accompany Microchip software.
  *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * 3. The name of Atmel may not be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * 4. This software may only be redistributed and used in connection with an
- *    Atmel microcontroller product.
- *
- * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
- * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES,
+ * WHETHER EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE,
+ * INCLUDING ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY,
+ * AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT WILL MICROCHIP BE
+ * LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, INCIDENTAL OR CONSEQUENTIAL
+ * LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND WHATSOEVER RELATED TO THE
+ * SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS BEEN ADVISED OF THE
+ * POSSIBILITY OR THE DAMAGES ARE FORESEEABLE.  TO THE FULLEST EXTENT
+ * ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN ANY WAY
+ * RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
+ * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
  *
  * \asf_license_stop
  *
  */
 /*
- * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
 #include "usart.h"
 #include <pinmux.h>
@@ -71,7 +61,11 @@ static enum status_code _usart_set_config(
 	/* Cache new register values to minimize the number of register writes */
 	uint32_t ctrla = 0;
 	uint32_t ctrlb = 0;
+#ifdef FEATURE_USART_ISO7816
+	uint32_t ctrlc = 0;
+#endif
 	uint16_t baud  = 0;
+	uint32_t transfer_mode;
 
 	enum sercom_asynchronous_operation_mode mode = SERCOM_ASYNC_OPERATION_MODE_ARITHMETIC;
 	enum sercom_asynchronous_sample_num sample_num = SERCOM_ASYNC_SAMPLE_NUM_16;
@@ -115,8 +109,19 @@ static enum status_code _usart_set_config(
 
 	enum status_code status_code = STATUS_OK;
 
+	transfer_mode = (uint32_t)config->transfer_mode;
+#ifdef FEATURE_USART_ISO7816
+	if(config->iso7816_config.enabled) {
+		transfer_mode = config->iso7816_config.protocol_t;
+	}
+#endif
 	/* Get baud value from mode and clock */
-	switch (config->transfer_mode)
+#ifdef FEATURE_USART_ISO7816
+	if(config->iso7816_config.enabled) {
+		baud = config->baudrate;
+	} else {
+#endif
+	switch (transfer_mode)
 	{
 		case USART_TRANSFER_SYNCHRONOUSLY:
 			if (!config->use_external_clock) {
@@ -145,6 +150,9 @@ static enum status_code _usart_set_config(
 		/* Abort */
 		return status_code;
 	}
+#ifdef FEATURE_USART_ISO7816
+	}
+#endif
 
 #ifdef FEATURE_USART_IRDA
 	if(config->encoding_format_enable) {
@@ -159,7 +167,7 @@ static enum status_code _usart_set_config(
 	usart_hw->BAUD.reg = baud;
 
 	/* Set sample mode */
-	ctrla |= config->transfer_mode;
+	ctrla |= transfer_mode;
 
 	if (config->use_external_clock == false) {
 		ctrla |= SERCOM_USART_CTRLA_MODE(0x1);
@@ -168,8 +176,8 @@ static enum status_code _usart_set_config(
 		ctrla |= SERCOM_USART_CTRLA_MODE(0x0);
 	}
 
-	/* Set stopbits, character size and enable transceivers */
-	ctrlb = (uint32_t)config->stopbits | (uint32_t)config->character_size |
+	/* Set stopbits and enable transceivers */
+	ctrlb =  
 		#ifdef FEATURE_USART_IRDA
 			(config->encoding_format_enable << SERCOM_USART_CTRLB_ENC_Pos) |
 		#endif
@@ -182,6 +190,30 @@ static enum status_code _usart_set_config(
 			(config->receiver_enable << SERCOM_USART_CTRLB_RXEN_Pos) |
 			(config->transmitter_enable << SERCOM_USART_CTRLB_TXEN_Pos);
 
+#ifdef FEATURE_USART_ISO7816
+	if(config->iso7816_config.enabled) {
+		ctrla |= SERCOM_USART_CTRLA_FORM(0x07);
+		if (config->iso7816_config.enable_inverse) {
+			ctrla |= SERCOM_USART_CTRLA_TXINV | SERCOM_USART_CTRLA_RXINV;
+		}
+		ctrlb |=  USART_CHARACTER_SIZE_8BIT;
+		
+		switch(config->iso7816_config.protocol_t) {
+			case ISO7816_PROTOCOL_T_0:
+				ctrlb |= (uint32_t)config->stopbits;	
+				ctrlc |= SERCOM_USART_CTRLC_GTIME(config->iso7816_config.guard_time) | \
+						(config->iso7816_config.inhibit_nack) | \
+						(config->iso7816_config.successive_recv_nack) | \
+						SERCOM_USART_CTRLC_MAXITER(config->iso7816_config.max_iterations);
+				break;	
+			case ISO7816_PROTOCOL_T_1:
+				ctrlb |= USART_STOPBITS_1;
+				break;		
+		}
+	} else {
+#endif
+	ctrlb |= (uint32_t)config->stopbits;
+	ctrlb |= (uint32_t)config->character_size;
 	/* Check parity mode bits */
 	if (config->parity != USART_PARITY_NONE) {
 		ctrla |= SERCOM_USART_CTRLA_FORM(1);
@@ -197,6 +229,9 @@ static enum status_code _usart_set_config(
 		ctrla |= SERCOM_USART_CTRLA_FORM(0);
 #endif
 	}
+#ifdef FEATURE_USART_ISO7816
+	}
+#endif
 
 #ifdef FEATURE_USART_LIN_MASTER
 	usart_hw->CTRLC.reg = ((usart_hw->CTRLC.reg) & SERCOM_USART_CTRLC_GTIME_Msk)
@@ -227,8 +262,18 @@ static enum status_code _usart_set_config(
 	usart_hw->CTRLA.reg = ctrla;
 
 #ifdef FEATURE_USART_RS485
-	usart_hw->CTRLC.reg &= ~(SERCOM_USART_CTRLC_GTIME(0x7));
-	usart_hw->CTRLC.reg |= SERCOM_USART_CTRLC_GTIME(config->rs485_guard_time);
+	if ((usart_hw->CTRLA.reg & SERCOM_USART_CTRLA_FORM_Msk) != \
+		SERCOM_USART_CTRLA_FORM(0x07)) {
+		usart_hw->CTRLC.reg &= ~(SERCOM_USART_CTRLC_GTIME(0x7));
+		usart_hw->CTRLC.reg |= SERCOM_USART_CTRLC_GTIME(config->rs485_guard_time);
+	}
+#endif
+
+#ifdef FEATURE_USART_ISO7816
+	if(config->iso7816_config.enabled) {
+		_usart_wait_for_sync(module);
+		usart_hw->CTRLC.reg = ctrlc;
+	}
 #endif
 
 	return STATUS_OK;
@@ -249,7 +294,7 @@ static enum status_code _usart_set_config(
  * \retval STATUS_OK                       The initialization was successful
  * \retval STATUS_BUSY                     The USART module is busy
  *                                         resetting
- * \retval STATUS_ERR_DENIED               The USART have not been disabled in
+ * \retval STATUS_ERR_DENIED               The USART has not been disabled in
  *                                         advance of initialization
  * \retval STATUS_ERR_INVALID_ARG          The configuration struct contains
  *                                         invalid configuration
@@ -281,8 +326,10 @@ enum status_code usart_init(
 
 	uint32_t sercom_index = _sercom_get_sercom_inst_index(module->hw);
 	uint32_t pm_index, gclk_index; 
-#if (SAML21) || (SAMC20) || (SAMC21)
-#if (SAML21)
+#if (SAML22) || (SAMC20) 
+	pm_index	= sercom_index + MCLK_APBCMASK_SERCOM0_Pos;
+	gclk_index	= sercom_index + SERCOM0_GCLK_ID_CORE;
+#elif (SAML21) || (SAMR30)
 	if (sercom_index == 5) {
 		pm_index     = MCLK_APBDMASK_SERCOM5_Pos;
 		gclk_index   = SERCOM5_GCLK_ID_CORE;
@@ -290,10 +337,14 @@ enum status_code usart_init(
 		pm_index     = sercom_index + MCLK_APBCMASK_SERCOM0_Pos;
 		gclk_index   = sercom_index + SERCOM0_GCLK_ID_CORE;
 	}
-#else
-	pm_index     = sercom_index + MCLK_APBCMASK_SERCOM0_Pos;
-	gclk_index   = sercom_index + SERCOM0_GCLK_ID_CORE;
-#endif
+#elif (SAMC21)
+	pm_index	= sercom_index + MCLK_APBCMASK_SERCOM0_Pos;
+	
+	if (sercom_index == 5){
+		gclk_index	= SERCOM5_GCLK_ID_CORE;
+    } else {
+    	gclk_index	= sercom_index + SERCOM0_GCLK_ID_CORE;
+    }
 #else
 	pm_index     = sercom_index + PM_APBCMASK_SERCOM0_Pos;
 	gclk_index   = sercom_index + SERCOM0_GCLK_ID_CORE;
@@ -310,7 +361,7 @@ enum status_code usart_init(
 	}
 
 	/* Turn on module in PM */
-#if (SAML21)
+#if (SAML21) || (SAMR30)
 	if (sercom_index == 5) {
 		system_apb_clock_set_mask(SYSTEM_CLOCK_APB_APBD, 1 << pm_index);
 	} else {
@@ -340,6 +391,9 @@ enum status_code usart_init(
 #endif
 #ifdef FEATURE_USART_START_FRAME_DECTION
 	module->start_frame_detection_enabled = config->start_frame_detection_enable;
+#endif
+#ifdef FEATURE_USART_ISO7816
+	module->iso7816_mode_enabled = config->iso7816_config.enabled;
 #endif
 	/* Set configuration according to the config struct */
 	status_code = _usart_set_config(module, config);
@@ -540,7 +594,7 @@ enum status_code usart_read_wait(
 		else if (error_code & SERCOM_USART_STATUS_ISF) {
 			/* Clear flag by writing 1 to it  and
 			 *  return with an error code */
-			usart_hw->STATUS.reg |= SERCOM_USART_STATUS_ISF;
+			usart_hw->STATUS.reg = SERCOM_USART_STATUS_ISF;
 
 			return STATUS_ERR_PROTOCOL;
 		}
@@ -549,7 +603,7 @@ enum status_code usart_read_wait(
 		else if (error_code & SERCOM_USART_STATUS_COLL) {
 			/* Clear flag by writing 1 to it
 			 *  return with an error code */
-			usart_hw->STATUS.reg |= SERCOM_USART_STATUS_COLL;
+			usart_hw->STATUS.reg = SERCOM_USART_STATUS_COLL;
 
 			return STATUS_ERR_PACKET_COLLISION;
 		}

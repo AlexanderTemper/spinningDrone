@@ -3,45 +3,35 @@
  *
  * \brief SAM EEPROM Emulator
  *
- * Copyright (C) 2012-2015 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2012-2018 Microchip Technology Inc. and its subsidiaries.
  *
  * \asf_license_start
  *
  * \page License
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * Subject to your compliance with these terms, you may use Microchip
+ * software and any derivatives exclusively with Microchip products.
+ * It is your responsibility to comply with third party license terms applicable
+ * to your use of third party software (including open source software) that
+ * may accompany Microchip software.
  *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * 3. The name of Atmel may not be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * 4. This software may only be redistributed and used in connection with an
- *    Atmel microcontroller product.
- *
- * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
- * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES,
+ * WHETHER EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE,
+ * INCLUDING ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY,
+ * AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT WILL MICROCHIP BE
+ * LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, INCIDENTAL OR CONSEQUENTIAL
+ * LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND WHATSOEVER RELATED TO THE
+ * SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS BEEN ADVISED OF THE
+ * POSSIBILITY OR THE DAMAGES ARE FORESEEABLE.  TO THE FULLEST EXTENT
+ * ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN ANY WAY
+ * RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
+ * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
  *
  * \asf_license_stop
  *
  */
 /*
- * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
 #include "eeprom.h"
 #include <string.h>
@@ -256,10 +246,82 @@ static void _eeprom_emulator_format_memory(void)
 }
 
 /**
+ * \brief Check if a row is a full row
+ *  because the page is a invalid page, so if two pages have data,
+ *  it is the full row.
+ *
+ *  \param[in]  phy_page  Physical page that in a row
+ */
+static bool _eeprom_emulator_is_full_row(uint16_t phy_page)
+{
+	if((_eeprom_instance.flash[phy_page].header.logical_page
+		== _eeprom_instance.flash[phy_page+2].header.logical_page)
+		|| (_eeprom_instance.flash[phy_page+1].header.logical_page
+		== _eeprom_instance.flash[phy_page+2].header.logical_page )) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
+ * \brief Erase one invalid page according to two invalid physical page
+ *
+ *  \param[in]  pre_phy_page  One physical invalid page
+ *  \param[in]  next_phy_page Another physical invalid page
+ */
+static void _eeprom_emulator_erase_invalid_page(uint16_t pre_phy_page,uint16_t next_phy_page)
+{
+ 	/* Erase the old/full row*/
+	if(_eeprom_emulator_is_full_row(pre_phy_page)) {
+		 _eeprom_emulator_nvm_erase_row(pre_phy_page/4);
+	} else {
+		_eeprom_emulator_nvm_erase_row(next_phy_page/4);
+	}
+}
+
+/**
+ * \brief Check if there exist rows with same logical pages due to power drop
+ *  when writing or erasing page.
+ *  when existed same logical page, the old(full) row will be erased.
+ */
+static void _eeprom_emulator_check_logical_page(void)
+{
+	uint16_t i = 0, j = 0;
+	for (i = 0; i < _eeprom_instance.physical_pages; i=i+4) {
+
+		uint16_t pre_logical_page = _eeprom_instance.flash[i].header.logical_page;
+		if( pre_logical_page == EEPROM_INVALID_PAGE_NUMBER) {
+			continue;
+		}
+
+		for (j = NVMCTRL_ROW_PAGES+i; j < _eeprom_instance.physical_pages; j=j+4) {
+
+			if (j == EEPROM_MASTER_PAGE_NUMBER) {
+				continue;
+			}
+			uint16_t next_logical_page = _eeprom_instance.flash[j].header.logical_page;
+			if( next_logical_page == EEPROM_INVALID_PAGE_NUMBER) {
+				continue;
+			}
+
+			if(pre_logical_page == next_logical_page) {
+				/* Found invalid logical page and erase it */
+				_eeprom_emulator_erase_invalid_page(i,j);
+			}
+		}
+	}
+}
+
+
+/**
  * \brief Creates a map in SRAM to translate logical EEPROM pages to physical FLASH pages.
  */
 static void _eeprom_emulator_update_page_mapping(void)
 {
+	/* Check if exists invalid logical page */
+	_eeprom_emulator_check_logical_page();
+
 	/* Scan through all physical pages, to map physical and logical pages */
 	for (uint16_t c = 0; c < _eeprom_instance.physical_pages; c++) {
 		if (c == EEPROM_MASTER_PAGE_NUMBER) {
