@@ -6,7 +6,6 @@ ASF_INC_PATH = \
 	$(ASF_PATH)/common/utils                                       \
 	$(ASF_PATH)/common/utils/interrupt                             \
 	$(ASF_PATH)/common/boards                                      \
-	$(ASF_PATH)/common2/applications/user_application/user_board/config_samd20 \
 	$(ASF_PATH)/common2/boards/user_board                          \
 	$(ASF_PATH)/sam0/drivers/nvm                                   \
 	$(ASF_PATH)/sam0/drivers/system                                \
@@ -23,6 +22,8 @@ ASF_INC_PATH = \
 	$(ASF_PATH)/sam0/drivers/sercom                                \
 	$(ASF_PATH)/sam0/drivers/sercom/spi                            \
 	$(ASF_PATH)/sam0/drivers/sercom/usart                          \
+	$(ASF_PATH)/sam0/drivers/sercom/i2c                            \
+	$(ASF_PATH)/sam0/drivers/sercom/i2c/i2c_samd20                 \
 	$(ASF_PATH)/sam0/drivers/tc                                    \
 	$(ASF_PATH)/sam0/services/eeprom/emulator/main_array           \
 	$(ASF_PATH)/sam0/utils                                         \
@@ -51,6 +52,7 @@ ASF_CSRCS = \
 	$(ASF_PATH)/sam0/drivers/sercom/spi/spi_interrupt.c            \
 	$(ASF_PATH)/sam0/drivers/sercom/usart/usart_interrupt.c        \
 	$(ASF_PATH)/sam0/drivers/sercom/usart/usart.c                  \
+	$(ASF_PATH)/sam0/drivers/sercom/i2c/i2c_samd20/i2c_master.c    \
 	$(ASF_PATH)/sam0/drivers/system/clock/clock_samd20/clock.c     \
 	$(ASF_PATH)/sam0/drivers/system/clock/clock_samd20/gclk.c      \
 	$(ASF_PATH)/sam0/drivers/system/interrupt/system_interrupt.c   \

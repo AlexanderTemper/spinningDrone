@@ -44,27 +44,36 @@ def sendData():
             p = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
             y = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
             send = "Att %d %d %d \n" % (r,p,y)
+            server.sendall(send)
         elif inBuffer[0] == 71:#G
             x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
             y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
             z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
             send = "Gyro %d %d %d \n" % (x,y,z)
+            server.sendall(send)
         elif inBuffer[0] == 82:#R
             x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
             y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
             z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
             send = "Acc %d %d %d \n" % (x,y,z)
+            server.sendall(send)
         elif inBuffer[0] == 77:#M
             x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
             y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
             z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
             send = "Mag %d %d %d \n" % (x,y,z)
+            server.sendall(send)
         elif inBuffer[0] == 84:#T
             x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
             y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
             z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
             send = "Tof %d %d %d \n" % (x,y,z)
+            server.sendall(send)
+    elif inBuffer[0] == 68:#D
+        send = "Debug%s \r\n" % ''.join(chr(inBuffer[i]) for i in range(0,nextBuffer))
         server.sendall(send)
+    
+    
 
 def handle_data(handle, value):
     global lastread,inBuffer,nextBuffer

@@ -26,8 +26,31 @@ void gets32att(attitude_32 *att32, attitude_t *attf);
 void toSensor(sensor_32 * sensor,float x, float y, float z);
 enum status_code sendData(attitude_t *att,float gx,float gy,float gz,float ax, float ay, float az, float mx, float my , float mz);
 
+#define SLAVE_ADDRESS 0x12
+#define TIMEOUT 1000
+#define DATA_LENGTH 10
+static uint8_t write_buffer[DATA_LENGTH] = {
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+};
+
 int main(void)
 {
+
+	//! [timeout_counter]
+	uint16_t timeout = 0;
+
+	/* Init i2c packet. */
+	struct i2c_master_packet packet = {
+		.address     = SLAVE_ADDRESS,
+		.data_length = DATA_LENGTH,
+		.data        = write_buffer,
+		.ten_bit_address = false,
+		.high_speed      = false,
+		.hs_master_code  = 0x0,
+	};
+
+
+
 	/********************* Initialize global variables **********************/
 	
 	bmf055_input_state = USART_INPUT_STATE_PRINT_DATA;
@@ -60,6 +83,9 @@ int main(void)
 	/*Initialize UART for communication with PC*/
 	usart_initialize();
 	
+	/*Initialize I2C for communication*/
+	i2c_initialize();
+
 	/*Enable the system interrupts*/
 	system_interrupt_enable_global();/* All interrupts have a priority of level 0 which is the highest. */
 	
@@ -69,10 +95,17 @@ int main(void)
 	/************************** Infinite Loop *******************************/
 	while (true)
 	{
+		/*while (i2c_master_write_packet_wait(&i2c_master_instance, &packet) !=STATUS_OK) {
+			// Increment timeout counter and check if timed out.
+			if (timeout++ == TIMEOUT) {
+				usart_write_buffer_wait(&usart_instance,"ABD timeout",11);
+				timeout=0;
+			}
+		}*/
+
 		/* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
 		if (READ_SENSORS_FLAG)
 		{
-
 			/* Read accelerometer's data */
 			bma2x2_read_accel_xyz(&accel_data);
 
@@ -127,8 +160,8 @@ int main(void)
 
 
 			// 10MS * 10 == 100ms
-			if(timer > 5){
-
+			if(timer > 10){
+				usart_write_buffer_wait(&usart_instance,"ABD Test abc",12);
 				sendData(&att, gx, gy, gz, ax, ay, az, mx, my , mz);
 				/*usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABO",3);
 				usart_write_buffer_wait(&usart_instance, (uint8_t *)&att32,sizeof(att32));

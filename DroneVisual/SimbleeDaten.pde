@@ -77,6 +77,8 @@ class SimbleeDaten extends PApplet {
          } else if(list[0].equals("end")){
            println("Client closed connection");
            closed=true;
+         } else if(list[0].equals("DebugD")){
+           println(String.join(" ", list));
          }
       }
     }

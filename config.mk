@@ -73,6 +73,7 @@ CPPFLAGS = \
        -D BOARD=USER_BOARD \
        -D SPI_CALLBACK_MODE=true \
        -D USART_CALLBACK_MODE=true \
+       -D I2C_MASTER_CALLBACK_MODE=false \
        -D TC_ASYNC=true
 
 # Extra flags to use when linking
