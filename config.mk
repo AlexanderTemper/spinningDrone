@@ -14,6 +14,7 @@ CSRCS = \
 	src/Sensors/bmg160.c \
 	src/Sensors/bmm050_support.c \
 	src/Sensors/bmm050.c \
+	src/Sensors/vl53l0x.c \
 	src/ASF_Support/clock_support.c \
 	src/ASF_Support/spi_support.c \
     src/ASF_Support/i2c_support.c \

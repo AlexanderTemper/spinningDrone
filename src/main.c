@@ -26,31 +26,14 @@ void gets32att(attitude_32 *att32, attitude_t *attf);
 void toSensor(sensor_32 * sensor,float x, float y, float z);
 enum status_code sendData(attitude_t *att,float gx,float gy,float gz,float ax, float ay, float az, float mx, float my , float mz);
 
-#define SLAVE_ADDRESS 0x12
-#define TIMEOUT 1000
-#define DATA_LENGTH 10
-static uint8_t write_buffer[DATA_LENGTH] = {
-		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
-};
+
+volatile uint32_t msTicks = 0;                              /* Variable to store millisecond ticks */
+void SysTick_Handler(void)  {                               /* SysTick interrupt Handler. */
+  msTicks++;                                                /* See startup file startup_LPC17xx.s for SysTick vector */
+}
 
 int main(void)
 {
-
-	//! [timeout_counter]
-	uint16_t timeout = 0;
-
-	/* Init i2c packet. */
-	struct i2c_master_packet packet = {
-		.address     = SLAVE_ADDRESS,
-		.data_length = DATA_LENGTH,
-		.data        = write_buffer,
-		.ten_bit_address = false,
-		.high_speed      = false,
-		.hs_master_code  = 0x0,
-	};
-
-
-
 	/********************* Initialize global variables **********************/
 	
 	bmf055_input_state = USART_INPUT_STATE_PRINT_DATA;
@@ -161,7 +144,7 @@ int main(void)
 
 			// 10MS * 10 == 100ms
 			if(timer > 10){
-				usart_write_buffer_wait(&usart_instance,"ABD Test abc",12);
+				//usart_write_buffer_wait(&usart_instance,"ABD Test abc",12);
 				sendData(&att, gx, gy, gz, ax, ay, az, mx, my , mz);
 				/*usart_write_buffer_wait(&usart_instance, (uint8_t *)"ABO",3);
 				usart_write_buffer_wait(&usart_instance, (uint8_t *)&att32,sizeof(att32));
@@ -206,7 +189,7 @@ enum status_code sendData(attitude_t *att,float gx,float gy,float gz,float ax, f
 		sensor_32 tof;
 		tof.x = counter;
 		tof.y = -counter;
-		tof.z = 0;
+		tof.z = tc1_ticks;
 
 		gets32att(&att32, att);
 		toSensor(&gyro,gx*1000, gy*1000, gz*1000);

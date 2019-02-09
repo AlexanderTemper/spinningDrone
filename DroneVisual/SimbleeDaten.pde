@@ -72,7 +72,7 @@ class SimbleeDaten extends PApplet {
          }else if (list.length >= 4 && list[0].equals("Tof")) {
             tofRaw[0] = float(list[1]);
             tofRaw[1] = float(list[2]); 
-            tofRaw[2] = float(list[3]);
+            tofRaw[2] = float(list[3])/1000;//clock in ms
             tof.updateDiagramm(tofRaw);
          } else if(list[0].equals("end")){
            println("Client closed connection");

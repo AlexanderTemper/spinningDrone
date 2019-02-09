@@ -20,7 +20,7 @@ adapter = pygatt.GATTToolBackend()
 
 
 lastread = 0
-inBuffer = [0 for i in range(200)]
+inBuffer = [0 for i in range(1000)]
 nextBuffer = 0
 
 def twos_comp(val):
