@@ -2,6 +2,7 @@
 #include "MahonyAHRS.h"
 #include <math.h>
 #include <float.h>
+#include "vl53l0x.h"
 
 typedef struct {
 	int32_t roll;
@@ -16,21 +17,12 @@ typedef struct {
 	int32_t z;
 } sensor_32;
 
-
-
-
 uint16_t calc_hardiron(struct bmm050_mag_s32_data_t* mag_data);
 void correct_mag(struct bmm050_mag_s32_data_t* mag_data);
 float yaw_offset(float yaw);
 void gets32att(attitude_32 *att32, attitude_t *attf);
 void toSensor(sensor_32 * sensor,float x, float y, float z);
 enum status_code sendData(attitude_t *att,float gx,float gy,float gz,float ax, float ay, float az, float mx, float my , float mz);
-
-
-volatile uint32_t msTicks = 0;                              /* Variable to store millisecond ticks */
-void SysTick_Handler(void)  {                               /* SysTick interrupt Handler. */
-  msTicks++;                                                /* See startup file startup_LPC17xx.s for SysTick vector */
-}
 
 int main(void)
 {
@@ -74,18 +66,25 @@ int main(void)
 	
 	/* Initialize the sensors */
 	bmf055_sensors_initialize();
+	//initVL53L0X(false);
+
+	/*uint8_t test1 = 145;
+	//uint16_t test2 = 0x8645; //134 69
+	//uint32_t test3 = 0x89753214;//137 117 32 20
+
+	uint8_t usart_buffer_tx[81] = {0};
+
+
+	test1 =readReg(VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV);
+
+	sprintf((char *)usart_buffer_tx, "ABD read:%d          AB",test1);
+	usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+*/
+	while(true){}
 
 	/************************** Infinite Loop *******************************/
 	while (true)
 	{
-		/*while (i2c_master_write_packet_wait(&i2c_master_instance, &packet) !=STATUS_OK) {
-			// Increment timeout counter and check if timed out.
-			if (timeout++ == TIMEOUT) {
-				usart_write_buffer_wait(&usart_instance,"ABD timeout",11);
-				timeout=0;
-			}
-		}*/
-
 		/* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
 		if (READ_SENSORS_FLAG)
 		{

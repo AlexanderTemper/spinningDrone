@@ -12,7 +12,7 @@
 //------------------------------------------------------------
 // I use a 8-bit number for the address, LSB must be 0 so that I can
 // OR over the last bit correctly based on reads and writes
-#define ADDRESS_DEFAULT 0x12
+#define ADDRESS_DEFAULT 0x29
 #define TIMEOUT 1000
 
 // Record the current time to check an upcoming timeout against
@@ -209,6 +209,8 @@ bool timeoutOccurred(void);
 //---------------------------------------------------------
 // I2C communication Functions
 //---------------------------------------------------------
+void readi2c(uint8_t reg,uint8_t *data, uint16_t length);
+void writei2c(uint8_t reg,uint8_t *data, uint16_t length);
 void writeReg(uint8_t reg, uint8_t value);        // Write an 8-bit register
 void writeReg16Bit(uint8_t reg, uint16_t value);  // Write a 16-bit register
 void writeReg32Bit(uint8_t reg, uint32_t value);  // Write a 32-bit register
@@ -216,7 +218,7 @@ uint8_t readReg(uint8_t reg);                     // Read an 8-bit register
 uint16_t readReg16Bit(uint8_t reg);               // Read a 16-bit register
 uint32_t readReg32Bit(uint8_t reg);               // Read a 32-bit register
 // Write `count` number of bytes from `src` to the sensor, starting at `reg`
-void writeMulti(uint8_t reg, uint8_t const *src, uint8_t count);
+void writeMulti(uint8_t reg, uint8_t *src, uint8_t count);
 // Read `count` number of bytes from the sensor, starting at `reg`, to `dst`
 void readMulti(uint8_t reg, uint8_t *dst, uint8_t count);
 

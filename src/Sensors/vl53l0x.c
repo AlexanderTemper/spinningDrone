@@ -9,19 +9,32 @@ uint32_t g_measTimBudUs;
 uint16_t g_ioTimeout = 0;  // no timeout
 uint8_t g_isTimeout = 0;
 uint16_t g_timeoutStartMs;
-/*
-// Write an 8-bit register
-void writeReg(uint8_t reg, uint8_t value){
+//---------------------------------------------------------
+// I2C communication Functions
+//---------------------------------------------------------
+
+
+void writei2c(uint8_t reg,uint8_t *data, uint16_t length){
 	uint16_t timeout = 0;
-	uint8_t data = value;
 	struct i2c_master_packet packet = {
-			.address     = g_i2cAddr,
-			.data_length = 1,
-			.data        = &data,
-			.ten_bit_address = false,
-			.high_speed      = false,
-			.hs_master_code  = 0x0,
-		};
+				.address     = g_i2cAddr,
+				.data_length = 1,
+				.data        = &reg,
+				.ten_bit_address = false,
+				.high_speed      = false,
+				.hs_master_code  = 0x0,
+			};
+	//Send reg to write
+	while (i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &packet) !=STATUS_OK) {
+		if (timeout++ == TIMEOUT) {
+			usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD timeout writ",16);
+			timeout=0;
+		}
+	}
+	timeout=0;
+	packet.data_length = length;
+	packet.data = data;
+
 	while (i2c_master_write_packet_wait(&i2c_master_instance, &packet) !=STATUS_OK) {
 		// Increment timeout counter and check if timed out.
 		if (timeout++ == TIMEOUT) {
@@ -29,6 +42,107 @@ void writeReg(uint8_t reg, uint8_t value){
 			timeout=0;
 		}
 	}
+}
+
+
+void readi2c(uint8_t reg,uint8_t *data, uint16_t length){
+	uint16_t timeout = 0;
+	struct i2c_master_packet packet = {
+				.address     = g_i2cAddr,
+				.data_length = 1,
+				.data        = &reg,
+				.ten_bit_address = false,
+				.high_speed      = false,
+				.hs_master_code  = 0x0,
+			};
+	//Send reg to read
+	while (i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &packet) !=STATUS_OK) {
+		if (timeout++ == TIMEOUT) {
+			usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD timeout writ",16);
+			timeout=0;
+		}
+	}
+
+	timeout=0;
+	packet.data_length = length;
+	packet.data = data;
+
+	while (i2c_master_read_packet_wait(&i2c_master_instance, &packet) !=STATUS_OK) {
+		// Increment timeout counter and check if timed out.
+		if (timeout++ == TIMEOUT) {
+			usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD timeout",11);
+			timeout=0;
+		}
+	}
+}
+
+
+// Write an 8-bit register
+void writeReg(uint8_t reg, uint8_t value){
+	uint8_t data;
+	writei2c(reg,&data,1);
+}
+
+
+// Write a 16-bit register
+void writeReg16Bit(uint8_t reg, uint16_t value){
+	uint8_t data[2];
+	data[0]=(value >> 8) & 0xFF;
+	data[1]=(value     ) & 0xFF;
+	writei2c(reg,data,sizeof(data));
+}
+
+// Write a 32-bit register
+void writeReg32Bit(uint8_t reg, uint32_t value){
+	uint8_t data[4];
+	data[0]=(value >>24) & 0xFF;
+	data[1]=(value >>16) & 0xFF;
+	data[2]=(value >> 8) & 0xFF;
+	data[3]=(value     ) & 0xFF;
+	writei2c(reg,data,sizeof(data));
+}
+
+// Read an 8-bit register
+uint8_t readReg(uint8_t reg) {
+	uint8_t value = 0;
+	readi2c(reg,&value,1);
+	return value;
+}
+
+// Read a 16-bit register
+uint16_t readReg16Bit(uint8_t reg) {
+	uint16_t value;
+	uint8_t data[2] = {0};
+	readi2c(reg,data,sizeof(data));
+
+	value  = (uint16_t)data[0] << 8;
+	value |= (uint16_t)data[1];
+	return value;
+}
+
+// Read a 32-bit register
+uint32_t readReg32Bit(uint8_t reg) {
+	uint32_t value;
+	uint8_t data[4] = {0};
+	readi2c(reg,data,sizeof(data));
+
+	value  = (uint32_t)data[0] <<24;
+	value |= (uint32_t)data[1] <<16;
+	value |= (uint32_t)data[2] << 8;
+	value |= data[3];
+	return value;
+}
+
+// Write an arbitrary number of bytes from the given array to the sensor,
+// starting at the given register
+void writeMulti(uint8_t reg, uint8_t *src, uint8_t count){
+	writei2c(reg,src,count);
+}
+
+// Read an arbitrary number of bytes from the sensor, starting at the given
+// register, into the given array
+void readMulti(uint8_t reg, uint8_t * dst, uint8_t count) {
+	readi2c(reg,dst,count);
 }
 
 
@@ -42,7 +156,7 @@ void setAddress(uint8_t new_addr) {
 uint8_t getAddress() {
   return g_i2cAddr;
 }
-
+/*
 // Initialize sensor using sequence based on VL53L0X_DataInit(),
 // VL53L0X_StaticInit(), and VL53L0X_PerformRefCalibration().
 // This function does not perform reference SPAD calibration
@@ -51,7 +165,7 @@ uint8_t getAddress() {
 // enough unless a cover glass is added.
 // If io_2v8 (optional) is true or not given, the sensor is configured for 2V8
 // mode.
-bool initVL53L0X( bool io_2v8 ){
+uint8_t initVL53L0X( uint8_t io_2v8 ){
   // VL53L0X_DataInit() begin
 
   // sensor uses 1V8 mode for I/O by default; switch to 2V8 mode if necessary
@@ -270,7 +384,7 @@ bool initVL53L0X( bool io_2v8 ){
 
   return true;
 }
-
+/*
 // Set the return signal rate limit check value in units of MCPS (mega counts
 // per second). "This represents the amplitude of the signal reflected from the
 // target and detected by the device"; setting this limit presumably determines
