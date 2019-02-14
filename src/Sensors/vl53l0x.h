@@ -4,6 +4,7 @@
 #include <compiler.h>
 #include "i2c_support.h"
 #include "usart_support.h"
+#include "tc_support.h"
 
 
 
@@ -16,10 +17,10 @@
 #define TIMEOUT 1000
 
 // Record the current time to check an upcoming timeout against
-#define startTimeout() (g_timeoutStartMs = millis())
+#define startTimeout() (g_timeoutStartMs = tc1_ticks)
 
 // Check if timeout is enabled (set to nonzero value) and has expired
-#define checkTimeoutExpired() (g_ioTimeout > 0 && ((uint16_t)millis() - g_timeoutStartMs) > g_ioTimeout)
+#define checkTimeoutExpired() (g_ioTimeout > 0 && ((uint16_t)tc1_ticks - g_timeoutStartMs) > g_ioTimeout)
 
 // Decode VCSEL (vertical cavity surface emitting laser) pulse period in PCLKs
 // from register value
@@ -204,7 +205,7 @@ void setTimeout(uint16_t timeout);
 uint16_t getTimeout(void);
 
 // Indicates whether a read timeout has occurred since the last call to timeoutOccurred().
-bool timeoutOccurred(void);
+uint8_t timeoutOccurred(void);
 
 //---------------------------------------------------------
 // I2C communication Functions

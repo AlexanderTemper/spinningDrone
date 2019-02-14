@@ -13,12 +13,6 @@
 #ifndef MahonyAHRS_h
 #define MahonyAHRS_h
 
-typedef struct {
-  float roll;
-  float pitch;
-  float yaw;
-} attitude_t;
-
 #define radiansToDegrees(angleRadians) ((angleRadians) * 57.2957795131f)
 
 //----------------------------------------------------------------------------------------------------
@@ -33,7 +27,6 @@ extern volatile float q0, q1, q2, q3;	// quaternion of sensor frame relative to 
 
 void MahonyAHRSupdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
 void MahonyAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, float az);
-void getMahAttitude(attitude_t *attp);
 
 #endif
 //=====================================================================================================

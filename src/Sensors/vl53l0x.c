@@ -8,14 +8,47 @@ uint8_t g_stopVariable; // read by init and used when starting measurement; is S
 uint32_t g_measTimBudUs;
 uint16_t g_ioTimeout = 0;  // no timeout
 uint8_t g_isTimeout = 0;
-uint16_t g_timeoutStartMs;
+uint32_t g_timeoutStartMs;
+
+
+
+uint8_t getSpadInfo(uint8_t * count, uint8_t * type_is_aperture);
+uint16_t decodeTimeout(uint16_t reg_val);
+uint16_t encodeTimeout(uint16_t timeout_mclks);
+uint32_t timeoutMclksToMicroseconds(uint16_t timeout_period_mclks, uint8_t vcsel_period_pclks);
+uint32_t timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t vcsel_period_pclks);
+uint8_t performSingleRefCalibration(uint8_t vhv_init_byte);
+void getSequenceStepEnables(SequenceStepEnables * enables);
+void getSequenceStepTimeouts(SequenceStepEnables const * enables, SequenceStepTimeouts * timeouts);
+
+
 //---------------------------------------------------------
 // I2C communication Functions
 //---------------------------------------------------------
 
+void debugwritei2c(struct i2c_master_packet *const packet){
+	/*uint16_t buffer_counter = 0;
+	uint16_t tmp_data_length = packet->data_length;
+	while (tmp_data_length--) {
+		uint8_t usart_buffer_tx[81] = {0};
+		uint8_t data = packet->data[buffer_counter++];
+		sprintf((char *)usart_buffer_tx, "ABD send[%d/%d]:0x%x          ",packet->data_length,buffer_counter-1,data);
+		usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+	}*/
+}
 
+void debugreadi2c(struct i2c_master_packet *const packet){
+	/*uint16_t buffer_counter = 0;
+	uint16_t tmp_data_length = packet->data_length;
+	while (tmp_data_length--) {
+		uint8_t read = packet->data[buffer_counter++];
+		uint8_t usart_buffer_tx[81] = {0};
+		sprintf((char *)usart_buffer_tx, "ABD read[%d/%d]:0x%x         ",packet->data_length,buffer_counter-1,read);
+		usart_write_buffer_wait(&usart_instance, usart_buffer_tx,sizeof(usart_buffer_tx));
+	}*/
+}
 void writei2c(uint8_t reg,uint8_t *data, uint16_t length){
-	uint16_t timeout = 0;
+	uint16_t mytimeout = 0;
 	struct i2c_master_packet packet = {
 				.address     = g_i2cAddr,
 				.data_length = 1,
@@ -24,29 +57,35 @@ void writei2c(uint8_t reg,uint8_t *data, uint16_t length){
 				.high_speed      = false,
 				.hs_master_code  = 0x0,
 			};
+
+	debugwritei2c(&packet);
+
+
 	//Send reg to write
 	while (i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &packet) !=STATUS_OK) {
-		if (timeout++ == TIMEOUT) {
+		if (mytimeout++ == TIMEOUT) {
 			usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD timeout writ",16);
-			timeout=0;
+			mytimeout=0;
 		}
 	}
-	timeout=0;
+	mytimeout=0;
 	packet.data_length = length;
 	packet.data = data;
 
+	debugwritei2c(&packet);
+
 	while (i2c_master_write_packet_wait(&i2c_master_instance, &packet) !=STATUS_OK) {
 		// Increment timeout counter and check if timed out.
-		if (timeout++ == TIMEOUT) {
+		if (mytimeout++ == TIMEOUT) {
 			usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD timeout",11);
-			timeout=0;
+			mytimeout=0;
 		}
 	}
 }
 
 
 void readi2c(uint8_t reg,uint8_t *data, uint16_t length){
-	uint16_t timeout = 0;
+	uint16_t mytimeout = 0;
 	struct i2c_master_packet packet = {
 				.address     = g_i2cAddr,
 				.data_length = 1,
@@ -55,31 +94,37 @@ void readi2c(uint8_t reg,uint8_t *data, uint16_t length){
 				.high_speed      = false,
 				.hs_master_code  = 0x0,
 			};
+
+	debugwritei2c(&packet);
+
 	//Send reg to read
 	while (i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &packet) !=STATUS_OK) {
-		if (timeout++ == TIMEOUT) {
+		if (mytimeout++ == TIMEOUT) {
 			usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD timeout writ",16);
-			timeout=0;
+			mytimeout=0;
 		}
 	}
 
-	timeout=0;
+	mytimeout=0;
 	packet.data_length = length;
 	packet.data = data;
 
 	while (i2c_master_read_packet_wait(&i2c_master_instance, &packet) !=STATUS_OK) {
 		// Increment timeout counter and check if timed out.
-		if (timeout++ == TIMEOUT) {
+		if (mytimeout++ == TIMEOUT) {
 			usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD timeout",11);
-			timeout=0;
+			mytimeout=0;
 		}
 	}
+
+	debugreadi2c(&packet);
+
 }
 
 
 // Write an 8-bit register
 void writeReg(uint8_t reg, uint8_t value){
-	uint8_t data;
+	uint8_t data=value;
 	writei2c(reg,&data,1);
 }
 
@@ -104,7 +149,7 @@ void writeReg32Bit(uint8_t reg, uint32_t value){
 
 // Read an 8-bit register
 uint8_t readReg(uint8_t reg) {
-	uint8_t value = 0;
+	uint8_t value = 128;
 	readi2c(reg,&value,1);
 	return value;
 }
@@ -156,7 +201,7 @@ void setAddress(uint8_t new_addr) {
 uint8_t getAddress() {
   return g_i2cAddr;
 }
-/*
+
 // Initialize sensor using sequence based on VL53L0X_DataInit(),
 // VL53L0X_StaticInit(), and VL53L0X_PerformRefCalibration().
 // This function does not perform reference SPAD calibration
@@ -186,6 +231,7 @@ uint8_t initVL53L0X( uint8_t io_2v8 ){
   writeReg(0xFF, 0x00);
   writeReg(0x80, 0x00);
 
+
   // disable SIGNAL_RATE_MSRC (bit 1) and SIGNAL_RATE_PRE_RANGE (bit 4) limit checks
   writeReg(MSRC_CONFIG_CONTROL, readReg(MSRC_CONFIG_CONTROL) | 0x12);
 
@@ -199,7 +245,7 @@ uint8_t initVL53L0X( uint8_t io_2v8 ){
   // VL53L0X_StaticInit() begin
 
   uint8_t spad_count;
-  bool spad_type_is_aperture;
+  uint8_t spad_type_is_aperture;
   if (!getSpadInfo(&spad_count, &spad_type_is_aperture)) { return false; }
 
   // The SPAD map (RefGoodSpadMap) is read by VL53L0X_get_info_from_device() in
@@ -207,6 +253,7 @@ uint8_t initVL53L0X( uint8_t io_2v8 ){
   // GLOBAL_CONFIG_SPAD_ENABLES_REF_0 through _6, so read it from there
   uint8_t ref_spad_map[6];
   readMulti(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
+
 
   // -- VL53L0X_set_reference_spads() begin (assume NVM values are valid)
 
@@ -336,6 +383,7 @@ uint8_t initVL53L0X( uint8_t io_2v8 ){
 
   // -- VL53L0X_load_tuning_settings() end
 
+
   // "Set interrupt config to new sample ready"
   // -- VL53L0X_SetGpioConfig() begin
 
@@ -384,7 +432,7 @@ uint8_t initVL53L0X( uint8_t io_2v8 ){
 
   return true;
 }
-/*
+
 // Set the return signal rate limit check value in units of MCPS (mega counts
 // per second). "This represents the amplitude of the signal reflected from the
 // target and detected by the device"; setting this limit presumably determines
@@ -393,7 +441,7 @@ uint8_t initVL53L0X( uint8_t io_2v8 ){
 // seems to increase the likelihood of getting an inaccurate reading because of
 // unwanted reflections from objects other than the intended target.
 // Defaults to 0.25 MCPS as initialized by the ST API and this library.
-bool setSignalRateLimit(float limit_Mcps)
+uint8_t setSignalRateLimit(float limit_Mcps)
 {
   if (limit_Mcps < 0 || limit_Mcps > 511.99) { return false; }
 
@@ -405,7 +453,7 @@ bool setSignalRateLimit(float limit_Mcps)
 // Get the return signal rate limit check value in MCPS
 float getSignalRateLimit(void)
 {
-  return (float)readReg16Bit(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT) / (1 << 7);
+	return (float)(readReg16Bit(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT))/(1 << 7);
 }
 
 // Set the measurement timing budget in microseconds, which is the time allowed
@@ -415,7 +463,7 @@ float getSignalRateLimit(void)
 // factor of N decreases the range measurement standard deviation by a factor of
 // sqrt(N). Defaults to about 33 milliseconds; the minimum is 20 ms.
 // based on VL53L0X_set_measurement_timing_budget_micro_seconds()
-bool setMeasurementTimingBudget(uint32_t budget_us)
+uint8_t setMeasurementTimingBudget(uint32_t budget_us)
 {
   SequenceStepEnables enables;
   SequenceStepTimeouts timeouts;
@@ -558,7 +606,7 @@ uint32_t getMeasurementTimingBudget(void)
 //  pre:  12 to 18 (initialized default: 14)
 //  final: 8 to 14 (initialized default: 10)
 // based on VL53L0X_set_vcsel_pulse_period()
-bool setVcselPulsePeriod(vcselPeriodType type, uint8_t period_pclks)
+uint8_t setVcselPulsePeriod(vcselPeriodType type, uint8_t period_pclks)
 {
   uint8_t vcsel_period_reg = encodeVcselPeriod(period_pclks);
 
@@ -872,9 +920,9 @@ uint16_t readRangeSingleMillimeters( statInfo_t *extraStats ) {
 
 // Did a timeout occur in one of the read functions since the last call to
 // timeoutOccurred()?
-bool timeoutOccurred()
+uint8_t timeoutOccurred()
 {
-  bool tmp = g_isTimeout;
+  uint8_t tmp = g_isTimeout;
   g_isTimeout = false;
   return tmp;
 }
@@ -892,9 +940,12 @@ uint16_t getTimeout(void){
 // Get reference SPAD (single photon avalanche diode) count and type
 // based on VL53L0X_get_info_from_device(),
 // but only gets reference SPAD count and type
-bool getSpadInfo(uint8_t * count, bool * type_is_aperture)
+uint8_t getSpadInfo(uint8_t * count, uint8_t * type_is_aperture)
 {
   uint8_t tmp;
+
+  /*usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD spadiAB",11);
+  usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD spadiAB",11);*/
 
   writeReg(0x80, 0x01);
   writeReg(0xFF, 0x01);
@@ -910,10 +961,16 @@ bool getSpadInfo(uint8_t * count, bool * type_is_aperture)
   writeReg(0x94, 0x6b);
   writeReg(0x83, 0x00);
   startTimeout();
+
   while (readReg(0x83) == 0x00)
   {
     if (checkTimeoutExpired()) { return false; }
   }
+
+  usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD aiadaAB",11);
+  usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD bibdaAB",11);
+  usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD cicdaAB",11);
+  usart_write_buffer_wait(&usart_instance,(uint8_t *)"ABD diddaAB",11);
   writeReg(0x83, 0x01);
   tmp = readReg(0x92);
 
@@ -1036,7 +1093,7 @@ uint32_t timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t vcsel_pe
 
 
 // based on VL53L0X_perform_single_ref_calibration()
-bool performSingleRefCalibration(uint8_t vhv_init_byte)
+uint8_t performSingleRefCalibration(uint8_t vhv_init_byte)
 {
   writeReg(SYSRANGE_START, 0x01 | vhv_init_byte); // VL53L0X_REG_SYSRANGE_MODE_START_STOP
 
@@ -1052,4 +1109,4 @@ bool performSingleRefCalibration(uint8_t vhv_init_byte)
 
   return true;
 }
-*/
+

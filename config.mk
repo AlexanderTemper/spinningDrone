@@ -15,13 +15,16 @@ CSRCS = \
 	src/Sensors/bmm050_support.c \
 	src/Sensors/bmm050.c \
 	src/Sensors/vl53l0x.c \
+	src/sensors/gyro.c \
+	src/sensors/acc.c \
+	src/sensors/mag.c \
 	src/ASF_Support/clock_support.c \
 	src/ASF_Support/spi_support.c \
     src/ASF_Support/i2c_support.c \
 	src/ASF_Support/tc_support.c \
 	src/ASF_Support/usart_support.c \
-	src/bmf055.c \
-	src/MahonyAHRS.c \
+	src/imu/imu.c \
+	src/imu/MahonyAHRS.c \
 	src/main.c
 
 CSRCS += $(ASF_CSRCS)
@@ -33,6 +36,8 @@ ASSRCS = \
 INC_PATH = \
 	src \
 	src/ASF_Support \
+	src/imu \
+	src/sensors \
 	src/Sensors \
 	src/config
 
