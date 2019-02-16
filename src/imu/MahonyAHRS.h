@@ -13,8 +13,6 @@
 #ifndef MahonyAHRS_h
 #define MahonyAHRS_h
 
-#define radiansToDegrees(angleRadians) ((angleRadians) * 57.2957795131f)
-
 //----------------------------------------------------------------------------------------------------
 // Variable declaration
 

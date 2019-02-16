@@ -1,47 +1,84 @@
 #include "imu.h"
 
-void getMahAttitude(attitude_t *attp);
+/************************************************************************/
+/* Globals                                                              */
+/************************************************************************/
+attitudeEulerAngles_t attitude = EULER_INITIALIZE;
 
-void updateAtt(attitude_t *att,imuData *data, accData *acc, gyroData *gyro, magData *mag){
-	//uint16_t acc_1g = 1024;
-	float ax = (float)acc->x;///acc_1g;
-	float ay = (float)acc->y;///acc_1g;
-	float az = (float)acc->z;///acc_1g;
+/************************************************************************/
 
-	float gyro_scale = 16.3835f;
-	float gx = (((float)gyro->x/gyro_scale)*M_PI)/180;
-	float gy = (((float)gyro->y/gyro_scale)*M_PI)/180;
-	float gz = (((float)gyro->z/gyro_scale)*M_PI)/180;
+void getMahAttitude(void);
+int16_t yaw_offset(int16_t yaw);
+float imuCalcKpGain(void);
 
-	//calc_hardiron(&mag_data);
-	float mx = mag->x;
-	float my = mag->y;
-	float mz = mag->z;
+bool speedUp = true;
 
+void updateAtt(void) {
 
-	data->a.x = ax;
-	data->a.y = ay;
-	data->a.z = az;
+    twoKp = imuCalcKpGain();
 
-	data->g.x = gx;
-	data->g.y = gy;
-	data->g.z = gz;
+    MahonyAHRSupdate(gyroData.x, gyroData.y, gyroData.z, accData.x, accData.y, accData.z, magData.x, magData.y, magData.z);
+    getMahAttitude();
 
-	data->m.x = mx;
-	data->m.y = my;
-	data->m.z = mz;
+    if (attitude.values.yaw < 0) {
+        attitude.values.yaw += 3600;
+    }
 
-	MahonyAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
-	getMahAttitude(att);
+    if (!speedUp) {
+       attitude.values.yaw = yaw_offset(attitude.values.yaw);
+    }
+
 }
 
+/**
+ * Speed up Convergence with high KP for the first 100
+ */
+float imuCalcKpGain(void) {
+    static uint8_t counter = 0;
 
-void getMahAttitude(attitude_t *attp) {
+    if (speedUp) {
+        counter++;
+        if (counter == 100) {
+            speedUp = false;
+            counter = 0;
+        }
+        return 100.0f;
+    }
 
-  attp->roll = radiansToDegrees(atan2(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2));
-  attp->pitch = radiansToDegrees(asin(-2.0f * (q1*q3 - q0*q2)));
-  attp->yaw = radiansToDegrees(atan2(q1*q2 + q0*q3, 0.5f - q2*q2 - q3*q3));
-  /*attp->roll = (180* atan2(2.0f*q2*q3 - 2.0f*q0*q1, 2.0f*q0*q0 + 2.0f*q3*q3 -1.0f))/M_PI;
-  attp->pitch = (180*-asin(2.0f * (q1*q3 + q0*q2)))/M_PI;
-  attp->yaw = (180*atan2(2.0f*q1*q2 - 2.0f*q0*q3, 2.0f*q2*q2 + 2.0f*q3*q3 -1.0f))/M_PI;*/
+    return 5.0f;
 }
+
+void getMahAttitude(void) {
+
+    attitude.values.roll  = (int16_t) (radiansToDegrees(atan2(q0 * q1 + q2 * q3, 0.5f - q1 * q1 - q2 * q2)) * 10);
+    attitude.values.pitch = (int16_t) (radiansToDegrees(asin(-2.0f * (q1 * q3 - q0 * q2))) * 10);
+    attitude.values.yaw   = (int16_t) (radiansToDegrees(atan2(q1 * q2 + q0 * q3, 0.5f - q2 * q2 - q3 * q3)) * 10);
+    /*attp->roll = (180* atan2(2.0f*q2*q3 - 2.0f*q0*q1, 2.0f*q0*q0 + 2.0f*q3*q3 -1.0f))/M_PI;
+     attp->pitch = (180*-asin(2.0f * (q1*q3 + q0*q2)))/M_PI;
+     attp->yaw = (180*atan2(2.0f*q1*q2 - 2.0f*q0*q3, 2.0f*q2*q2 + 2.0f*q3*q3 -1.0f))/M_PI;*/
+}
+
+// Reset yaw offset after 40 mesurements
+int16_t yaw_offset(int16_t yaw) {
+    static uint8_t counter = 0;
+
+    static uint16_t yaw_bias = 0;
+    static uint16_t yaw_min = 3600;
+    static uint16_t yaw_max = 0;
+
+    if (counter < 40) {
+        yaw_min = yaw < yaw_min ? yaw : yaw_min;
+        yaw_max = yaw > yaw_max ? yaw : yaw_max;
+        counter++;
+        return yaw;
+    } else if (counter == 40) {
+        yaw_bias = (yaw_max + yaw_min) / 2;
+        counter++;
+    }
+    yaw = yaw - yaw_bias;
+    if (yaw < 0) {
+        yaw += 3600;
+    }
+    return yaw;
+}
+

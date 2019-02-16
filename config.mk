@@ -8,16 +8,18 @@ BUILD_DIR = build
 
 # List of C source files.
 CSRCS = \
-	src/Sensors/bma2x2_support.c \
-	src/Sensors/bma2x2.c \
-	src/Sensors/bmg160_support.c \
-	src/Sensors/bmg160.c \
-	src/Sensors/bmm050_support.c \
-	src/Sensors/bmm050.c \
-	src/Sensors/vl53l0x.c \
+	src/drivers/bma2x2_support.c \
+	src/drivers/bma2x2.c \
+	src/drivers/bmg160_support.c \
+	src/drivers/bmg160.c \
+	src/drivers/bmm050_support.c \
+	src/drivers/bmm050.c \
+	src/sensors/sensor.c \
+	src/drivers/vl53l0x.c \
 	src/sensors/gyro.c \
 	src/sensors/acc.c \
 	src/sensors/mag.c \
+	src/telemetry/simbleeBridge.c \
 	src/ASF_Support/clock_support.c \
 	src/ASF_Support/spi_support.c \
     src/ASF_Support/i2c_support.c \
@@ -38,7 +40,8 @@ INC_PATH = \
 	src/ASF_Support \
 	src/imu \
 	src/sensors \
-	src/Sensors \
+	src/drivers \
+	src/telemetry \
 	src/config
 
 INC_PATH += $(ASF_INC_PATH)    

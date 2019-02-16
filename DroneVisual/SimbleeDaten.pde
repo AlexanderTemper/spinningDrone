@@ -50,9 +50,9 @@ class SimbleeDaten extends PApplet {
       if ((message = in.readLine()) != null) {
         String[] list = split(trim(message), " ");
         if (list.length >= 4 && list[0].equals("Att")) {
-            attRaw[2] = float(list[1])/100;
-            attRaw[1] = float(list[2])/100; 
-            attRaw[0] = float(list[3])/100;
+            attRaw[2] = float(list[1])/10;
+            attRaw[1] = float(list[2])/10; 
+            attRaw[0] = float(list[3])/10;
             att.updateDiagramm(attRaw);
          } else if (list.length >= 4 && list[0].equals("Gyro")) {
             gyroRaw[0] = float(list[1])/1000;
