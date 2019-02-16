@@ -1,15 +1,16 @@
 #include "asf.h"
 #include <math.h>
 #include <float.h>
-#include "vl53l0x.h"
 #include "sensor.h"
 #include "imu.h"
+#include "tof.h"
 
 #include "clock_support.h"
 #include "spi_support.h"
-//#include "i2c_support.h"
+#include "i2c_support.h"
 #include "tc_support.h"
 #include "usart_support.h"
+#include "simbleeBridge.h"
 #include "simbleeBridge.h"
 
 /************************************************************************/
@@ -44,7 +45,7 @@ int main(void) {
     usart_initialize();
 
     /*Initialize I2C for communication*/
-    //i2c_initialize();
+    i2c_initialize();
 
     /*Enable the system interrupts*/
     system_interrupt_enable_global();/* All interrupts have a priority of level 0 which is the highest. */
@@ -53,6 +54,7 @@ int main(void) {
     gyroInit();
     accInit();
     magInit();
+    tofInit();
 
     //initVL53L0X(false);
     //setTimeout(400);

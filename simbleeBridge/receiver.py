@@ -20,7 +20,8 @@ adapter = pygatt.GATTToolBackend()
 
 
 lastread = 0
-inBuffer = [0 for i in range(1000)]
+buffersize = 1000
+inBuffer = [0 for i in range(buffersize)]
 nextBuffer = 0
 
 def twos_comp(val):
@@ -71,6 +72,7 @@ def sendData():
             server.sendall(send)
     elif inBuffer[0] == 68:#D
         send = "Debug%s \r\n" % ''.join(chr(inBuffer[i]) for i in range(0,nextBuffer))
+        print(send)
         server.sendall(send)
     
     
@@ -79,10 +81,9 @@ def handle_data(handle, value):
     global lastread,inBuffer,nextBuffer
     for i in range (0, len(value)):
         r = value[i]
-            
         if lastread == 65 and r == 66: # 65 = A , 66 = B
             sendData()
-            nextBuffer = 0;
+            nextBuffer = 0
         elif lastread == 65:
             inBuffer[nextBuffer] = lastread
             nextBuffer += 1
@@ -92,6 +93,8 @@ def handle_data(handle, value):
             inBuffer[nextBuffer] = r
             nextBuffer += 1
         lastread = r
+        if nextBuffer >= buffersize:
+           nextBuffer = 0
 
 
 def connect():

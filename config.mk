@@ -5,6 +5,17 @@ PART = samd20j18
 TARGET_FLASH = test_flash.elf
 BUILD_DIR = build
 
+VL53L0X_PATH = src/drivers/vl53l0x
+
+VL53L0X_INC_PATH = $(VL53L0X_PATH)/inc                                      
+	
+VL53L0X_CSRCS = \
+	$(VL53L0X_PATH)/src/vl53l0x_api.c                \
+	$(VL53L0X_PATH)/src/vl53l0x_api_calibration.c    \
+	$(VL53L0X_PATH)/src/vl53l0x_api_core.c           \
+	$(VL53L0X_PATH)/src/vl53l0x_api_ranging.c        \
+	$(VL53L0X_PATH)/src/vl53l0x_api_strings.c        
+
 
 # List of C source files.
 CSRCS = \
@@ -14,11 +25,14 @@ CSRCS = \
 	src/drivers/bmg160.c \
 	src/drivers/bmm050_support.c \
 	src/drivers/bmm050.c \
+	src/drivers/vl53l0x_i2c_platform.c \
+	src/drivers/vl53l0x_platform.c \
+	src/drivers/vl53l0x_platform_log.c \
 	src/sensors/sensor.c \
-	src/drivers/vl53l0x.c \
 	src/sensors/gyro.c \
 	src/sensors/acc.c \
 	src/sensors/mag.c \
+	src/sensors/tof.c \
 	src/telemetry/simbleeBridge.c \
 	src/ASF_Support/clock_support.c \
 	src/ASF_Support/spi_support.c \
@@ -30,6 +44,7 @@ CSRCS = \
 	src/main.c
 
 CSRCS += $(ASF_CSRCS)
+CSRCS += $(VL53L0X_CSRCS)
 	
 # List of assembler source files.
 ASSRCS = \
@@ -44,7 +59,8 @@ INC_PATH = \
 	src/telemetry \
 	src/config
 
-INC_PATH += $(ASF_INC_PATH)    
+INC_PATH += $(ASF_INC_PATH)
+INC_PATH += $(VL53L0X_INC_PATH)     
 
 # Additional search paths for libraries.
 LIB_PATH = src/ASF/thirdparty/CMSIS/Lib/GCC                          
@@ -83,7 +99,8 @@ CPPFLAGS = \
        -D SPI_CALLBACK_MODE=true \
        -D USART_CALLBACK_MODE=true \
        -D I2C_MASTER_CALLBACK_MODE=false \
-       -D TC_ASYNC=true
+       -D TC_ASYNC=true \
+       -D VL53L0X_LOG_ENABLE
 
 # Extra flags to use when linking
 LDFLAGS = -u _printf_float

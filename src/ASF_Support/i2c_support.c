@@ -21,7 +21,7 @@ void i2c_configure_master(void)
 
 
 	config_i2c_master.baud_rate = I2C_MASTER_BAUD_RATE_100KHZ;
-	config_i2c_master.buffer_timeout = 10000;
+	config_i2c_master.buffer_timeout = 100;
 
 	/* Initialize and enable device with config. */
     config_i2c_master.pinmux_pad0    = PINMUX_PA22C_SERCOM3_PAD0;
