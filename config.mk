@@ -33,6 +33,7 @@ CSRCS = \
 	src/sensors/acc.c \
 	src/sensors/mag.c \
 	src/sensors/tof.c \
+	src/debug.c \
 	src/telemetry/simbleeBridge.c \
 	src/ASF_Support/clock_support.c \
 	src/ASF_Support/spi_support.c \

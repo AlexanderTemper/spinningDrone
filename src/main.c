@@ -67,6 +67,7 @@ int main(void) {
             readAccData();
             readGyroData();
             readMagData();
+            readTofData();
 
             updateAtt();
 

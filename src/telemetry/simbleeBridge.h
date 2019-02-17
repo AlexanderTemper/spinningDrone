@@ -3,6 +3,7 @@
 
 #include "usart_support.h"
 #include "imu.h"
+#include "tof.h"
 
 enum status_code sendData(void);
 #endif /* _SIMBLEEBRIDGE_H_ */

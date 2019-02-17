@@ -254,17 +254,15 @@ VL53L0X_Error VL53L0X_RdDWord(VL53L0X_DEV Dev, uint8_t index, uint32_t *data) {
     return Status;
 }
 
-#define VL53L0X_POLLINGDELAY_LOOPNB  250
 VL53L0X_Error VL53L0X_PollingDelay(VL53L0X_DEV Dev) {
     VL53L0X_Error status = VL53L0X_ERROR_NONE;
 
-    volatile uint32_t i;
+    volatile uint32_t i=0;
     LOG_FUNCTION_START("");
-
-    for (i = 0; i < VL53L0X_POLLINGDELAY_LOOPNB; i++) {
-        //Do nothing
-        asm("nop");
+    while(i<0x00ffffff){
+        i++;
     }
+    //tc4_wait_for_msec(100000); TODO OsciMessen
 
     LOG_FUNCTION_END(status);
     return status;

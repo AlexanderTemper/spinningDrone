@@ -33,7 +33,7 @@ enum status_code sendData(void) {
         memcpy(&buffer[48], (uint8_t *) &buffer32s, sizeof(sensorData32s_t));
 
         memcpy(&buffer[60], "ABT", 3);
-        buffer32s.x = twoKp;
+        buffer32s.x = (uint32_t)tofData.x;
         buffer32s.y = -counter;
         buffer32s.z = tc1_ticks;
 

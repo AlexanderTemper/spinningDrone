@@ -3,6 +3,7 @@
 
 #include "sensor.h"
 #include "vl53l0x_api.h"
+#include "debug.h"
 
 typedef struct {
     int16_t x;
