@@ -14,6 +14,8 @@ typedef struct {
 //G per axis x,y,z
 extern SENSOR_DATA tofData;
 extern rawTofData_t rawTofData;
+extern VL53L0X_Dev_t tofDev;
+
 
 void tofInit(void);
 SENSOR_OPERATION_STATUS readTofData(void);
