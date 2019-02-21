@@ -259,10 +259,8 @@ VL53L0X_Error VL53L0X_PollingDelay(VL53L0X_DEV Dev) {
 
     volatile uint32_t i=0;
     LOG_FUNCTION_START("");
-    while(i<0x00ffffff){
-        i++;
-    }
-    //tc4_wait_for_msec(100000); TODO OsciMessen
+
+    tc4_wait_for_msec(5);
 
     LOG_FUNCTION_END(status);
     return status;

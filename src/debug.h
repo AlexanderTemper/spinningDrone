@@ -4,6 +4,7 @@
 #include "status_codes.h"
 #include "time.h"
 #include <stdarg.h>
+#include <string.h>
 #include "usart_support.h"
 
 #define MAX_STRING_LENGTH 256

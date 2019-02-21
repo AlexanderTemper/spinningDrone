@@ -101,7 +101,7 @@ CPPFLAGS = \
        -D USART_CALLBACK_MODE=true \
        -D I2C_MASTER_CALLBACK_MODE=false \
        -D TC_ASYNC=true \
-       -D VL53L0X_LOG_ENABLE
+ #      -D VL53L0X_LOG_ENABLE
 
 # Extra flags to use when linking
 LDFLAGS = -u _printf_float

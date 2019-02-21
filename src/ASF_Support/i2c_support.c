@@ -20,7 +20,7 @@ void i2c_configure_master(void)
 	i2c_master_get_config_defaults(&config_i2c_master);
 
 
-	config_i2c_master.baud_rate = I2C_MASTER_BAUD_RATE_100KHZ;
+	config_i2c_master.baud_rate = I2C_MASTER_BAUD_RATE_400KHZ;
 	config_i2c_master.buffer_timeout = 1000;
 
 	/* Initialize and enable device with config. */

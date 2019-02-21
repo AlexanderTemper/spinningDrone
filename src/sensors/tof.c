@@ -36,28 +36,20 @@ VL53L0X_Error WaitMeasurementDataReady(VL53L0X_DEV Dev) {
 #define VERSION_REQUIRED_MINOR 0
 #define VERSION_REQUIRED_BUILD 1
 VL53L0X_Dev_t tofDev;
+VL53L0X_Version_t Version;
+VL53L0X_Version_t *pVersion = &Version;
+VL53L0X_DeviceInfo_t DeviceInfo;
+
 void tofInit(void) {
     tofDev.I2cDevAddr = 0x29;
     uint32_t refSpadCount;
     uint8_t isApertureSpads;
     uint8_t VhvSettings;
     uint8_t PhaseCal;
-    VL53L0X_Version_t Version;
-    VL53L0X_Version_t *pVersion = &Version;
-    VL53L0X_DeviceInfo_t DeviceInfo;
 
-    tofDevStatus = VL53L0X_GetVersion(pVersion);
 
-    if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        if (pVersion->major != VERSION_REQUIRED_MAJOR || pVersion->minor != VERSION_REQUIRED_MINOR || pVersion->build != VERSION_REQUIRED_BUILD) {
-            DEBUG_WAIT(MODUL_DEFAULT, "VL53L0X API Version Error: Your firmware has %d.%d.%d (revision %d). This example requires %d.%d.%d.\n", pVersion->major,
-                    pVersion->minor, pVersion->build, pVersion->revision, VERSION_REQUIRED_MAJOR, VERSION_REQUIRED_MINOR, VERSION_REQUIRED_BUILD);
-        }
-    }
-    if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "Sensor init");
-        tofDevStatus = VL53L0X_DataInit(&tofDev);
-    }
+    DEBUG_WAIT(MODUL_DEFAULT, "Sensor init");
+    tofDevStatus = VL53L0X_DataInit(&tofDev);
 
     if (tofDevStatus == VL53L0X_ERROR_NONE) {
         DEBUG_WAIT(MODUL_DEFAULT, "Device Info");

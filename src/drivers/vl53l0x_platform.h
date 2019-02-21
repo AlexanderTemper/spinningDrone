@@ -55,6 +55,8 @@ extern "C" {
  * @brief    Generic PAL device type that does link between API and platform abstraction layer
  *
  */
+
+#define USE_I2C_2V8
 typedef struct {
     VL53L0X_DevData_t Data;               /*!< embed ST Ewok Dev  data as "Data"*/
     /*!< user specific field */
