@@ -54,7 +54,7 @@ int main(void) {
     accInit();
     magInit();
     tofInit();
-    int32_t status_int = 0;
+   /* int32_t status_int = 0;
     uint8_t read = 0xff;
     do {
         status_int = VL53L0X_RdByte(&tofDev, VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV, &read);
@@ -71,9 +71,8 @@ int main(void) {
     } while (read == 0);
     while (1) {
         DEBUG_WAIT(MODUL_DEFAULT, "Sensor fail");
-    }
+    }*/
 
-    //VL53L0X_UpdateByte(Dev,VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV,0xFE,x01);
     /************************** Infinite Loop *******************************/
     while (true) {
         /* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/

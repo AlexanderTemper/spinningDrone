@@ -122,7 +122,7 @@ void tofInit(void) {
 }
 
 SENSOR_OPERATION_STATUS readTofData(void) {
-    VL53L0X_RangingMeasurementData_t RangingMeasurementData;
+   /* VL53L0X_RangingMeasurementData_t RangingMeasurementData;
     VL53L0X_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasurementData;
     if (tofDevStatus == VL53L0X_ERROR_NONE) {
         tofDevStatus = WaitMeasurementDataReady(&tofDev);
@@ -139,7 +139,7 @@ SENSOR_OPERATION_STATUS readTofData(void) {
         VL53L0X_PollingDelay(&tofDev);
         return SENSOR_SUCCESS;
     }
-
+*/
     return SENSOR_ERROR;
 }
 
