@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2016, STMicroelectronics International N.V.
+ Copyright ï¿½ 2016, STMicroelectronics International N.V.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -553,7 +553,7 @@ uint32_t VL53L0X_calc_timeout_mclks(VL53L0X_DEV Dev,
 		(uint32_t) (((timeout_period_us * 1000)
 		+ (macro_period_ns / 2)) / macro_period_ns);
 
-    return timeout_period_mclks;
+	return timeout_period_mclks;
 }
 
 /* To convert register value into us */
@@ -569,7 +569,8 @@ uint32_t VL53L0X_calc_timeout_us(VL53L0X_DEV Dev,
 	macro_period_ns = (macro_period_ps + 500) / 1000;
 
 	actual_timeout_period_us =
-		((timeout_period_mclks * macro_period_ns) + 500) / 1000;
+		((timeout_period_mclks * macro_period_ns)
+		+ (macro_period_ns / 2)) / 1000;
 
 	return actual_timeout_period_us;
 }
@@ -694,7 +695,7 @@ VL53L0X_Error set_sequence_step_timeout(VL53L0X_DEV Dev,
 	uint16_t PreRangeEncodedTimeOut;
 	uint16_t PreRangeTimeOutMClks;
 	uint16_t MsrcRangeTimeOutMClks;
-	uint32_t FinalRangeTimeOutMClks;
+	uint16_t FinalRangeTimeOutMClks;
 	uint16_t FinalRangeEncodedTimeOut;
 	VL53L0X_SchedulerSequenceSteps_t SchedulerSequenceSteps;
 
@@ -1114,7 +1115,7 @@ VL53L0X_Error VL53L0X_set_measurement_timing_budget_micro_seconds(VL53L0X_DEV De
 	uint32_t FinalRangeTimingBudgetMicroSeconds;
 	VL53L0X_SchedulerSequenceSteps_t SchedulerSequenceSteps;
 	uint32_t MsrcDccTccTimeoutMicroSeconds	= 2000;
-	uint32_t StartOverheadMicroSeconds		= 1910;
+	uint32_t StartOverheadMicroSeconds		= 1320;
 	uint32_t EndOverheadMicroSeconds		= 960;
 	uint32_t MsrcOverheadMicroSeconds		= 660;
 	uint32_t TccOverheadMicroSeconds		= 590;
@@ -1237,19 +1238,19 @@ VL53L0X_Error VL53L0X_set_measurement_timing_budget_micro_seconds(VL53L0X_DEV De
 				FinalRangeOverheadMicroSeconds;
 
 		/* Final Range Timeout
-		 * Note that the final range timeout is determined by the timing
-		 * budget and the sum of all other timeouts within the sequence.
-		 * If there is no room for the final range timeout, then an error
-		 * will be set. Otherwise the remaining time will be applied to
-		 * the final range.
-		 */
+		* Note that the final range timeout is determined by the timing
+		* budget and the sum of all other timeouts within the sequence.
+		* If there is no room for the final range timeout, then an error
+		* will be set. Otherwise the remaining time will be applied to
+		* the final range.
+		*/
 		Status = set_sequence_step_timeout(Dev,
-			VL53L0X_SEQUENCESTEP_FINAL_RANGE,
-			FinalRangeTimingBudgetMicroSeconds);
+			   VL53L0X_SEQUENCESTEP_FINAL_RANGE,
+			   FinalRangeTimingBudgetMicroSeconds);
 
 		VL53L0X_SETPARAMETERFIELD(Dev,
-			MeasurementTimingBudgetMicroSeconds,
-			MeasurementTimingBudgetMicroSeconds);
+			   MeasurementTimingBudgetMicroSeconds,
+			   MeasurementTimingBudgetMicroSeconds);
 	}
 
 	LOG_FUNCTION_END(Status);
@@ -1692,7 +1693,7 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 	const uint32_t cPulseEffectiveWidth_centi_ns   = 800;
 	/* Expressed in 100ths of a ns, i.e. centi-ns */
 	const uint32_t cAmbientEffectiveWidth_centi_ns = 600;
-	const FixPoint1616_t cDfltFinalRangeIntegrationTimeMilliSecs	= 0x00190000; /* 25ms */
+	const FixPoint1616_t cSigmaEstRef	= 0x00000042; /* 0.001 */
 	const uint32_t cVcselPulseWidth_ps	= 4700; /* pico secs */
 	const FixPoint1616_t cSigmaEstMax	= 0x028F87AE;
 	const FixPoint1616_t cSigmaEstRtnMax	= 0xF000;
@@ -1707,7 +1708,6 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 	uint32_t vcselTotalEventsRtn;
 	uint32_t finalRangeTimeoutMicroSecs;
 	uint32_t preRangeTimeoutMicroSecs;
-	uint32_t finalRangeIntegrationTimeMilliSecs;
 	FixPoint1616_t sigmaEstimateP1;
 	FixPoint1616_t sigmaEstimateP2;
 	FixPoint1616_t sigmaEstimateP3;
@@ -1730,7 +1730,6 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 	FixPoint1616_t sqrtResult;
 	FixPoint1616_t totalSignalRate_mcps;
 	FixPoint1616_t correctedSignalRate_mcps;
-	FixPoint1616_t sigmaEstRef;
 	uint32_t vcselWidth;
 	uint32_t finalRangeMacroPCLKS;
 	uint32_t preRangeMacroPCLKS;
@@ -1740,7 +1739,18 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 	/*! \addtogroup calc_sigma_estimate
 	 * @{
 	 *
-	 * Estimates the range sigma
+	 * Estimates the range sigma based on the
+	 *
+	 *	- vcsel_rate_kcps
+	 *	- ambient_rate_kcps
+	 *	- signal_total_events
+	 *	- xtalk_rate
+	 *
+	 * and the following parameters
+	 *
+	 *	- SigmaEstRefArray
+	 *	- SigmaEstEffPulseWidth
+	 *	- SigmaEstEffAmbWidth
 	 */
 
 	LOG_FUNCTION_START("");
@@ -1837,6 +1847,30 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 		if (vcselTotalEventsRtn < 1)
 			vcselTotalEventsRtn = 1;
 
+		/*
+		 * Calculate individual components of the main equation -
+		 * replicating the equation implemented in the script
+		 * OpenAll_Ewok_ranging_data.jsl.
+		 *
+		 * sigmaEstimateP1 represents the effective pulse width, which
+		 * is a tuning parameter, rather than a real value.
+		 *
+		 * sigmaEstimateP2 represents the ambient/signal rate ratio
+		 * expressed as a multiple of the effective ambient width
+		 * (tuning parameter).
+		 *
+		 * sigmaEstimateP3 provides the signal event component, with the
+		 * knowledge that
+		 *	- Noise of a square pulse is 1/sqrt(12) of the pulse
+		 *	 width.
+		 *	- at 0Lux, sigma is proportional to
+		 *	  effectiveVcselPulseWidth/sqrt(12 * signalTotalEvents)
+		 *
+		 * deltaT_ps represents the time of flight in pico secs for the
+		 * current range measurement, using the "TOF per mm" constant
+		 * (in ps).
+		 */
+
 		sigmaEstimateP1 = cPulseEffectiveWidth_centi_ns;
 
 		/* ((FixPoint1616 << 16)* uint32)/uint32 = FixPoint1616 */
@@ -1862,10 +1896,11 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 		 * truncates.
 		 */
 		diff1_mcps = (((peakSignalRate_kcps << 16) -
-			2 * xTalkCompRate_kcps) + 500)/1000;
+			xTalkCompRate_kcps) + 500)/1000;
 
 		/* vcselRate + xtalkCompRate */
-		diff2_mcps = ((peakSignalRate_kcps << 16) + 500)/1000;
+		diff2_mcps = (((peakSignalRate_kcps << 16) +
+			xTalkCompRate_kcps) + 500)/1000;
 
 		/* Shift by 8 bits to increase resolution prior to the
 		 * division */
@@ -1877,37 +1912,33 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 		/* FixPoint2408 << 8 = FixPoint1616 */
 		xTalkCorrection <<= 8;
 
-		if(pRangingMeasurementData->RangeStatus != 0){
-			pwMult = 1 << 16;
-		} else {
-			/* FixPoint1616/uint32 = FixPoint1616 */
-			pwMult = deltaT_ps/cVcselPulseWidth_ps; /* smaller than 1.0f */
+		/* FixPoint1616/uint32 = FixPoint1616 */
+		pwMult = deltaT_ps/cVcselPulseWidth_ps; /* smaller than 1.0f */
 
-			/*
-			 * FixPoint1616 * FixPoint1616 = FixPoint3232, however both
-			 * values are small enough such that32 bits will not be
-			 * exceeded.
-			 */
-			pwMult *= ((1 << 16) - xTalkCorrection);
+		/*
+		 * FixPoint1616 * FixPoint1616 = FixPoint3232, however both
+		 * values are small enough such that32 bits will not be
+		 * exceeded.
+		 */
+		pwMult *= ((1 << 16) - xTalkCorrection);
 
-			/* (FixPoint3232 >> 16) = FixPoint1616 */
-			pwMult =  (pwMult + c16BitRoundingParam) >> 16;
+		/* (FixPoint3232 >> 16) = FixPoint1616 */
+		pwMult =  (pwMult + c16BitRoundingParam) >> 16;
 
-			/* FixPoint1616 + FixPoint1616 = FixPoint1616 */
-			pwMult += (1 << 16);
+		/* FixPoint1616 + FixPoint1616 = FixPoint1616 */
+		pwMult += (1 << 16);
 
-			/*
-			 * At this point the value will be 1.xx, therefore if we square
-			 * the value this will exceed 32 bits. To address this perform
-			 * a single shift to the right before the multiplication.
-			 */
-			pwMult >>= 1;
-			/* FixPoint1715 * FixPoint1715 = FixPoint3430 */
-			pwMult = pwMult * pwMult;
+		/*
+		 * At this point the value will be 1.xx, therefore if we square
+		 * the value this will exceed 32 bits. To address this perform
+		 * a single shift to the right before the multiplication.
+		 */
+		pwMult >>= 1;
+		/* FixPoint1715 * FixPoint1715 = FixPoint3430 */
+		pwMult = pwMult * pwMult;
 
-			/* (FixPoint3430 >> 14) = Fix1616 */
-			pwMult >>= 14;
-		}
+		/* (FixPoint3430 >> 14) = Fix1616 */
+		pwMult >>= 14;
 
 		/* FixPoint1616 * uint32 = FixPoint1616 */
 		sqr1 = pwMult * sigmaEstimateP1;
@@ -1953,25 +1984,11 @@ VL53L0X_Error VL53L0X_calc_sigma_estimate(VL53L0X_DEV Dev,
 			 * max result. */
 			sigmaEstRtn = cSigmaEstRtnMax;
 		}
-		finalRangeIntegrationTimeMilliSecs =
-			(finalRangeTimeoutMicroSecs + preRangeTimeoutMicroSecs + 500)/1000;
-
-		/* sigmaEstRef = 1mm * 25ms/final range integration time (inc pre-range)
-		 * sqrt(FixPoint1616/int) = FixPoint2408)
-		 */
-		sigmaEstRef =
-			VL53L0X_isqrt((cDfltFinalRangeIntegrationTimeMilliSecs +
-				finalRangeIntegrationTimeMilliSecs/2)/
-				finalRangeIntegrationTimeMilliSecs);
-
-		/* FixPoint2408 << 8 = FixPoint1616 */
-		sigmaEstRef <<= 8;
-		sigmaEstRef = (sigmaEstRef + 500)/1000;
 
 		/* FixPoint1616 * FixPoint1616 = FixPoint3232 */
 		sqr1 = sigmaEstRtn * sigmaEstRtn;
 		/* FixPoint1616 * FixPoint1616 = FixPoint3232 */
-		sqr2 = sigmaEstRef * sigmaEstRef;
+		sqr2 = cSigmaEstRef * cSigmaEstRef;
 
 		/* sqrt(FixPoint3232) = FixPoint1616 */
 		sqrtResult = VL53L0X_isqrt((sqr1 + sqr2));
@@ -2058,6 +2075,22 @@ VL53L0X_Error VL53L0X_get_pal_range_status(VL53L0X_DEV Dev,
 		NoneFlag = 0;
 	}
 
+	/* LastSignalRefMcps */
+	if (Status == VL53L0X_ERROR_NONE)
+		Status = VL53L0X_WrByte(Dev, 0xFF, 0x01);
+
+	if (Status == VL53L0X_ERROR_NONE)
+		Status = VL53L0X_RdWord(Dev,
+			VL53L0X_REG_RESULT_PEAK_SIGNAL_RATE_REF,
+			&tmpWord);
+
+	LastSignalRefMcps = VL53L0X_FIXPOINT97TOFIXPOINT1616(tmpWord);
+
+	if (Status == VL53L0X_ERROR_NONE)
+		Status = VL53L0X_WrByte(Dev, 0xFF, 0x00);
+
+	PALDevDataSet(Dev, LastSignalRefMcps, LastSignalRefMcps);
+
 	/*
 	 * Check if Sigma limit is enabled, if yes then do comparison with limit
 	 * value and put the result back into pPalRangeStatus.
@@ -2106,21 +2139,6 @@ VL53L0X_Error VL53L0X_get_pal_range_status(VL53L0X_DEV Dev,
 		Status = VL53L0X_GetLimitCheckValue(Dev,
 				VL53L0X_CHECKENABLE_SIGNAL_REF_CLIP,
 				&SignalRefClipValue);
-
-		/* Read LastSignalRefMcps from device */
-		if (Status == VL53L0X_ERROR_NONE)
-			Status = VL53L0X_WrByte(Dev, 0xFF, 0x01);
-
-		if (Status == VL53L0X_ERROR_NONE)
-			Status = VL53L0X_RdWord(Dev,
-				VL53L0X_REG_RESULT_PEAK_SIGNAL_RATE_REF,
-				&tmpWord);
-
-		if (Status == VL53L0X_ERROR_NONE)
-			Status = VL53L0X_WrByte(Dev, 0xFF, 0x00);
-
-		LastSignalRefMcps = VL53L0X_FIXPOINT97TOFIXPOINT1616(tmpWord);
-		PALDevDataSet(Dev, LastSignalRefMcps, LastSignalRefMcps);
 
 		if ((SignalRefClipValue > 0) &&
 				(LastSignalRefMcps > SignalRefClipValue)) {

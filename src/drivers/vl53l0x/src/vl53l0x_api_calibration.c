@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2016, STMicroelectronics International N.V.
+ Copyright ï¿½ 2016, STMicroelectronics International N.V.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -860,19 +860,16 @@ VL53L0X_Error VL53L0X_perform_ref_spad_management(VL53L0X_DEV Dev,
 				break;
 			}
 
+			(refSpadCount_int)++;
+
 			/* Cannot combine Aperture and Non-Aperture spads, so
 			 * ensure the current spad is of the correct type.
 			 */
 			if (is_aperture((uint32_t)startSelect + nextGoodSpad) !=
 					needAptSpads) {
-				/* At this point we have enabled the maximum
-				 * number of Aperture spads.
-				 */
-				complete = 1;
+				Status = VL53L0X_ERROR_REF_SPAD_INIT;
 				break;
 			}
-
-			(refSpadCount_int)++;
 
 			currentSpadIndex = nextGoodSpad;
 			Status = enable_spad_bit(

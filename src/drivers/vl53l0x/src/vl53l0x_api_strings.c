@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2016, STMicroelectronics International N.V.
+ Copyright ï¿½ 2016, STMicroelectronics International N.V.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,6 @@ VL53L0X_Error VL53L0X_get_device_info(VL53L0X_DEV Dev,
 	uint8_t Revision;
 
 	Status = VL53L0X_check_part_used(Dev, &Revision, pVL53L0X_DeviceInfo);
-
 	if (Status == VL53L0X_ERROR_NONE) {
 		if (Revision == 0) {
 			VL53L0X_COPYSTRING(pVL53L0X_DeviceInfo->Name,
@@ -106,7 +105,6 @@ VL53L0X_Error VL53L0X_get_device_info(VL53L0X_DEV Dev,
 		Status = VL53L0X_RdByte(Dev, VL53L0X_REG_IDENTIFICATION_MODEL_ID,
 				&pVL53L0X_DeviceInfo->ProductType);
 	}
-
 	if (Status == VL53L0X_ERROR_NONE) {
 		Status = VL53L0X_RdByte(Dev,
 			VL53L0X_REG_IDENTIFICATION_REVISION_ID,

@@ -26,6 +26,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+#define USE_I2C_2V8
+
 #include "vl53l0x_api.h"
 #include "vl53l0x_tuning.h"
 #include "vl53l0x_interrupt_threshold_settings.h"
@@ -386,7 +388,15 @@ VL53L0X_Error VL53L0X_DataInit(VL53L0X_DEV Dev)
 	if (Status == VL53L0X_ERROR_NONE)
 		Status = VL53L0X_WrByte(Dev, 0x88, 0x00);
 
+	/* read WHO_AM_I */
+	uint8_t b;
+	Status = VL53L0X_RdByte(Dev, 0xC0, &b);
+	//Serial.print("WHOAMI: 0x"); Serial.println(b, HEX);
+	   
+	/* read WHO_AM_I */
+
 	VL53L0X_SETDEVICESPECIFICPARAMETER(Dev, ReadDataFromDeviceDone, 0);
+
 #ifdef USE_IQC_STATION
 	if (Status == VL53L0X_ERROR_NONE)
 		Status = VL53L0X_apply_offset_adjustment(Dev);
@@ -409,6 +419,7 @@ VL53L0X_Error VL53L0X_DataInit(VL53L0X_DEV Dev)
 
 	/* Get default parameters */
 	Status = VL53L0X_GetDeviceParameters(Dev, &CurrentParameters);
+
 	if (Status == VL53L0X_ERROR_NONE) {
 		/* initialize PAL values */
 		CurrentParameters.DeviceMode = VL53L0X_DEVICEMODE_SINGLE_RANGING;
@@ -499,7 +510,6 @@ VL53L0X_Error VL53L0X_DataInit(VL53L0X_DEV Dev)
 	if (Status == VL53L0X_ERROR_NONE)
 		VL53L0X_SETDEVICESPECIFICPARAMETER(Dev, RefSpadsInitialised, 0);
 
-
 	LOG_FUNCTION_END(Status);
 	return Status;
 }
@@ -559,7 +569,7 @@ VL53L0X_Error VL53L0X_StaticInit(VL53L0X_DEV Dev)
 	uint32_t refSpadCount = 0;
 	uint8_t ApertureSpads = 0;
 	uint8_t vcselPulsePeriodPCLK;
-	uint32_t seqTimeoutMicroSecs;
+	FixPoint1616_t seqTimeoutMilliSecs;
 
 	LOG_FUNCTION_START("");
 
@@ -693,32 +703,32 @@ VL53L0X_Error VL53L0X_StaticInit(VL53L0X_DEV Dev)
 
 	/* Store pre-range timeout */
 	if (Status == VL53L0X_ERROR_NONE) {
-		Status = get_sequence_step_timeout(
+		Status = VL53L0X_GetSequenceStepTimeout(
 			Dev,
 			VL53L0X_SEQUENCESTEP_PRE_RANGE,
-			&seqTimeoutMicroSecs);
+			&seqTimeoutMilliSecs);
 	}
 
 	if (Status == VL53L0X_ERROR_NONE) {
 		VL53L0X_SETDEVICESPECIFICPARAMETER(
 			Dev,
 			PreRangeTimeoutMicroSecs,
-			seqTimeoutMicroSecs);
+			seqTimeoutMilliSecs);
 	}
 
 	/* Store final-range timeout */
 	if (Status == VL53L0X_ERROR_NONE) {
-		Status = get_sequence_step_timeout(
+		Status = VL53L0X_GetSequenceStepTimeout(
 			Dev,
 			VL53L0X_SEQUENCESTEP_FINAL_RANGE,
-			&seqTimeoutMicroSecs);
+			&seqTimeoutMilliSecs);
 	}
 
 	if (Status == VL53L0X_ERROR_NONE) {
 		VL53L0X_SETDEVICESPECIFICPARAMETER(
 			Dev,
 			FinalRangeTimeoutMicroSecs,
-			seqTimeoutMicroSecs);
+			seqTimeoutMilliSecs);
 	}
 
 	LOG_FUNCTION_END(Status);
@@ -754,8 +764,6 @@ VL53L0X_Error VL53L0X_ResetDevice(VL53L0X_DEV Dev)
 		} while (Byte != 0x00);
 	}
 
-	VL53L0X_PollingDelay(Dev);
-
 	/* Release reset */
 	Status = VL53L0X_WrByte(Dev, VL53L0X_REG_SOFT_RESET_GO2_SOFT_RESET_N,
 		0x01);
@@ -767,8 +775,6 @@ VL53L0X_Error VL53L0X_ResetDevice(VL53L0X_DEV Dev)
 			VL53L0X_REG_IDENTIFICATION_MODEL_ID, &Byte);
 		} while (Byte == 0x00);
 	}
-
-	VL53L0X_PollingDelay(Dev);
 
 	/* Set PAL State to VL53L0X_STATE_POWERDOWN */
 	if (Status == VL53L0X_ERROR_NONE)
@@ -1304,14 +1310,17 @@ VL53L0X_Error VL53L0X_GetSequenceStepTimeout(VL53L0X_DEV Dev,
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 	uint32_t TimeoutMicroSeconds;
+	uint32_t WholeNumber_ms = 0;
+	uint32_t Fraction_ms = 0;
 	LOG_FUNCTION_START("");
 
 	Status = get_sequence_step_timeout(Dev, SequenceStepId,
 		&TimeoutMicroSeconds);
 	if (Status == VL53L0X_ERROR_NONE) {
-		TimeoutMicroSeconds <<= 8;
-		*pTimeOutMilliSecs = (TimeoutMicroSeconds + 500)/1000;
-		*pTimeOutMilliSecs <<= 8;
+		WholeNumber_ms = TimeoutMicroSeconds / 1000;
+		Fraction_ms = TimeoutMicroSeconds - (WholeNumber_ms * 1000);
+		*pTimeOutMilliSecs = (WholeNumber_ms << 16)
+			+ (((Fraction_ms * 0xffff) + 500) / 1000);
 	}
 
 	LOG_FUNCTION_END(Status);
@@ -2519,20 +2528,13 @@ VL53L0X_Error VL53L0X_GetMeasurementRefSignal(VL53L0X_DEV Dev,
 	FixPoint1616_t *pMeasurementRefSignal)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-	uint8_t SignalRefClipLimitCheckEnable = 0;
 	LOG_FUNCTION_START("");
 
-	Status = VL53L0X_GetLimitCheckEnable(Dev,
-			VL53L0X_CHECKENABLE_SIGNAL_REF_CLIP,
-			&SignalRefClipLimitCheckEnable);
-	if (SignalRefClipLimitCheckEnable != 0) {
-		*pMeasurementRefSignal = PALDevDataGet(Dev, LastSignalRefMcps);
-	} else {
-		Status = VL53L0X_ERROR_INVALID_COMMAND;
-	}
-	LOG_FUNCTION_END(Status);
+	*pMeasurementRefSignal = PALDevDataGet(Dev, LastSignalRefMcps);
 
+	LOG_FUNCTION_END(Status);
 	return Status;
+
 }
 
 VL53L0X_Error VL53L0X_GetHistogramMeasurementData(VL53L0X_DEV Dev,
@@ -2558,7 +2560,6 @@ VL53L0X_Error VL53L0X_PerformSingleRangingMeasurement(VL53L0X_DEV Dev,
 
 	if (Status == VL53L0X_ERROR_NONE)
 		Status = VL53L0X_PerformSingleMeasurement(Dev);
-
 
 	if (Status == VL53L0X_ERROR_NONE)
 		Status = VL53L0X_GetRangingMeasurementData(Dev,
@@ -2848,7 +2849,7 @@ VL53L0X_Error VL53L0X_GetStopCompletedStatus(VL53L0X_DEV Dev,
 		Status = VL53L0X_WrByte(Dev, 0xFF, 0x0);
 
 	*pStopStatus = Byte;
-
+	
 	if (Byte == 0) {
 		Status = VL53L0X_WrByte(Dev, 0x80, 0x01);
 		Status = VL53L0X_WrByte(Dev, 0xFF, 0x01);
