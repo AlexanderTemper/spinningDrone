@@ -4,6 +4,7 @@
 #include "sensor.h"
 #include "imu.h"
 #include "tof.h"
+#include "tof.h"
 
 #include "clock_support.h"
 #include "spi_support.h"
@@ -20,10 +21,8 @@
 /*! Sensors data are read in accordance with TC6 callback. */
 #define READ_SENSORS_FLAG				tc6_callback_flag
 
-
 int main(void) {
     /********************* Initialize global variables **********************/
-
 
     uint16_t timer = 0;
 
@@ -55,10 +54,26 @@ int main(void) {
     accInit();
     magInit();
     tofInit();
+    int32_t status_int = 0;
+    uint8_t read = 0xff;
+    do {
+        status_int = VL53L0X_RdByte(&tofDev, VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV, &read);
+        if (status_int != 0) {
+            break;
+        }
+        if (read == 0) {
+            status_int = VL53L0X_WrByte(&tofDev, VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV, 0x01);
+        }
+        if (status_int != 0) {
+            break;
+        }
 
-    //initVL53L0X(false);
-    //setTimeout(400);
-    //startContinuous(0);
+    } while (read == 0);
+    while (1) {
+        DEBUG_WAIT(MODUL_DEFAULT, "Sensor fail");
+    }
+
+    //VL53L0X_UpdateByte(Dev,VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV,0xFE,x01);
     /************************** Infinite Loop *******************************/
     while (true) {
         /* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
@@ -70,8 +85,6 @@ int main(void) {
             readTofData();
 
             updateAtt();
-
-
 
             // 10MS * 10 == 100ms
             if (timer > 10) {
