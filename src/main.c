@@ -21,8 +21,6 @@ void errorwait(enum status_code status){
     if(status != STATUS_OK){
         DEBUG_WAIT(MODUL_DEFAULT, "Fail code 0x%x",status);
         while(1);
-    } else {
-        DEBUG_WAIT(MODUL_DEFAULT, "OK 0x%x                       ",status);
     }
 }
 /*! Sensors data are read in accordance with TC6 callback. */
