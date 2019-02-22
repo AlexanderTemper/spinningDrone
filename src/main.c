@@ -17,7 +17,14 @@
 /************************************************************************/
 /* Macro Definitions                                                    */
 /************************************************************************/
-
+void errorwait(enum status_code status){
+    if(status != STATUS_OK){
+        DEBUG_WAIT(MODUL_DEFAULT, "Fail code 0x%x",status);
+        while(1);
+    } else {
+        DEBUG_WAIT(MODUL_DEFAULT, "OK 0x%x                       ",status);
+    }
+}
 /*! Sensors data are read in accordance with TC6 callback. */
 #define READ_SENSORS_FLAG				tc6_callback_flag
 
@@ -25,6 +32,7 @@ int main(void) {
     /********************* Initialize global variables **********************/
 
     uint16_t timer = 0;
+    uint8_t status = STATUS_OK;
 
     /************************* Initializations ******************************/
 
@@ -44,7 +52,9 @@ int main(void) {
     usart_initialize();
 
     /*Initialize I2C for communication*/
-    i2c_initialize();
+    status = i2c_initialize();
+    errorwait(status);
+
 
     /*Enable the system interrupts*/
     system_interrupt_enable_global();/* All interrupts have a priority of level 0 which is the highest. */
@@ -54,7 +64,7 @@ int main(void) {
     accInit();
     magInit();
     tofInit();
-   /* int32_t status_int = 0;
+    /*int32_t status_int = 0;
     uint8_t read = 0xff;
     do {
         status_int = VL53L0X_RdByte(&tofDev, VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV, &read);
@@ -70,7 +80,7 @@ int main(void) {
 
     } while (read == 0);
     while (1) {
-        DEBUG_WAIT(MODUL_DEFAULT, "Sensor fail");
+        //DEBUG_WAIT(MODUL_DEFAULT, "Sensor fail");
     }*/
 
     /************************** Infinite Loop *******************************/
@@ -100,4 +110,5 @@ int main(void) {
     } /* !while (true) */
 
 }
+
 
