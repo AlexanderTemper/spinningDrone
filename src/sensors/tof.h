@@ -2,7 +2,7 @@
 #define _TOF_H_
 
 #include "sensor.h"
-#include "vl53l0x_api.h"
+#include "vl53l0x.h"
 #include "debug.h"
 
 typedef struct {
@@ -14,7 +14,6 @@ typedef struct {
 //G per axis x,y,z
 extern SENSOR_DATA tofData;
 extern rawTofData_t rawTofData;
-extern VL53L0X_Dev_t tofDev;
 
 
 void tofInit(void);
