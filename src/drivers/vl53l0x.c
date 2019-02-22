@@ -26,54 +26,6 @@ uint8_t getSpadInfo(uint8_t * count, bool * type_is_aperture);
 void getSequenceStepEnables(SequenceStepEnables * enables);
 void getSequenceStepTimeouts(SequenceStepEnables const * enables, SequenceStepTimeouts * timeouts);
 
-
-#ifdef I2C_DEBUG
-void debugwritei2c(struct i2c_master_packet * const packet) {
-    uint16_t buffer_counter = 0;
-    uint16_t tmp_data_length = packet->data_length;
-    while (tmp_data_length--) {
-        uint8_t usart_buffer_tx[81] = {0};
-        uint8_t data = packet->data[buffer_counter++];
-        sprintf((char *) usart_buffer_tx, "ABD send[%d/%d]:0x%x          ", packet->data_length, buffer_counter - 1, data);
-        usart_write_buffer_wait(&usart_instance, usart_buffer_tx, sizeof(usart_buffer_tx));
-    }
-}
-
-void debugreadi2c(struct i2c_master_packet * const packet) {
-    uint16_t buffer_counter = 0;
-    uint16_t tmp_data_length = packet->data_length;
-    while (tmp_data_length--) {
-        uint8_t read = packet->data[buffer_counter++];
-        uint8_t usart_buffer_tx[81] = {0};
-        sprintf((char *) usart_buffer_tx, "ABD read[%d/%d]:0x%x         ", packet->data_length, buffer_counter - 1, read);
-        usart_write_buffer_wait(&usart_instance, usart_buffer_tx, sizeof(usart_buffer_tx));
-    }
-}
-
-int32_t debugwrite(uint8_t address, uint8_t index, uint8_t *pdata, int32_t count) {
-    DEBUG_WAIT(MODUL_I2C, "write %d to addr 0x%x :", count, index);
-    uint16_t buffer_counter = 0;
-    while (buffer_counter < count) {
-        DEBUG_WAIT(MODUL_I2C, " 0x%x,", pdata[buffer_counter++]);
-    }
-
-    return VL53L0X_ERROR_NONE;
-}
-
-int32_t debugread(uint8_t address, uint8_t index, uint8_t *pdata, int32_t count) {
-    //DEBUG_WAIT(MODUL_I2C, "Reading %d to addr 0x%x :", count, index);
-
-    DEBUG_WAIT(MODUL_I2C, "read %d from addr 0x%x :", count, index);
-    uint16_t buffer_counter = 0;
-    while (buffer_counter < count) {
-        DEBUG_WAIT(MODUL_I2C, " 0x%x,", pdata[buffer_counter++]);
-    }
-
-    return VL53L0X_ERROR_NONE;
-}
-
-#endif
-
 VL53L0X_Error writei2c(uint8_t *pdata, int32_t count) {
 
     uint32_t mytimeout = 0;
@@ -99,11 +51,10 @@ VL53L0X_Error writei2c(uint8_t *pdata, int32_t count) {
 
 VL53L0X_Error writeMulti(uint8_t reg, uint8_t *src, uint8_t count) {
     writeBuffer[0] = reg;
-    for (int i = 0; i < count && i < 4; i++) {
+    for (int i = 0; i < count && i < 4; i++) { // TODO Memcpy ?
         writeBuffer[i + 1] = src[i];
     }
 
-    //debugwrite(address,index,pdata,count);
     return writei2c(writeBuffer, count + 1);
 }
 
@@ -141,8 +92,6 @@ VL53L0X_Error readMulti(uint8_t reg, uint8_t *dst, uint8_t count) {
         }
     } while (i2cStatus != STATUS_OK);
 
-    // debugreadi2c(&packet);
-    //debugread(address,index,pdata,count);
     return VL53L0X_ERROR_NONE;
 }
 
