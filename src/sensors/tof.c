@@ -50,7 +50,7 @@ void tofInit(void) {
 
     VL53L0X_Version_t Version;
     VL53L0X_DeviceInfo_t DeviceInfo;
-/*
+
     DEBUG_WAIT(MODUL_DEFAULT, "Sensor init");
     tofDevStatus = VL53L0X_DataInit(&tofDev);
 
@@ -118,28 +118,26 @@ void tofInit(void) {
 
     if (tofDevStatus != VL53L0X_ERROR_NONE) {
         DEBUG_WAIT(MODUL_DEFAULT, "fehler %d", tofDevStatus);
-    }*/
+    }
 }
 
 SENSOR_OPERATION_STATUS readTofData(void) {
     VL53L0X_RangingMeasurementData_t RangingMeasurementData;
     VL53L0X_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasurementData;
-    if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        tofDevStatus = WaitMeasurementDataReady(&tofDev);
-    }
+    uint8_t NewDatReady = 0;
 
-    if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "Messung");
+    tofDevStatus = VL53L0X_GetMeasurementDataReady(&tofDev, &NewDatReady);
+    if ((NewDatReady == 0x01) && tofDevStatus == VL53L0X_ERROR_NONE) {
         tofDevStatus = VL53L0X_GetRangingMeasurementData(&tofDev, pRangingMeasurementData);
 
-        tofData.x = pRangingMeasurementData->RangeMilliMeter;
+              tofData.x = pRangingMeasurementData->RangeMilliMeter;
 
-        // Clear the interrupt
-        VL53L0X_ClearInterruptMask(&tofDev, VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
-        VL53L0X_PollingDelay(&tofDev);
-        return SENSOR_SUCCESS;
+              // Clear the interrupt
+              VL53L0X_ClearInterruptMask(&tofDev, VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
+              VL53L0X_PollingDelay(&tofDev);
+              return SENSOR_SUCCESS;
     }
-
-    return SENSOR_ERROR;
+    //TODO SENSOR Busy
+    return SENSOR_SUCCESS;
 }
 

@@ -1,7 +1,7 @@
 #include "vl53l0x_i2c_platform.h"
 
 #define TIMEOUT 1000
-#define I2C_DEBUG
+//#define I2C_DEBUG
 
 #ifdef I2C_DEBUG
 void debugwritei2c(struct i2c_master_packet * const packet) {
@@ -49,9 +49,35 @@ int32_t debugread(uint8_t address, uint8_t index, uint8_t *pdata, int32_t count)
     return VL53L0X_ERROR_NONE;
 }
 
-
-
 #endif
+
+
+uint8_t writeBuffer[5];
+
+
+int32_t writei2c(uint8_t address, uint8_t *pdata, int32_t count) {
+
+    uint32_t mytimeout = 0;
+    uint8_t i2cStatus = STATUS_OK;
+    struct i2c_master_packet packet = {
+            .address = address,
+            .data_length = count,
+            .data = pdata,
+            .ten_bit_address = false,
+            .high_speed = false,
+            .hs_master_code = 0x0,
+    };
+
+    do {
+        i2cStatus = i2c_master_write_packet_wait(&i2c_master_instance, &packet);
+        if (mytimeout++ == TIMEOUT) {
+            DEBUG_WAIT(MODUL_I2C, "I2C Read Register Timeout: 0x%x", i2cStatus);
+            return VL53L0X_ERROR_CONTROL_INTERFACE;
+        }
+    } while (i2cStatus != STATUS_OK);
+    return VL53L0X_ERROR_NONE;
+}
+
 /**
  * @brief Writes the supplied byte buffer to the device
  *
@@ -78,44 +104,13 @@ int32_t debugread(uint8_t address, uint8_t index, uint8_t *pdata, int32_t count)
 
 int32_t VL53L0X_write_multi(uint8_t address, uint8_t index, uint8_t *pdata, int32_t count) {
 
-    debugwrite(address,index,pdata,count);
+    writeBuffer[0]=index;
+    for(int i = 0; i<count && i<4;i++){
+        writeBuffer[i+1] = pdata[i];
+    }
 
-    uint32_t mytimeout = 0;
-    uint8_t i2cStatus = STATUS_OK;
-    struct i2c_master_packet packet = {
-            .address = address,
-            .data_length = 1,
-            .data = &index,
-            .ten_bit_address = false,
-            .high_speed = false,
-            .hs_master_code =0x0,
-    };
-
-  //  debugwritei2c(&packet);
-    //Send reg to write
-    do {
-        i2cStatus = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &packet);
-        if (mytimeout++ == TIMEOUT) {
-            DEBUG_WAIT(MODUL_I2C,"I2C write Register Timeout: 0x%x", i2cStatus);
-            return VL53L0X_ERROR_CONTROL_INTERFACE;
-        }
-    } while (i2cStatus != STATUS_OK);
-
-    mytimeout = 0;
-    packet.data_length = count;
-    packet.data = pdata;
-
-  //  debugwritei2c(&packet);
-    do {
-        i2cStatus = i2c_master_write_packet_wait(&i2c_master_instance, &packet) ;
-        if (mytimeout++ == TIMEOUT) {
-            DEBUG_WAIT(MODUL_I2C,"I2C write Data Timeout: 0x%x", i2cStatus);
-            return VL53L0X_ERROR_CONTROL_INTERFACE;
-        }
-    } while (i2cStatus != STATUS_OK);
-
-
-    return VL53L0X_ERROR_NONE;
+    //debugwrite(address,index,pdata,count);
+    return writei2c(address,writeBuffer,count+1);
 }
 
 /**
@@ -157,7 +152,7 @@ int32_t VL53L0X_read_multi(uint8_t address, uint8_t index, uint8_t *pdata, int32
 
    // debugwritei2c(&packet);
     do {
-        i2cStatus = i2c_master_write_packet_wait_no_stop(&i2c_master_instance, &packet);
+        i2cStatus = i2c_master_write_packet_wait(&i2c_master_instance, &packet);
         if (mytimeout++ == TIMEOUT) {
             DEBUG_WAIT(MODUL_I2C,"I2C Read Register Timeout: 0x%x", i2cStatus);
             return VL53L0X_ERROR_CONTROL_INTERFACE;
@@ -178,7 +173,7 @@ int32_t VL53L0X_read_multi(uint8_t address, uint8_t index, uint8_t *pdata, int32
     } while (i2cStatus != STATUS_OK);
 
    // debugreadi2c(&packet);
-    debugread(address,index,pdata,count);
+    //debugread(address,index,pdata,count);
     return VL53L0X_ERROR_NONE;
 }
 

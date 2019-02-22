@@ -17,8 +17,7 @@ struct i2c_master_module i2c_master_instance;
 /************************************************************************/
 /* Function Declarations                                                */
 /************************************************************************/
-void i2c_initialize(void);
-void i2c_configure_master(void);
+enum status_code i2c_initialize(void);
 
 
 #endif /* I2C_SUPPORT_H_ */
