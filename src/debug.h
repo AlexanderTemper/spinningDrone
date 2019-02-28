@@ -8,10 +8,10 @@
 #include "usart_support.h"
 
 #define MAX_STRING_LENGTH 256
-#define DEBUG_LOG_ENABLE
+//#define DEBUG_LOG_ENABLE
 
 enum {
-    MODUL_DEFAULT = 1, MODUL_I2C = 2, MODUL_ALL = 0x7fffffff //all bits except sign
+    MODUL_DEFAULT = 1, MODUL_I2C = 2, MODUL_TOF = 4,MODUL_ALL = 0x7fffffff //all bits except sign
 };
 
 #ifdef DEBUG_LOG_ENABLE

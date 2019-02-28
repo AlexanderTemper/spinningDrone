@@ -1,5 +1,5 @@
 /*******************************************************************************
-Copyright © 2016, STMicroelectronics International N.V.
+Copyright ï¿½ 2016, STMicroelectronics International N.V.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -81,6 +81,7 @@ VL53L0X_Error VL53L0X_get_limit_check_info(VL53L0X_DEV Dev, uint16_t LimitCheckI
 	#define  VL53L0X_STRING_ERROR_BUFFER_TOO_SMALL                       ""
 	#define  VL53L0X_STRING_ERROR_GPIO_NOT_EXISTING                      ""
 	#define  VL53L0X_STRING_ERROR_GPIO_FUNCTIONALITY_NOT_SUPPORTED       ""
+    #define VL53L0X_STRING_ERROR_INTERRUPT_NOT_CLEARED                   ""
 	#define  VL53L0X_STRING_ERROR_CONTROL_INTERFACE                      ""
 	#define  VL53L0X_STRING_ERROR_INVALID_COMMAND                        ""
 	#define  VL53L0X_STRING_ERROR_DIVISION_BY_ZERO                       ""
@@ -134,6 +135,8 @@ VL53L0X_Error VL53L0X_get_limit_check_info(VL53L0X_DEV Dev, uint16_t LimitCheckI
 	#define  VL53L0X_STRING_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE          ""
 	#define  VL53L0X_STRING_CHECKENABLE_SIGNAL_REF_CLIP                  ""
 	#define  VL53L0X_STRING_CHECKENABLE_RANGE_IGNORE_THRESHOLD           ""
+    #define  VL53L0X_STRING_CHECKENABLE_SIGNAL_RATE_MSRC                 ""
+    #define  VL53L0X_STRING_CHECKENABLE_SIGNAL_RATE_PRE_RANGE            ""
 
 	/* Sequence Step */
 	#define  VL53L0X_STRING_SEQUENCESTEP_TCC                             ""

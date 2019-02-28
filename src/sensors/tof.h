@@ -17,7 +17,7 @@ extern rawTofData_t rawTofData;
 extern VL53L0X_Dev_t tofDev;
 
 
-void tofInit(void);
+SENSOR_OPERATION_STATUS tofInit(void);
 SENSOR_OPERATION_STATUS readTofData(void);
 
 #endif /* !_TOF_H_ */

@@ -38,6 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
+//Save space
+//#define USE_EMPTY_STRING;
+
 /**
  * @file vl53l0x_platform.h
  *

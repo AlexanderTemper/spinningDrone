@@ -7,7 +7,6 @@ SENSOR_DATA tofData;
 VL53L0X_Error tofDevStatus;
 VL53L0X_Dev_t tofDev;
 
-
 /************************************************************************/
 VL53L0X_Error WaitMeasurementDataReady(VL53L0X_DEV Dev) {
     VL53L0X_Error Status = VL53L0X_ERROR_NONE;
@@ -39,86 +38,80 @@ VL53L0X_Error WaitMeasurementDataReady(VL53L0X_DEV Dev) {
 #define VERSION_REQUIRED_MINOR 0
 #define VERSION_REQUIRED_BUILD 1
 
-
-
-void tofInit(void) {
+SENSOR_OPERATION_STATUS tofInit(void) {
     tofDev.I2cDevAddr = 0x29;
     uint32_t refSpadCount;
     uint8_t isApertureSpads;
     uint8_t VhvSettings;
     uint8_t PhaseCal;
 
-    VL53L0X_Version_t Version;
-    VL53L0X_DeviceInfo_t DeviceInfo;
-
-    DEBUG_WAIT(MODUL_DEFAULT, "Sensor init");
+    DEBUG_WAIT(MODUL_TOF, "Sensor init");
     tofDevStatus = VL53L0X_DataInit(&tofDev);
 
     if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "Device Info");
-        tofDevStatus = VL53L0X_GetDeviceInfo(&tofDev, &DeviceInfo);
-    }
-    if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "VL53L0X_GetDeviceInfo:\n");
-        DEBUG_WAIT(MODUL_DEFAULT, "Device Name : %s\n", DeviceInfo.Name);
-        DEBUG_WAIT(MODUL_DEFAULT, "Device Type : %s\n", DeviceInfo.Type);
-        DEBUG_WAIT(MODUL_DEFAULT, "Device ID : %s\n", DeviceInfo.ProductId);
-        DEBUG_WAIT(MODUL_DEFAULT, "ProductRevisionMajor : %d\n", DeviceInfo.ProductRevisionMajor);
-        DEBUG_WAIT(MODUL_DEFAULT, "ProductRevisionMinor : %d\n", DeviceInfo.ProductRevisionMinor);
-
-        if ((DeviceInfo.ProductRevisionMinor != 1) && (DeviceInfo.ProductRevisionMinor != 1)) {
-            DEBUG_WAIT(MODUL_DEFAULT, "Error expected cut 1.1 but found cut %d.%d\n", DeviceInfo.ProductRevisionMajor, DeviceInfo.ProductRevisionMinor);
-            tofDevStatus = VL53L0X_ERROR_NOT_SUPPORTED;
-        }
-    }
-
-    if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "Call of VL53L0X_StaticInit\n");
+        DEBUG_WAIT(MODUL_TOF, "Call of VL53L0X_StaticInit\n");
         tofDevStatus = VL53L0X_StaticInit(&tofDev); // Device Initialization
         // StaticInit will set interrupt by default
     }
 
     if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "Call of VL53L0X_PerformRefSpadManagement\n");
+        DEBUG_WAIT(MODUL_TOF, "Call of VL53L0X_PerformRefSpadManagement\n");
         tofDevStatus = VL53L0X_PerformRefSpadManagement(&tofDev, &refSpadCount, &isApertureSpads); // Device Initialization
     }
 
     if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "Call of VL53L0X_PerformRefCalibration\n");
+        DEBUG_WAIT(MODUL_TOF, "Call of VL53L0X_PerformRefCalibration\n");
         tofDevStatus = VL53L0X_PerformRefCalibration(&tofDev, &VhvSettings, &PhaseCal); // Device Initialization
     }
 
     if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "Setze Device Mode CONTINUOUS");
+        DEBUG_WAIT(MODUL_TOF, "set Device Mode CONTINUOUS");
         tofDevStatus = VL53L0X_SetDeviceMode(&tofDev, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
     }
 
     // Enable/Disable Sigma and Signal check
-     if( tofDevStatus == VL53L0X_ERROR_NONE ) {
-         tofDevStatus = VL53L0X_SetLimitCheckEnable( &tofDev, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1 );
-     }
-
-     if( tofDevStatus == VL53L0X_ERROR_NONE ) {
-         tofDevStatus = VL53L0X_SetLimitCheckEnable( &tofDev, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1 );
-     }
-
-     if( tofDevStatus == VL53L0X_ERROR_NONE ) {
-         tofDevStatus = VL53L0X_SetLimitCheckEnable( &tofDev, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, 1 );
-     }
-
-     if( tofDevStatus == VL53L0X_ERROR_NONE ) {
-         tofDevStatus = VL53L0X_SetLimitCheckValue( &tofDev, VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, (FixPoint1616_t)( 1.5 * 0.023 * 65536 ) );
-     }
-
 
     if (tofDevStatus == VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "Starte Messungen");
+        tofDevStatus = VL53L0X_SetLimitCheckEnable(&tofDev,
+        VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
+    }
+    if (tofDevStatus == VL53L0X_ERROR_NONE) {
+        tofDevStatus = VL53L0X_SetLimitCheckEnable(&tofDev,
+        VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
+    }
+
+    if (tofDevStatus == VL53L0X_ERROR_NONE) {
+        tofDevStatus = VL53L0X_SetLimitCheckValue(&tofDev,
+        VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, (FixPoint1616_t) (0.1 * 65536));
+    }
+    if (tofDevStatus == VL53L0X_ERROR_NONE) {
+        tofDevStatus = VL53L0X_SetLimitCheckValue(&tofDev,
+        VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, (FixPoint1616_t) (60 * 65536));
+    }
+    if (tofDevStatus == VL53L0X_ERROR_NONE) {
+        tofDevStatus = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(&tofDev, 33000);
+    }
+
+    if (tofDevStatus == VL53L0X_ERROR_NONE) {
+        tofDevStatus = VL53L0X_SetVcselPulsePeriod(&tofDev,
+        VL53L0X_VCSEL_PERIOD_PRE_RANGE, 18);
+    }
+    if (tofDevStatus == VL53L0X_ERROR_NONE) {
+        tofDevStatus = VL53L0X_SetVcselPulsePeriod(&tofDev,
+        VL53L0X_VCSEL_PERIOD_FINAL_RANGE, 14);
+    }
+
+    if (tofDevStatus == VL53L0X_ERROR_NONE) {
+        DEBUG_WAIT(MODUL_TOF, "start measurement");
         tofDevStatus = VL53L0X_StartMeasurement(&tofDev);
     }
 
     if (tofDevStatus != VL53L0X_ERROR_NONE) {
-        DEBUG_WAIT(MODUL_DEFAULT, "fehler %d", tofDevStatus);
+        DEBUG_WAIT(MODUL_DEFAULT, "TOF Error %d", tofDevStatus);
+        return SENSOR_ERROR;
     }
+
+    return SENSOR_SUCCESS;
 }
 
 SENSOR_OPERATION_STATUS readTofData(void) {
@@ -130,12 +123,12 @@ SENSOR_OPERATION_STATUS readTofData(void) {
     if ((NewDatReady == 0x01) && tofDevStatus == VL53L0X_ERROR_NONE) {
         tofDevStatus = VL53L0X_GetRangingMeasurementData(&tofDev, pRangingMeasurementData);
 
-              tofData.x = pRangingMeasurementData->RangeMilliMeter;
+        tofData.x = pRangingMeasurementData->RangeMilliMeter;
 
-              // Clear the interrupt
-              VL53L0X_ClearInterruptMask(&tofDev, VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
-              VL53L0X_PollingDelay(&tofDev);
-              return SENSOR_SUCCESS;
+        // Clear the interrupt
+        VL53L0X_ClearInterruptMask(&tofDev, VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
+        VL53L0X_PollingDelay(&tofDev);
+        return SENSOR_SUCCESS;
     }
     //TODO SENSOR Busy
     return SENSOR_SUCCESS;
