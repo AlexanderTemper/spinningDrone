@@ -7,10 +7,9 @@
 #include "acc.h"
 #include "mag.h"
 #include "time.h"
-#include <math.h>
+#include "maths.h"
 
 #define radiansToDegrees(angleRadians) ((angleRadians) * 57.2957795131f)
-
 
 typedef struct {
     float w,x,y,z;

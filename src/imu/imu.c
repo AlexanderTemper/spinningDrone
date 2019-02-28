@@ -47,12 +47,15 @@ float imuCalcKpGain(void) {
 
     return 5.0f;
 }
-
+#define M_PIf_h 1.57079632679489661923f
 void getMahAttitude(void) {
 
-    attitude.values.roll  = (int16_t) (radiansToDegrees(atan2(q0 * q1 + q2 * q3, 0.5f - q1 * q1 - q2 * q2)) * 10);
-    attitude.values.pitch = (int16_t) (radiansToDegrees(asin(-2.0f * (q1 * q3 - q0 * q2))) * 10);
-    attitude.values.yaw   = (int16_t) (radiansToDegrees(atan2(q1 * q2 + q0 * q3, 0.5f - q2 * q2 - q3 * q3)) * 10);
+    float q2q2 = q2 * q2;
+
+    attitude.values.roll  = (int16_t) (radiansToDegrees(atan2_approx(q0 * q1 + q2 * q3, 0.5f - q1 * q1 - q2q2)) * 10);
+    attitude.values.pitch = (int16_t) (radiansToDegrees(M_PIf_h - acos_approx(2 * (q0 * q2 - q1 * q3))) * 10);
+    attitude.values.yaw   = (int16_t) (radiansToDegrees(atan2_approx(q1*q2 + q0*q3, 0.5f - q2q2 - q3 * q3)) * 10);
+
     /*attp->roll = (180* atan2(2.0f*q2*q3 - 2.0f*q0*q1, 2.0f*q0*q0 + 2.0f*q3*q3 -1.0f))/M_PI;
      attp->pitch = (180*-asin(2.0f * (q1*q3 + q0*q2)))/M_PI;
      attp->yaw = (180*atan2(2.0f*q1*q2 - 2.0f*q0*q3, 2.0f*q2*q2 + 2.0f*q3*q3 -1.0f))/M_PI;*/
@@ -81,4 +84,3 @@ int16_t yaw_offset(int16_t yaw) {
     }
     return yaw;
 }
-

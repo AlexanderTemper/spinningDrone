@@ -43,6 +43,7 @@ CSRCS = \
 	src/imu/imu.c \
 	src/time.c \
 	src/imu/MahonyAHRS.c \
+	src/common/maths.c \
 	src/main.c
 
 CSRCS += $(ASF_CSRCS)
@@ -59,7 +60,8 @@ INC_PATH = \
 	src/sensors \
 	src/drivers \
 	src/telemetry \
-	src/config
+	src/config \
+	src/common
 
 INC_PATH += $(ASF_INC_PATH)
 INC_PATH += $(VL53L0X_INC_PATH)     
