@@ -41,6 +41,7 @@ CSRCS = \
 	src/ASF_Support/tc_support.c \
 	src/ASF_Support/usart_support.c \
 	src/imu/imu.c \
+	src/time.c \
 	src/imu/MahonyAHRS.c \
 	src/main.c
 

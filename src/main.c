@@ -21,8 +21,6 @@ void errorwait(enum status_code status){
     if(status != STATUS_OK){
         DEBUG_WAIT(MODUL_DEFAULT, "Fail code 0x%x",status);
         while(1);
-    } else {
-        DEBUG_WAIT(MODUL_DEFAULT, "OK 0x%x                       ",status);
     }
 }
 /*! Sensors data are read in accordance with TC6 callback. */
@@ -64,30 +62,15 @@ int main(void) {
     accInit();
     magInit();
     tofInit();
-    /*int32_t status_int = 0;
-    uint8_t read = 0xff;
-    do {
-        status_int = VL53L0X_RdByte(&tofDev, VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV, &read);
-        if (status_int != 0) {
-            break;
-        }
-        if (read == 0) {
-            status_int = VL53L0X_WrByte(&tofDev, VL53L0X_REG_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV, 0x01);
-        }
-        if (status_int != 0) {
-            break;
-        }
 
-    } while (read == 0);
-    while (1) {
-        //DEBUG_WAIT(MODUL_DEFAULT, "Sensor fail");
-    }*/
 
+    timeMs_t time = 0;
     /************************** Infinite Loop *******************************/
     while (true) {
         /* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
         if (READ_SENSORS_FLAG) {
 
+            time = getTimeMs();
             readAccData();
             readGyroData();
             readMagData();
@@ -95,8 +78,11 @@ int main(void) {
 
             updateAtt();
 
+
             // 10MS * 10 == 100ms
             if (timer > 10) {
+                timeing.imuLoop = cmpTimeMs(getTimeMs(),time);
+                timeing.total = getTimeMs();
                 sendData();
                 timer = 0;
             } else {

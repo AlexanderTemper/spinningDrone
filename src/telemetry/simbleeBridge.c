@@ -1,5 +1,6 @@
 #include "simbleeBridge.h"
 
+
 enum status_code sendData(void) {
 
     if (usart_callback_transmit_flag) {
@@ -16,26 +17,34 @@ enum status_code sendData(void) {
         buffer32s.y = attitude.values.pitch;
         buffer32s.z = attitude.values.yaw;
 
-        memcpy(&buffer[0], "ABO", 3);
+        //Start IMU Frame
+        memcpy(&buffer[0], "ABI", 3);
+        //Attitude
         memcpy(&buffer[3], (uint8_t *) &buffer32s, sizeof(sensorData32s_t));
-
-        memcpy(&buffer[15], "ABG", 3);
-
+        //Gyro
         sensorFloatToS32(&buffer32s, &gyroData, 1000);
-        memcpy(&buffer[18], (uint8_t *) &buffer32s, sizeof(sensorData32s_t));
-
-        memcpy(&buffer[30], "ABR", 3);
+        memcpy(&buffer[15], (uint8_t *) &buffer32s, sizeof(sensorData32s_t));
+        //ACC
         sensorFloatToS32(&buffer32s, &accData, 1000);
-        memcpy(&buffer[33], (uint8_t *) &buffer32s, sizeof(sensorData32s_t));
-
-        memcpy(&buffer[45], "ABM", 3);
+        memcpy(&buffer[27], (uint8_t *) &buffer32s, sizeof(sensorData32s_t));
+        //Mag
         sensorFloatToS32(&buffer32s, &magData, 1);
-        memcpy(&buffer[48], (uint8_t *) &buffer32s, sizeof(sensorData32s_t));
+        memcpy(&buffer[39], (uint8_t *) &buffer32s, sizeof(sensorData32s_t));
+        //end IMU Frame
 
+        //Start Time Frame
+        memcpy(&buffer[51], "ABZ", 3);
+        int8_t t = timeing.imuLoop;
+        memcpy(&buffer[54], (uint8_t *) &t, 1);
+        memcpy(&buffer[55], (uint8_t *) &t, 1);
+        memcpy(&buffer[56], (uint8_t *) &timeing.total, 4);
+        //end Time Frame
+
+        //Start TOF Frame
         memcpy(&buffer[60], "ABT", 3);
-        buffer32s.x = (uint32_t)tofData.x;
-        buffer32s.y = -counter;
-        buffer32s.z = tc1_ticks;
+        buffer32s.x = (uint32_t) tofData.x;
+        buffer32s.y = 0;
+        buffer32s.z = 0;
 
         memcpy(&buffer[63], (uint8_t *) &buffer32s, sizeof(sensorData32s_t));
 

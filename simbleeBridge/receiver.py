@@ -39,40 +39,43 @@ def tolong(a,b,c,d):
     return twos_comp(value)
 
 def sendData():
-    if nextBuffer == 13:
-        if inBuffer[0] == 79:#O
-            r = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
-            p = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
-            y = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
-            send = "Att %d %d %d \n" % (r,p,y)
-            server.sendall(send)
-        elif inBuffer[0] == 71:#G
-            x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
-            y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
-            z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
-            send = "Gyro %d %d %d \n" % (x,y,z)
-            server.sendall(send)
-        elif inBuffer[0] == 82:#R
-            x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
-            y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
-            z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
-            send = "Acc %d %d %d \n" % (x,y,z)
-            server.sendall(send)
-        elif inBuffer[0] == 77:#M
-            x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
-            y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
-            z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
-            send = "Mag %d %d %d \n" % (x,y,z)
-            server.sendall(send)
-        elif inBuffer[0] == 84:#T
-            x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
-            y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
-            z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
-            send = "Tof %d %d %d \n" % (x,y,z)
-            server.sendall(send)
+
+    if nextBuffer == 49 and inBuffer[0] == 73:#I
+        r = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
+        p = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
+        y = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
+        send = "Att %d %d %d \n" % (r,p,y)
+        server.sendall(send)
+        x = tolong(inBuffer[13],inBuffer[14],inBuffer[15],inBuffer[16])
+        y = tolong(inBuffer[17],inBuffer[18],inBuffer[19],inBuffer[20])
+        z = tolong(inBuffer[21],inBuffer[22],inBuffer[23],inBuffer[24])
+        send = "Gyro %d %d %d \n" % (x,y,z)
+        server.sendall(send)
+        x = tolong(inBuffer[25],inBuffer[26],inBuffer[27],inBuffer[28])
+        y = tolong(inBuffer[29],inBuffer[30],inBuffer[31],inBuffer[32])
+        z = tolong(inBuffer[33],inBuffer[34],inBuffer[35],inBuffer[36])
+        send = "Acc %d %d %d \n" % (x,y,z)
+        server.sendall(send)
+        x = tolong(inBuffer[37],inBuffer[38],inBuffer[39],inBuffer[40])
+        y = tolong(inBuffer[41],inBuffer[42],inBuffer[43],inBuffer[44])
+        z = tolong(inBuffer[45],inBuffer[46],inBuffer[47],inBuffer[48])
+        send = "Mag %d %d %d \n" % (x,y,z)
+        server.sendall(send)
+    elif nextBuffer == 13 and inBuffer[0] == 84:#T
+        x = tolong(inBuffer[1],inBuffer[2],inBuffer[3],inBuffer[4])
+        y = tolong(inBuffer[5],inBuffer[6],inBuffer[7],inBuffer[8])
+        z = tolong(inBuffer[9],inBuffer[10],inBuffer[11],inBuffer[12])
+        send = "Tof %d %d %d \n" % (x,y,z)
+        server.sendall(send)
+    elif nextBuffer == 7 and inBuffer[0] == 90:#Z
+        imuloop = inBuffer[1]
+        imuloop = inBuffer[2]
+        total = tolong(inBuffer[3],inBuffer[4],inBuffer[5],inBuffer[6])
+        send = "Timing %d %d %d \n" % (imuloop,imuloop,total)
+        server.sendall(send)
     elif inBuffer[0] == 68:#D
         send = "Debug%s \r\n" % ''.join(chr(inBuffer[i]) for i in range(0,nextBuffer))
-        print(send)
+        print send,
         server.sendall(send)
     
     

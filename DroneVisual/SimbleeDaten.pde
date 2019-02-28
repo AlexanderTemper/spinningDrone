@@ -70,10 +70,15 @@ class SimbleeDaten extends PApplet {
             magRaw[2] = float(list[3])/16;
             mag.updateDiagramm(magRaw);
          }else if (list.length >= 4 && list[0].equals("Tof")) {
-            tofRaw[0] = float(list[1]);
+            tofRaw[0] = float(list[1])/10;
             tofRaw[1] = float(list[2]); 
-            tofRaw[2] = float(list[3])/1000;//clock in ms
             tof.updateDiagramm(tofRaw);
+         }else if (list.length >= 4 && list[0].equals("Timing")) {
+           imuLoopTime = int(list[1]);
+           totalTimebetweenFrames = int(list[3]) - totalTime;
+           totalTime = int(list[3]);
+           statsRaw[0] = int(list[1]);
+           stats.updateDiagramm(statsRaw);
          } else if(list[0].equals("end")){
            println("Client closed connection");
            closed=true;

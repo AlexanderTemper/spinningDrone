@@ -3,7 +3,7 @@
 #ifdef DEBUG_LOG_ENABLE
 char debugBuffer[MAX_STRING_LENGTH] = { 0 };
 
-uint32_t _debug_modul_level = MODUL_ALL;
+uint32_t _debug_modul_level = MODUL_DEFAULT;
 
 void debugUart(uint32_t module, const char *format, ...) {
 

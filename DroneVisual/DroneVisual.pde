@@ -63,13 +63,18 @@ class Sensor {
 }
 // Data from Socket 
 BufferedReader in;
-Sensor gyro,acc,mag,att,tof;
+Sensor gyro,acc,mag,att,tof,stats;
 float[] gyroRaw= {0,0,0};
 float[] accRaw = {0,0,0};
 float[] magRaw = {0,0,0};
 float[] attRaw = {0,0,0};
 float[] tofRaw = {0,0,0};
+float[] statsRaw = {0,0,0};
 PFont f;
+
+int imuLoopTime = 0;
+int totalTime = 0;
+int totalTimebetweenFrames = 0;
 
 public void settings() {
   size(1680, 860,P3D);
@@ -93,8 +98,10 @@ void setup() {
   gyro = new Sensor(0,0,(width/3)-90,height/3-40,-10,10,"Gyro",graphColors,xLabel);
   acc = new Sensor(0,height/3,(width/3)-90,height/3-40,-1.5,1.5,"Acc",graphColors,xLabel);
   mag = new Sensor(0,(2*height)/3,(width/3)-90,height/3-40,-50,50,"Mag",graphColors,xLabel);
+  
   att = new Sensor((2*width/3)-80,0,(width/3)-90,height/3-40,-180,360,"Att",graphColors,xLabel);
-  tof = new Sensor((2*width/3)-80,height/2,(width/3)-90,height/3-40,-100,100,"Tof",graphColors,xLabel);
+  tof = new Sensor((2*width/3)-80,height/3,(width/3)-90,height/3-40,0,200,"Tof",graphColors,xLabel);
+  stats = new Sensor((2*width/3)-80,(2*height)/3,(width/3)-90,height/3-40,0,10,"Stats",graphColors,xLabel);
 
   simblee = new SimbleeDaten();
   surface.setTitle("BMF055");
@@ -102,11 +109,15 @@ void setup() {
 
 void draw() {
   background(255);
+  text("TotalTime: "+float(totalTime/1000),(width/2)-100,20); 
+  text("TbF: "+float(totalTimebetweenFrames),(width/2)-100,30); 
   gyro.draw();
   acc.draw();
   mag.draw();
   att.draw();
   tof.draw();
+  stats.draw();
+
   drawOrientation();
 }
 

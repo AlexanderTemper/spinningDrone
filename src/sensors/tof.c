@@ -115,11 +115,20 @@ SENSOR_OPERATION_STATUS tofInit(void) {
 }
 
 SENSOR_OPERATION_STATUS readTofData(void) {
-    VL53L0X_RangingMeasurementData_t RangingMeasurementData;
+   /* VL53L0X_RangingMeasurementData_t RangingMeasurementData;
     VL53L0X_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasurementData;
-    uint8_t NewDatReady = 0;
+    uint8_t NewDatReady = 0;*/
+    uint8_t Byte = 0;
+    VL53L0X_RdByte(&tofDev,VL53L0X_REG_RESULT_INTERRUPT_STATUS, &Byte);
 
-    tofDevStatus = VL53L0X_GetMeasurementDataReady(&tofDev, &NewDatReady);
+    if((Byte & 0x07) != 0){
+
+        uint16_t data;
+        VL53L0X_RdWord(&tofDev, VL53L0X_REG_RESULT_RANGE_STATUS + 10, &data);
+        tofData.x = data;
+        VL53L0X_WrByte(&tofDev, VL53L0X_REG_SYSTEM_INTERRUPT_CLEAR, 0x01);
+    }
+   /* tofDevStatus = VL53L0X_GetMeasurementDataReady(&tofDev, &NewDatReady);
     if ((NewDatReady == 0x01) && tofDevStatus == VL53L0X_ERROR_NONE) {
         tofDevStatus = VL53L0X_GetRangingMeasurementData(&tofDev, pRangingMeasurementData);
 
@@ -130,7 +139,7 @@ SENSOR_OPERATION_STATUS readTofData(void) {
         VL53L0X_PollingDelay(&tofDev);
         return SENSOR_SUCCESS;
     }
-    //TODO SENSOR Busy
+    //TODO SENSOR Busy*/
     return SENSOR_SUCCESS;
 }
 
