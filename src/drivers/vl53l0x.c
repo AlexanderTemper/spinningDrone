@@ -51,9 +51,10 @@ VL53L0X_Error writei2c(uint8_t *pdata, int32_t count) {
 
 VL53L0X_Error writeMulti(uint8_t reg, uint8_t *src, uint8_t count) {
     writeBuffer[0] = reg;
-    for (int i = 0; i < count && i < 4; i++) { // TODO Memcpy ?
-        writeBuffer[i + 1] = src[i];
+    if(count <= 4){
+        memcpy(&writeBuffer[1],src,count);
     }
+
 
     return writei2c(writeBuffer, count + 1);
 }
