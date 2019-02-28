@@ -45,8 +45,10 @@ SENSOR_OPERATION_STATUS tofInit(void) {
     uint8_t VhvSettings;
     uint8_t PhaseCal;
 
+
     DEBUG_WAIT(MODUL_TOF, "Sensor init");
     tofDevStatus = VL53L0X_DataInit(&tofDev);
+
 
     if (tofDevStatus == VL53L0X_ERROR_NONE) {
         DEBUG_WAIT(MODUL_TOF, "Call of VL53L0X_StaticInit\n");
@@ -115,9 +117,8 @@ SENSOR_OPERATION_STATUS tofInit(void) {
 }
 
 SENSOR_OPERATION_STATUS readTofData(void) {
-   /* VL53L0X_RangingMeasurementData_t RangingMeasurementData;
-    VL53L0X_RangingMeasurementData_t *pRangingMeasurementData = &RangingMeasurementData;
-    uint8_t NewDatReady = 0;*/
+    //VL53L0X_RangingMeasurementData_t RangingMeasurementData;
+    //uint8_t NewDatReady = 0;
     uint8_t Byte = 0;
     VL53L0X_RdByte(&tofDev,VL53L0X_REG_RESULT_INTERRUPT_STATUS, &Byte);
 
@@ -128,18 +129,18 @@ SENSOR_OPERATION_STATUS readTofData(void) {
         tofData.x = data;
         VL53L0X_WrByte(&tofDev, VL53L0X_REG_SYSTEM_INTERRUPT_CLEAR, 0x01);
     }
-   /* tofDevStatus = VL53L0X_GetMeasurementDataReady(&tofDev, &NewDatReady);
+    /*tofDevStatus = VL53L0X_GetMeasurementDataReady(&tofDev, &NewDatReady);
     if ((NewDatReady == 0x01) && tofDevStatus == VL53L0X_ERROR_NONE) {
-        tofDevStatus = VL53L0X_GetRangingMeasurementData(&tofDev, pRangingMeasurementData);
+        tofDevStatus = VL53L0X_GetRangingMeasurementData(&tofDev, &RangingMeasurementData);
 
-        tofData.x = pRangingMeasurementData->RangeMilliMeter;
-
+        if(RangingMeasurementData.RangeStatus == 0 ){
+            tofData.x = RangingMeasurementData.RangeMilliMeter;
+        }
         // Clear the interrupt
         VL53L0X_ClearInterruptMask(&tofDev, VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
-        VL53L0X_PollingDelay(&tofDev);
         return SENSOR_SUCCESS;
-    }
-    //TODO SENSOR Busy*/
+    }*/
+    //TODO SENSOR Busy
     return SENSOR_SUCCESS;
 }
 

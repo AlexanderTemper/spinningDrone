@@ -82,10 +82,10 @@
 *
 * This function calls configuration functions for DFLL48M and OSC8M clock sources,
 * generic clock generators 1 and 2 and0 the main clock of the system (generic clock generator 0).
-* After initialization, the clock sources’ and generic clock generators’ frequencies are as follows:
+* After initialization, the clock sourcesï¿½ and generic clock generatorsï¿½ frequencies are as follows:
 *
 *	Clock Source OSC8M   :	8 MHz clock source of MCU used as the source for multiple modules (Frequency 2 MHz)
-*	Clock Source DFLL48M :	DFLL clock source of MCU used as the source for multiple modules (Frequency 48 MHz – Open Loop)
+*	Clock Source DFLL48M :	DFLL clock source of MCU used as the source for multiple modules (Frequency 48 MHz ï¿½ Open Loop)
 *	GCLK 0				 :	Generates the main system clock, using DFLL as its source (Frequency 24 MHz)
 *	GCLK 1				 :	Generates clock signal for TC4, using OSC8M as its source (Frequency 500 KHz)
 *	GCLK 2				 :	Generates clock signal for USART, using OSC8M as its source (Frequency 2 MHz)
@@ -182,8 +182,6 @@ void clock_configure_system_clock(void)
 	/* Set the DFLL as the closck source for system GCLK */
 	config_gclock_gen.source_clock = SYSTEM_CLOCK_SOURCE_DFLL;
 	
-	/* set devision factor to 2 */
-	config_gclock_gen.division_factor = 2;
 	
 	/* Initialize GCLK0 with current configurations */
 	system_gclk_gen_set_config(GCLK_GENERATOR_0, &config_gclock_gen);
