@@ -6,7 +6,7 @@ uint8_t top;
 
 void setup() {
   // initialize serial:
-  Serial.begin(9600);
+  Serial.begin(9600,3,2);
 
   SimbleeBLE.deviceName = "Drone";
   SimbleeBLE.begin();

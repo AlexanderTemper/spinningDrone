@@ -77,6 +77,7 @@ int totalTime = 0;
 int totalTimebetweenFrames = 0;
 
 public void settings() {
+  System.setProperty("jogl.disable.openglcore", "true");
   size(1680, 860,P3D);
 }
 
