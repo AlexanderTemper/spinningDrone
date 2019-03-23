@@ -1,7 +1,11 @@
 // import libraries
-SimbleeDaten simblee;
+import processing.serial.*;
 // Serial port to connect to
-String serialPortName = "/dev/ttyUSB0";
+String serialPortName = "/dev/ttyACM0";
+Serial serialPort; // Serial port object
+
+SimbleeDaten simblee;
+
 
 class Sensor {
   float[] rawValues= {0,0,0};
@@ -106,9 +110,17 @@ void setup() {
 
   simblee = new SimbleeDaten();
   surface.setTitle("BMF055");
+  
+  serialPort = new Serial(this, serialPortName, 115200);
+  serialPort.clear();
+  
 }
 
 void draw() {
+  
+  processSerial();
+  
+  
   background(255);
   text("TotalTime: "+float(totalTime/1000),(width/2)-100,20); 
   text("TbF: "+float(totalTimebetweenFrames),(width/2)-100,30); 
@@ -118,7 +130,6 @@ void draw() {
   att.draw();
   tof.draw();
   stats.draw();
-
   drawOrientation();
 }
 
@@ -142,7 +153,43 @@ void drawOrientation(){
     popMatrix(); // end of object
 }
 
+int stepperRotation[][] = { {1600, 60}, {0, 20}};
 
+public static byte[] intToBytes(int l) {
+    byte[] result = new byte[4];
+    for (int i = 3; i >= 0; i--) {
+        result[i] = (byte)(l & 0xFF);
+        l >>= 8;
+    }
+    return result;
+}
+void processSerial(){
+  while (serialPort.available() > 0) {
+    //print(serialPort.read());
+    //print(" ");
+    String  inBuffer = serialPort.readStringUntil(13); // read from port until new line 
+    if (inBuffer != null) {
+      println(inBuffer);
+      
+      String[] parts = split(trim(inBuffer), ";");
+      if(parts.length > 1){
+        if(parts[1].equals("READY")){
+          serialPort.write(36);//$
+          serialPort.write(84);//T
+          byte[] a = intToBytes(stepperRotation[0][0]);
+          serialPort.write(a[3]);
+          serialPort.write(a[2]);
+          serialPort.write(a[1]);
+          serialPort.write(a[0]);
+          serialPort.write(36);//$
+          serialPort.write(84);//T
+        } else if(parts[1].equals("STATUS")){
+         // println(inBuffer);
+        }    
+      }
+    }
+  }
+}
 
 
 void drawPropShield()
