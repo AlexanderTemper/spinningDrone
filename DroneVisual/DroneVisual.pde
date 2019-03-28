@@ -1,11 +1,18 @@
 // import libraries
 import processing.serial.*;
+import java.util.ArrayList;
 // Serial port to connect to
 String serialPortName = "/dev/ttyACM0";
 Serial serialPort; // Serial port object
 
 SimbleeDaten simblee;
 
+
+// Communication
+ArrayList<Integer> inputBuffer = new ArrayList<Integer>(); 
+int inputBytes = 0;
+int lastChar = 0;
+boolean start = false;
 
 class Sensor {
   float[] rawValues= {0,0,0};
@@ -153,7 +160,23 @@ void drawOrientation(){
     popMatrix(); // end of object
 }
 
-int stepperRotation[][] = { {1600, 60}, {0, 20}};
+int stepperRotation[][] = {
+{400, 20},
+{1000, 0},
+{0, 20},
+{400, 20},
+{1000, 0},
+{0, 20},
+{400, 20},
+{1000, 0},
+{0, 20},
+{400, 20},
+{1000, 0},
+{0, 20},
+{400, 20},
+{1000, 0},
+{0, 20},
+};
 
 public static byte[] intToBytes(int l) {
     byte[] result = new byte[4];
@@ -163,34 +186,63 @@ public static byte[] intToBytes(int l) {
     }
     return result;
 }
+int frameCount = -1;
+
+void sendData(int rotation, int speed){
+  serialPort.write((int)'A');
+  serialPort.write((int)'B');
+  byte[] a = intToBytes(rotation);
+  serialPort.write(a[3]);
+  serialPort.write(a[2]);
+  serialPort.write(a[1]);
+  serialPort.write(a[0]);
+  byte[] b = intToBytes(speed);
+  serialPort.write(b[3]);
+  serialPort.write(b[2]);
+  serialPort.write((int)'C');
+  serialPort.write((int)'D');
+}
 void processSerial(){
   while (serialPort.available() > 0) {
-    //print(serialPort.read());
-    //print(" ");
-    String  inBuffer = serialPort.readStringUntil(13); // read from port until new line 
-    if (inBuffer != null) {
-      println(inBuffer);
-      
-      String[] parts = split(trim(inBuffer), ";");
-      if(parts.length > 1){
-        if(parts[1].equals("READY")){
-          serialPort.write(36);//$
-          serialPort.write(84);//T
-          byte[] a = intToBytes(stepperRotation[0][0]);
-          serialPort.write(a[3]);
-          serialPort.write(a[2]);
-          serialPort.write(a[1]);
-          serialPort.write(a[0]);
-          serialPort.write(36);//$
-          serialPort.write(84);//T
-        } else if(parts[1].equals("STATUS")){
-         // println(inBuffer);
-        }    
+    int data = serialPort.read();
+    if (start) {
+      if (lastChar == 'C') {
+        if (data == 'D') {
+          start = false;
+          if (inputBuffer.size() == 3 && inputBuffer.get(0) == (int)'R') {
+            int reqFrame = (inputBuffer.get(2)<<8)+inputBuffer.get(1);
+            //println("Request Frame: "+reqFrame+" is " + frameCount);
+            if(frameCount < reqFrame && reqFrame < stepperRotation.length){
+              frameCount = reqFrame;
+              println("send Frame:" + frameCount);
+              sendData(stepperRotation[frameCount][0],stepperRotation[frameCount][1]);
+            }
+            
+          } else if(inputBuffer.size() == 9 && inputBuffer.get(0) == (int)'S'){
+            int aSteps = (inputBuffer.get(4)<<24)+(inputBuffer.get(3)<<16)+(inputBuffer.get(2)<<8)+inputBuffer.get(1);
+            int absSteps = (inputBuffer.get(8)<<24)+(inputBuffer.get(7)<<16)+(inputBuffer.get(6)<<8)+inputBuffer.get(5);
+            println("Status:"+aSteps +" "+ absSteps);
+            statsRaw[1] = (float(absSteps)%1600)/160;
+            stats.updateDiagramm(statsRaw);
+          } else {
+            print("FrameError: ");
+            println(inputBuffer);
+          }
+        } else {
+          inputBuffer.add(lastChar);
+          inputBuffer.add(data);
+        }
+      } else if (data != 'C') {
+        inputBuffer.add(data);
       }
+    } else if ( data == 'B' && lastChar == 'A') {
+      start = true;
+      inputBuffer.clear();
+      inputBytes = 0;
     }
+    lastChar = data;
   }
 }
-
 
 void drawPropShield()
 {
