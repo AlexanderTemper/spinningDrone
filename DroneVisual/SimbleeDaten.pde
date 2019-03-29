@@ -39,7 +39,6 @@ class SimbleeDaten extends PApplet {
     Socket client = this.server.accept();
     String clientAddress = client.getInetAddress().getHostAddress();
     System.out.println("\r\nNew connection from " + clientAddress);
-    
     in = new BufferedReader(new InputStreamReader(client.getInputStream(),"UTF-8"));   
   }
   
@@ -53,6 +52,9 @@ class SimbleeDaten extends PApplet {
             attRaw[2] = float(list[1])/10;
             attRaw[1] = float(list[2])/10; 
             attRaw[0] = float(list[3])/10;
+            statsRaw[0] = attRaw[0];
+            statsRaw[1] = drehung;
+            stats.updateDiagramm(statsRaw);
             att.updateDiagramm(attRaw);
          } else if (list.length >= 4 && list[0].equals("Gyro")) {
             gyroRaw[0] = float(list[1])/1000;
@@ -71,14 +73,18 @@ class SimbleeDaten extends PApplet {
             mag.updateDiagramm(magRaw);
          }else if (list.length >= 4 && list[0].equals("Tof")) {
             tofRaw[0] = float(list[1])/10;
-            tofRaw[1] = float(list[2]); 
             tof.updateDiagramm(tofRaw);
          }else if (list.length >= 4 && list[0].equals("Timing")) {
            imuLoopTime = int(list[1]);
            totalTimebetweenFrames = int(list[3]) - totalTime;
+           if(totalTime < timeToWait){
+             state = 0;
+             sendResetRotation();
+             framecount = -1;
+           } else if(totalTime >= timeToWait && state==0){
+             state = 1;
+           }
            totalTime = int(list[3]);
-           statsRaw[0] = int(list[1]);
-           stats.updateDiagramm(statsRaw);
          } else if(list[0].equals("end")){
            println("Client closed connection");
            closed=true;

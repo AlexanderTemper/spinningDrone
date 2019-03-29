@@ -57,6 +57,14 @@ void setup()
   Serial.begin(115200);
 }
 
+void resetRotations(){
+  activeRotation.steps = 0;
+  activeRotation.speed = 0;
+  activeRotation.done = true;
+  nextRotation.steps = 0;
+  nextRotation.speed = 0;
+  nextRotation.done = true;
+}
 // Main Loop
 void loop()
 {
@@ -128,6 +136,13 @@ void readData() {
               Serial.write((uint8_t*)&nextRotation.steps,4);
               Serial.write((uint8_t*)&nextRotation.speed,2);
               END_FRAME*/
+          } else if(inputBytes == 1){
+            if(inputBuffer[0] == 'R'){
+              Serial.write("Reset");
+              frameCount=0;
+              absoluteSteps = 0;
+              resetRotations();
+            }
           } else {
             BEGIN_FRAME
             Serial.write("FrameERROR");

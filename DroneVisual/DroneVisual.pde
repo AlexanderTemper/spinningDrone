@@ -2,9 +2,10 @@
 import processing.serial.*;
 import java.util.ArrayList;
 // Serial port to connect to
+boolean SerialEnable = true;
+
 String serialPortName = "/dev/ttyACM0";
 Serial serialPort; // Serial port object
-
 SimbleeDaten simblee;
 
 
@@ -72,6 +73,12 @@ class Sensor {
     }
   }
 }
+
+// State
+//0= wait , 1 = booted, 2=starttart
+int timeToWait = 5000; // 5 sec
+int state = 0;
+
 // Data from Socket 
 BufferedReader in;
 Sensor gyro,acc,mag,att,tof,stats;
@@ -113,24 +120,27 @@ void setup() {
   
   att = new Sensor((2*width/3)-80,0,(width/3)-90,height/3-40,-180,360,"Att",graphColors,xLabel);
   tof = new Sensor((2*width/3)-80,height/3,(width/3)-90,height/3-40,0,200,"Tof",graphColors,xLabel);
-  stats = new Sensor((2*width/3)-80,(2*height)/3,(width/3)-90,height/3-40,0,10,"Stats",graphColors,xLabel);
+  stats = new Sensor((2*width/3)-80,(2*height)/3,(width/3)-90,height/3-40,0,360,"Stats",graphColors,xLabel);
 
   simblee = new SimbleeDaten();
   surface.setTitle("BMF055");
   
-  serialPort = new Serial(this, serialPortName, 115200);
-  serialPort.clear();
-  
+  if(SerialEnable){
+    serialPort = new Serial(this, serialPortName, 115200);
+    serialPort.clear();
+  }
 }
 
 void draw() {
-  
-  processSerial();
-  
+  if(SerialEnable){
+    processSerial();
+  }
   
   background(255);
   text("TotalTime: "+float(totalTime/1000),(width/2)-100,20); 
   text("TbF: "+float(totalTimebetweenFrames),(width/2)-100,30); 
+  text("State: "+state,(width/2)-100,40); 
+  text("Frame: "+framecount,(width/2)-100,50); 
   gyro.draw();
   acc.draw();
   mag.draw();
@@ -160,22 +170,18 @@ void drawOrientation(){
     popMatrix(); // end of object
 }
 
+float drehung = 0.0;
 int stepperRotation[][] = {
-{400, 20},
-{1000, 0},
+{16000, 60},
+{2000, 0},
+{0, 60},
+{2000, 0},
+{16000, 20},
+{2000, 0},
 {0, 20},
-{400, 20},
-{1000, 0},
-{0, 20},
-{400, 20},
-{1000, 0},
-{0, 20},
-{400, 20},
-{1000, 0},
-{0, 20},
-{400, 20},
-{1000, 0},
-{0, 20},
+{2000, 0},
+{0, 60},
+{2000, 0},
 };
 
 public static byte[] intToBytes(int l) {
@@ -186,7 +192,7 @@ public static byte[] intToBytes(int l) {
     }
     return result;
 }
-int frameCount = -1;
+int framecount = -1;
 
 void sendData(int rotation, int speed){
   serialPort.write((int)'A');
@@ -202,6 +208,13 @@ void sendData(int rotation, int speed){
   serialPort.write((int)'C');
   serialPort.write((int)'D');
 }
+void sendResetRotation(){
+  serialPort.write((int)'A');
+  serialPort.write((int)'B');
+  serialPort.write((int)'R');
+  serialPort.write((int)'C');
+  serialPort.write((int)'D');
+}
 void processSerial(){
   while (serialPort.available() > 0) {
     int data = serialPort.read();
@@ -211,19 +224,18 @@ void processSerial(){
           start = false;
           if (inputBuffer.size() == 3 && inputBuffer.get(0) == (int)'R') {
             int reqFrame = (inputBuffer.get(2)<<8)+inputBuffer.get(1);
-            //println("Request Frame: "+reqFrame+" is " + frameCount);
-            if(frameCount < reqFrame && reqFrame < stepperRotation.length){
-              frameCount = reqFrame;
-              println("send Frame:" + frameCount);
-              sendData(stepperRotation[frameCount][0],stepperRotation[frameCount][1]);
+            //println("Request Frame: "+reqFrame+" is " + );
+            if(framecount < reqFrame && reqFrame < stepperRotation.length && state == 1){
+              framecount = reqFrame;
+              println("send Frame:" + framecount);
+              sendData(stepperRotation[framecount][0],stepperRotation[framecount][1]);
             }
             
           } else if(inputBuffer.size() == 9 && inputBuffer.get(0) == (int)'S'){
             int aSteps = (inputBuffer.get(4)<<24)+(inputBuffer.get(3)<<16)+(inputBuffer.get(2)<<8)+inputBuffer.get(1);
             int absSteps = (inputBuffer.get(8)<<24)+(inputBuffer.get(7)<<16)+(inputBuffer.get(6)<<8)+inputBuffer.get(5);
             println("Status:"+aSteps +" "+ absSteps);
-            statsRaw[1] = (float(absSteps)%1600)/160;
-            stats.updateDiagramm(statsRaw);
+            drehung = (1-(float(absSteps)%1600)/1600)*360;
           } else {
             print("FrameError: ");
             println(inputBuffer);
