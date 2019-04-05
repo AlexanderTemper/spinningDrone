@@ -2,7 +2,7 @@
 import processing.serial.*;
 import java.util.ArrayList;
 // Serial port to connect to
-boolean SerialEnable = true;
+boolean SerialEnable = false;
 
 String serialPortName = "/dev/ttyACM0";
 Serial serialPort; // Serial port object
@@ -153,8 +153,8 @@ void draw() {
 
 void drawOrientation(){
     lights();
-    translate(width/2, height/2); // set position to centre
     pushMatrix(); // begin object
+    translate(width/2, height/2); // set position to centre
   
     float c1 = cos(radians(attRaw[2]));
     float s1 = sin(radians(attRaw[2]));
@@ -166,7 +166,7 @@ void drawOrientation(){
                  -s2, c1*c2, c2*s1, 0,
                  c2*s3, c1*s2*s3-c3*s1, c1*c3+s1*s2*s3, 0,
                  0, 0, 0, 1);
-    drawPropShield();
+    drawDrone();
     popMatrix(); // end of object
 }
 
@@ -256,80 +256,65 @@ void processSerial(){
   }
 }
 
-void drawPropShield()
+int visualR = 0;
+int visualRhelp = 0;
+void drawRotor(int dir){
+  
+   pushMatrix();
+   translate(0,-5,0);
+   rotateY(dir*visualR);
+   if(visualRhelp == 20){
+    visualR++;
+     visualRhelp = 0;
+   } else {
+     visualRhelp++;
+   }
+    box( 6, 6, 100);
+    box( 100, 6, 6);
+  popMatrix(); 
+  
+}
+void drawDrone()
 {
-  // 3D art by Benjamin Rheinland
-  stroke(0); // black outline
-  fill(0, 128, 0); // fill color PCB green
-  box(190, 6, 70); // PCB base shape
-
-  fill(255, 215, 0); // gold color
   noStroke();
-
-  //draw 14 contacts on Y- side
-  translate(65, 0, 30);
-  for (int i=0; i<14; i++) {
-    sphere(4.5); // draw gold contacts
-    translate(-10, 0, 0); // set new position
-  }
-
-  //draw 14 contacts on Y+ side
-  translate(10, 0, -60);
-  for (int i=0; i<14; i++) {
-    sphere(4.5); // draw gold contacts
-    translate(10, 0, 0); // set position
-  }
-
-  //draw 5 contacts on X+ side (DAC, 3v3, gnd)
-  translate(-10,0,10);
-  for (int i=0; i<5; i++) {
-    sphere(4.5);
-    translate(0,0,10);
-  }
-
-  //draw 4 contacts on X+ side (G C D 5)
-  translate(25,0,-15);
-  for (int i=0; i<4; i++) {
-    sphere(4.5);
-    translate(0,0,-10);
-  }
-
-  //draw 4 contacts on X- side (5V - + GND)
-  translate(-180,0,10);
-  for (int i=0; i<4; i++) {
-    sphere(4.5);
-    translate(0,0,10);
-  }
-
-  //draw audio amp IC
-  stroke(128);
-  fill(24);    //Epoxy color
-  translate(30,-6,-25);
-  box(13,6,13);
-
-  //draw pressure sensor IC
-  stroke(64);
-  translate(32,0,0);
-  fill(192);
-  box(10,6,18);
-
-  //draw gyroscope IC
-  stroke(128);
-  translate(27,0,0);
-  fill(24);
-  box(16,6,16);
-
-  //draw flash memory IC
-  translate(40,0,-15);
-  box(20,6,20);
-
-  //draw accelerometer/magnetometer IC
-  translate(-5,0,25);
-  box(12,6,12);
-
-  //draw 5V level shifter ICs
-  translate(42.5,2,0);
-  box(6,4,8);
-  translate(0,0,-20);
-  box(6,4,8);
+  // PCB
+  fill(0, 128, 0); 
+  box(80, 8, 80); 
+  
+  // Arrow
+  pushMatrix();
+    fill(0, 0, 128); 
+    translate(50, 0, 0);
+    box( 100, 6, 10); 
+    pushMatrix();
+      translate(36, 0, -12);
+      rotateY(PI/4.0);
+      box( 10, 6, 45); 
+    popMatrix(); 
+    pushMatrix();
+      translate(36, 0, +12);
+      rotateY(-PI/4.0);
+      box( 10, 6, 45); 
+    popMatrix(); 
+  popMatrix(); 
+  
+  // rotator
+  fill(128, 0, 0); 
+  pushMatrix();
+  rotateY(PI/4.0);
+  box( 6, 6, 300);
+  box( 300, 6, 6);
+  translate(0, 0, 150);
+  fill(0, 239, 15); 
+    drawRotor(-1);
+  translate(0, 0, -300);
+  fill(255, 0, 255);  
+    drawRotor(-1);
+  translate(150, 0, 150);
+  fill(0, 239, 15); 
+    drawRotor(1);
+  translate(-300, 0, 0);
+  fill(255, 0, 255); 
+    drawRotor(1);
+  popMatrix(); 
 }
