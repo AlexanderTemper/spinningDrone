@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2016, STMicroelectronics International N.V.
+ Copyright ï¿½ 2016, STMicroelectronics International N.V.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -175,7 +175,7 @@ uint32_t VL53L0X_quadrature_sum(uint32_t a, uint32_t b)
 }
 
 
-VL53L0X_Error VL53L0X_device_read_strobe(VL53L0X_DEV Dev)
+static VL53L0X_Error VL53L0X_device_read_strobe(VL53L0X_DEV Dev)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 	uint8_t strobe;
@@ -475,7 +475,7 @@ VL53L0X_Error VL53L0X_get_info_from_device(VL53L0X_DEV Dev, uint8_t option)
 }
 
 
-uint32_t VL53L0X_calc_macro_period_ps(VL53L0X_DEV Dev, uint8_t vcsel_period_pclks)
+static uint32_t VL53L0X_calc_macro_period_ps(VL53L0X_DEV Dev, uint8_t vcsel_period_pclks)
 {
 	uint64_t PLL_period_ps;
 	uint32_t macro_period_vclks;
@@ -557,7 +557,7 @@ uint32_t VL53L0X_calc_timeout_mclks(VL53L0X_DEV Dev,
 }
 
 /* To convert register value into us */
-uint32_t VL53L0X_calc_timeout_us(VL53L0X_DEV Dev,
+static uint32_t VL53L0X_calc_timeout_us(VL53L0X_DEV Dev,
 		uint16_t timeout_period_mclks,
 		uint8_t vcsel_period_pclks)
 {
@@ -1491,7 +1491,7 @@ VL53L0X_Error VL53L0X_get_total_signal_rate(VL53L0X_DEV Dev,
 	return Status;
 }
 
-VL53L0X_Error VL53L0X_calc_dmax(
+static VL53L0X_Error VL53L0X_calc_dmax(
 	VL53L0X_DEV Dev,
 	FixPoint1616_t totalSignalRate_mcps,
 	FixPoint1616_t totalCorrSignalRate_mcps,

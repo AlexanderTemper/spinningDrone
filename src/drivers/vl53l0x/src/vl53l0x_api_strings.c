@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2016, STMicroelectronics International N.V.
+ Copyright ï¿½ 2016, STMicroelectronics International N.V.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@
 	_LOG_FUNCTION_END_FMT(TRACE_MODULE_API, status, fmt, ##__VA_ARGS__)
 
 
-VL53L0X_Error VL53L0X_check_part_used(VL53L0X_DEV Dev,
+static VL53L0X_Error VL53L0X_check_part_used(VL53L0X_DEV Dev,
 		uint8_t *Revision,
 		VL53L0X_DeviceInfo_t *pVL53L0X_DeviceInfo)
 {

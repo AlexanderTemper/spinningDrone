@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2016, STMicroelectronics International N.V.
+ Copyright ï¿½ 2016, STMicroelectronics International N.V.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -395,7 +395,7 @@ VL53L0X_Error VL53L0X_apply_offset_adjustment(VL53L0X_DEV Dev)
 	return Status;
 }
 
-void get_next_good_spad(uint8_t goodSpadArray[], uint32_t size,
+static void get_next_good_spad(uint8_t goodSpadArray[], uint32_t size,
 			uint32_t curr, int32_t *next)
 {
 	uint32_t startIndex;
@@ -444,7 +444,7 @@ void get_next_good_spad(uint8_t goodSpadArray[], uint32_t size,
 }
 
 
-uint8_t is_aperture(uint32_t spadIndex)
+static uint8_t is_aperture(uint32_t spadIndex)
 {
 	/*
 	 * This function reports if a given spad index is an aperture SPAD by
@@ -460,7 +460,7 @@ uint8_t is_aperture(uint32_t spadIndex)
 }
 
 
-VL53L0X_Error enable_spad_bit(uint8_t spadArray[], uint32_t size,
+static VL53L0X_Error enable_spad_bit(uint8_t spadArray[], uint32_t size,
 	uint32_t spadIndex)
 {
 	VL53L0X_Error status = VL53L0X_ERROR_NONE;
@@ -478,7 +478,7 @@ VL53L0X_Error enable_spad_bit(uint8_t spadArray[], uint32_t size,
 	return status;
 }
 
-VL53L0X_Error count_enabled_spads(uint8_t spadArray[],
+static VL53L0X_Error count_enabled_spads(uint8_t spadArray[],
 		uint32_t byteCount, uint32_t maxSpads,
 		uint32_t *pTotalSpadsEnabled, uint8_t *pIsAperture)
 {
@@ -536,7 +536,7 @@ VL53L0X_Error count_enabled_spads(uint8_t spadArray[],
 	return status;
 }
 
-VL53L0X_Error set_ref_spad_map(VL53L0X_DEV Dev, uint8_t *refSpadArray)
+static VL53L0X_Error set_ref_spad_map(VL53L0X_DEV Dev, uint8_t *refSpadArray)
 {
 	VL53L0X_Error status = VL53L0X_WriteMulti(Dev,
 				VL53L0X_REG_GLOBAL_CONFIG_SPAD_ENABLES_REF_0,
@@ -544,7 +544,7 @@ VL53L0X_Error set_ref_spad_map(VL53L0X_DEV Dev, uint8_t *refSpadArray)
 	return status;
 }
 
-VL53L0X_Error get_ref_spad_map(VL53L0X_DEV Dev, uint8_t *refSpadArray)
+static VL53L0X_Error get_ref_spad_map(VL53L0X_DEV Dev, uint8_t *refSpadArray)
 {
 	VL53L0X_Error status = VL53L0X_ReadMulti(Dev,
 				VL53L0X_REG_GLOBAL_CONFIG_SPAD_ENABLES_REF_0,
@@ -553,7 +553,7 @@ VL53L0X_Error get_ref_spad_map(VL53L0X_DEV Dev, uint8_t *refSpadArray)
 	return status;
 }
 
-VL53L0X_Error enable_ref_spads(VL53L0X_DEV Dev,
+static VL53L0X_Error enable_ref_spads(VL53L0X_DEV Dev,
 				uint8_t apertureSpads,
 				uint8_t goodSpadArray[],
 				uint8_t spadArray[],
@@ -626,7 +626,7 @@ VL53L0X_Error enable_ref_spads(VL53L0X_DEV Dev,
 }
 
 
-VL53L0X_Error perform_ref_signal_measurement(VL53L0X_DEV Dev,
+static VL53L0X_Error perform_ref_signal_measurement(VL53L0X_DEV Dev,
 		uint16_t *refSignalRate)
 {
 	VL53L0X_Error status = VL53L0X_ERROR_NONE;
@@ -1062,7 +1062,7 @@ VL53L0X_Error VL53L0X_get_reference_spads(VL53L0X_DEV Dev,
 }
 
 
-VL53L0X_Error VL53L0X_perform_single_ref_calibration(VL53L0X_DEV Dev,
+static VL53L0X_Error VL53L0X_perform_single_ref_calibration(VL53L0X_DEV Dev,
 		uint8_t vhv_init_byte)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
@@ -1085,7 +1085,7 @@ VL53L0X_Error VL53L0X_perform_single_ref_calibration(VL53L0X_DEV Dev,
 }
 
 
-VL53L0X_Error VL53L0X_ref_calibration_io(VL53L0X_DEV Dev, uint8_t read_not_write,
+static VL53L0X_Error VL53L0X_ref_calibration_io(VL53L0X_DEV Dev, uint8_t read_not_write,
 	uint8_t VhvSettings, uint8_t PhaseCal,
 	uint8_t *pVhvSettings, uint8_t *pPhaseCal,
 	const uint8_t vhv_enable, const uint8_t phase_enable)
@@ -1120,7 +1120,7 @@ VL53L0X_Error VL53L0X_ref_calibration_io(VL53L0X_DEV Dev, uint8_t read_not_write
 }
 
 
-VL53L0X_Error VL53L0X_perform_vhv_calibration(VL53L0X_DEV Dev,
+static VL53L0X_Error VL53L0X_perform_vhv_calibration(VL53L0X_DEV Dev,
 	uint8_t *pVhvSettings, const uint8_t get_data_enable,
 	const uint8_t restore_config)
 {

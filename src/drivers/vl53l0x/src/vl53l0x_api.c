@@ -1127,7 +1127,7 @@ VL53L0X_Error VL53L0X_SetSequenceStepEnable(VL53L0X_DEV Dev,
 	return Status;
 }
 
-VL53L0X_Error sequence_step_enabled(VL53L0X_DEV Dev,
+static VL53L0X_Error sequence_step_enabled(VL53L0X_DEV Dev,
 	VL53L0X_SequenceStepId SequenceStepId, uint8_t SequenceConfig,
 	uint8_t *pSequenceStepEnabled)
 {
@@ -2156,7 +2156,7 @@ VL53L0X_Error VL53L0X_PerformOffsetCalibration(VL53L0X_DEV Dev,
 	return Status;
 }
 
-VL53L0X_Error VL53L0X_CheckAndLoadInterruptSettings(VL53L0X_DEV Dev,
+static VL53L0X_Error VL53L0X_CheckAndLoadInterruptSettings(VL53L0X_DEV Dev,
 	uint8_t StartNotStopFlag)
 {
 	uint8_t InterruptConfig;

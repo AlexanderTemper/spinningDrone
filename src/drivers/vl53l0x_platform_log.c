@@ -40,7 +40,7 @@ uint32_t _trace_level = TRACE_LEVEL_ALL;
 uint32_t _trace_modules = TRACE_MODULE_ALL;
 uint32_t _trace_functions = TRACE_FUNCTION_ALL;
 
-void trace_print_module_function(uint32_t module, uint32_t level, uint32_t function, const char *format, ...)
+static void trace_print_module_function(uint32_t module, uint32_t level, uint32_t function, const char *format, ...)
 {
     if ( ((level <=_trace_level) && ((module & _trace_modules) > 0))
         || ((function & _trace_functions) > 0) )

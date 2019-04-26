@@ -55,7 +55,7 @@ int32_t debugread(uint8_t address, uint8_t index, uint8_t *pdata, int32_t count)
 uint8_t writeBuffer[5];
 
 
-int32_t writei2c(uint8_t address, uint8_t *pdata, int32_t count) {
+static int32_t writei2c(uint8_t address, uint8_t *pdata, int32_t count) {
 
     uint32_t mytimeout = 0;
     uint8_t i2cStatus = STATUS_OK;

@@ -17,7 +17,7 @@
 /*! value of 9600 that is used to set USART baud rate */
 #define USART_BAUDRATE_9600	UINT32_C(9600)
 /*! loaded onto USART baud rate register initially */
-#define USART_BAUDRATE			USART_BAUDRATE_9600
+#define USART_BAUDRATE			USART_BAUDRATE_115200
 
 /************************************************************************/
 /* Global Variables                                                     */

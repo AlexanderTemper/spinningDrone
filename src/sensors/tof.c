@@ -8,7 +8,7 @@ VL53L0X_Error tofDevStatus;
 VL53L0X_Dev_t tofDev;
 
 /************************************************************************/
-VL53L0X_Error WaitMeasurementDataReady(VL53L0X_DEV Dev) {
+/*static VL53L0X_Error WaitMeasurementDataReady(VL53L0X_DEV Dev) {
     VL53L0X_Error Status = VL53L0X_ERROR_NONE;
     uint8_t NewDatReady = 0;
     uint32_t LoopNb;
@@ -32,7 +32,7 @@ VL53L0X_Error WaitMeasurementDataReady(VL53L0X_DEV Dev) {
     }
 
     return Status;
-}
+}*/
 
 #define VERSION_REQUIRED_MAJOR 1
 #define VERSION_REQUIRED_MINOR 0

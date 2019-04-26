@@ -257,7 +257,6 @@ VL53L0X_Error VL53L0X_RdDWord(VL53L0X_DEV Dev, uint8_t index, uint32_t *data) {
 VL53L0X_Error VL53L0X_PollingDelay(VL53L0X_DEV Dev) {
     VL53L0X_Error status = VL53L0X_ERROR_NONE;
 
-    volatile uint32_t i=0;
     LOG_FUNCTION_START("");
 
     tc4_wait_for_msec(5);

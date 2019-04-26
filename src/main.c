@@ -63,12 +63,13 @@ int main(void) {
     magInit();
     tofInit();
 
-
     timeMs_t time = 0;
     /************************** Infinite Loop *******************************/
     while (true) {
+
+    	DEBUG_WAIT(MODUL_DEFAULT, "Bin Da %d",timeing.imuLoop)
         /* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
-        if (READ_SENSORS_FLAG) {
+       /* if (READ_SENSORS_FLAG) {
 
             time = getTimeMs();
             readAccData();
@@ -89,9 +90,9 @@ int main(void) {
                 timer++;
             }
 
-            /* Reset TC flag */
+
             READ_SENSORS_FLAG = false;
-        }
+        }*/
 
     } /* !while (true) */
 

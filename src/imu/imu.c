@@ -61,7 +61,7 @@ void getMahAttitude(void) {
      attp->yaw = (180*atan2(2.0f*q1*q2 - 2.0f*q0*q3, 2.0f*q2*q2 + 2.0f*q3*q3 -1.0f))/M_PI;*/
 }
 
-// Reset yaw offset after 40 mesurements
+// Reset yaw offset after 400 mesurements
 int16_t yaw_offset(int16_t yaw) {
     static uint8_t counter = 0;
 
@@ -69,12 +69,12 @@ int16_t yaw_offset(int16_t yaw) {
     static uint16_t yaw_min = 3600;
     static uint16_t yaw_max = 0;
 
-    if (counter < 40) {
+    if (counter < 400) {
         yaw_min = yaw < yaw_min ? yaw : yaw_min;
         yaw_max = yaw > yaw_max ? yaw : yaw_max;
         counter++;
         return yaw;
-    } else if (counter == 40) {
+    } else if (counter == 400) {
         yaw_bias = (yaw_max + yaw_min) / 2;
         counter++;
     }

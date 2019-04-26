@@ -41,9 +41,17 @@ CSRCS = \
 	src/ASF_Support/tc_support.c \
 	src/ASF_Support/usart_support.c \
 	src/imu/imu.c \
-	src/time.c \
+	src/common/time.c \
 	src/imu/MahonyAHRS.c \
 	src/common/maths.c \
+	src/common/crc.c\
+	src/common/streambuf.c\
+	src/drivers/time.c\
+	src/drivers/serial_uart.c\
+	src/drivers/serial.c\
+	src/io/serial.c\
+	src/msp/msp.c\
+	src/msp/msp_serial.c\
 	src/main.c
 
 CSRCS += $(ASF_CSRCS)
@@ -61,7 +69,10 @@ INC_PATH = \
 	src/drivers \
 	src/telemetry \
 	src/config \
-	src/common
+	src/common \
+	src/msp \
+	src/io \
+	src/pg
 
 INC_PATH += $(ASF_INC_PATH)
 INC_PATH += $(VL53L0X_INC_PATH)     
