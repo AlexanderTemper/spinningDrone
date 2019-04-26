@@ -71,7 +71,8 @@
 /************************************************************************/
 
 #include "usart_support.h"
-
+#include "drivers/serial.h"
+#include "drivers/serial_uart.h"
 
 /************************************************************************/
 /* Function Definitions                                                 */
@@ -178,22 +179,15 @@ void usart_configure_callbacks(void)
 */
 void usart_callback_receive(struct usart_module *const usart_module_ptr)
 {
-	usart_rx_string[usart_rx_count] = usart_rx_byte;
+	uartDevice_t *uartdev = &uartDevice;
+	uartPort_t *s = &uartdev->port;
 	
-	if (usart_rx_string[usart_rx_count] == '\n')
-	{
-		/* Indicate end of string */
-		usart_rx_string[usart_rx_count + 1] = '\0';
-		/* New string received */
-		usart_callback_receive_flag = true;
-		/* Reset the counter */
-		usart_rx_count = 0;
+	s->port.rxBuffer[s->port.rxBufferHead] = usart_rx_byte;
+	if (s->port.rxBufferHead + 1 >= s->port.rxBufferSize) {
+	   s->port.rxBufferHead = 0;
+	} else {
+	   s->port.rxBufferHead++;
 	}
-	else
-	{
-		usart_rx_count++;
-	}
-	
 	/* Initiate a new job to listen to USART port for a new byte */
 	usart_read_job(&usart_instance, &usart_rx_byte);
 }

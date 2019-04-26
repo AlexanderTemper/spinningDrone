@@ -52,8 +52,8 @@ typedef struct uartPinDef_s {
 
 typedef struct uartDevice_s {
     uartPort_t port;
-    volatile uint8_t rxBuffer[64];
-    volatile uint8_t txBuffer[64];
+    volatile uint8_t rxBuffer[256];
+    volatile uint8_t txBuffer[256];
 } uartDevice_t;
 
 extern uartDevice_t uartDevice;

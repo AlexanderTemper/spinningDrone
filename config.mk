@@ -48,6 +48,7 @@ CSRCS = \
 	src/common/streambuf.c\
 	src/drivers/time.c\
 	src/drivers/serial_uart.c\
+	src/drivers/serial_uart_bmf.c\
 	src/drivers/serial.c\
 	src/io/serial.c\
 	src/msp/msp.c\

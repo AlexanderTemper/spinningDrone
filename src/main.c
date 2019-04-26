@@ -13,11 +13,13 @@
 #include "usart_support.h"
 #include "simbleeBridge.h"
 #include "simbleeBridge.h"
-
+#include "io/serial.h"
+#include "msp/msp_serial.h"
+#include "msp/msp_protocol.h"
 /************************************************************************/
 /* Macro Definitions                                                    */
 /************************************************************************/
-void errorwait(enum status_code status){
+static void errorwait(enum status_code status){
     if(status != STATUS_OK){
         DEBUG_WAIT(MODUL_DEFAULT, "Fail code 0x%x",status);
         while(1);
@@ -46,8 +48,11 @@ int main(void) {
     /*Initialize timers */
     tc_initialize();
 
-    /*Initialize UART for communication with PC*/
+    /*Initialize UART */
     usart_initialize();
+
+    serialInit();
+    mspSerialInit();
 
     /*Initialize I2C for communication*/
     status = i2c_initialize();
@@ -66,8 +71,11 @@ int main(void) {
     timeMs_t time = 0;
     /************************** Infinite Loop *******************************/
     while (true) {
+    	//mspSerialPush(MSP_API_VERSION, NULL, 0, MSP_DIRECTION_REQUEST);
 
-    	DEBUG_WAIT(MODUL_DEFAULT, "Bin Da %d",timeing.imuLoop)
+    	mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand, mspFcProcessReply);
+
+    	//DEBUG_WAIT(MODUL_DEFAULT, "Bin Da %d",timeing.imuLoop)
         /* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
        /* if (READ_SENSORS_FLAG) {
 

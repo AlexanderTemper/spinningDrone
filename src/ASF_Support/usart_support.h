@@ -33,7 +33,7 @@ volatile bool usart_callback_receive_flag;
 volatile bool usart_callback_transmit_flag;
 
 /*! USART Rx buffer */
-uint16_t usart_rx_string[64];
+uint16_t usart_rx_string[256];
 /*! USART Rx byte */
 uint16_t usart_rx_byte;
 /*! USART Rx buffer length */

@@ -4,6 +4,7 @@
 #include "drivers/serial_uart.h"
 #include "common/utils.h"
 
+
 uartDevice_t uartDevice;
 
 serialPort_t *uartOpen(UARTDevice_e device, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudRate, portMode_e mode, portOptions_e options)
