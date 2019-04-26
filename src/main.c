@@ -77,7 +77,7 @@ int main(void) {
 
     	//DEBUG_WAIT(MODUL_DEFAULT, "Bin Da %d",timeing.imuLoop)
         /* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
-       /* if (READ_SENSORS_FLAG) {
+        if (READ_SENSORS_FLAG) {
 
             time = getTimeMs();
             readAccData();
@@ -92,7 +92,7 @@ int main(void) {
             if (timer > 10) {
                 timeing.imuLoop = cmpTimeMs(getTimeMs(),time);
                 timeing.total = getTimeMs();
-                sendData();
+                //sendData();
                 timer = 0;
             } else {
                 timer++;
@@ -100,7 +100,7 @@ int main(void) {
 
 
             READ_SENSORS_FLAG = false;
-        }*/
+        }
 
     } /* !while (true) */
 
