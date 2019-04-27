@@ -14,6 +14,7 @@ void gyroInit(void) {
     bmg160_set_range_reg(0x00);
     bmg160_set_bw(C_BMG160_BW_116HZ_U8X);
     bmg160_set_power_mode(BMG160_MODE_NORMAL);
+    sensorsSet(SENSOR_GYRO);
 }
 
 SENSOR_OPERATION_STATUS readGyroData(void) {

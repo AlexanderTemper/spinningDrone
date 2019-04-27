@@ -2,6 +2,9 @@
 #define SENSOR_H_
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "sensors/sensors.h"
+#include "fc/runtime_config.h"
 
 #define SENSOR_OPERATION_STATUS int8_t
 #define SENSOR_SUCCESS 0

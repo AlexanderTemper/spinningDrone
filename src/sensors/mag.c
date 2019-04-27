@@ -17,6 +17,7 @@ void magInit(void) {
     bmm050_set_data_rate(BMM050_DR_10HZ);
     bmm050_set_presetmode(BMM050_PRESETMODE_REGULAR);
     bmm050_set_functional_state(BMM050_NORMAL_MODE);
+    sensorsSet(SENSOR_MAG);
 }
 
 SENSOR_OPERATION_STATUS readMagData(void) {

@@ -3,7 +3,7 @@
 
 enum status_code sendData(void) {
 
-    if (usart_callback_transmit_flag) {
+   /* if (usart_callback_transmit_flag) {
         sensorData32s_t buffer32s;
         static uint8_t buffer[75];
         static int32_t counter = 0;
@@ -50,7 +50,7 @@ enum status_code sendData(void) {
 
         usart_callback_transmit_flag = false;
         return usart_write_buffer_job(&usart_instance, buffer, 75);
-    }
+    }*/
 
     return STATUS_BUSY;
 }

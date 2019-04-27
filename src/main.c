@@ -16,6 +16,7 @@
 #include "io/serial.h"
 #include "msp/msp_serial.h"
 #include "msp/msp_protocol.h"
+#include "drivers/serial_uart_bmf.h"
 /************************************************************************/
 /* Macro Definitions                                                    */
 /************************************************************************/
@@ -68,11 +69,13 @@ int main(void) {
     magInit();
     tofInit();
 
+    mspInit();
+
     timeMs_t time = 0;
     /************************** Infinite Loop *******************************/
     while (true) {
     	//mspSerialPush(MSP_API_VERSION, NULL, 0, MSP_DIRECTION_REQUEST);
-
+    	//write_buffer();//clear Buffer;
     	mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand, mspFcProcessReply);
 
     	//DEBUG_WAIT(MODUL_DEFAULT, "Bin Da %d",timeing.imuLoop)

@@ -13,6 +13,27 @@
 
 const struct serialPortVTable uartVTable[];
 
+// TODO Fix ME
+void write_buffer(void){
+	uartDevice_t *uartdev = &uartDevice;
+	uartPort_t *s = &uartdev->port;
+	//if (usart_callback_transmit_flag) {
+		uint16_t size = 0;
+		uint32_t fromWhere = s->port.txBufferTail;
+
+		if (s->port.txBufferHead > s->port.txBufferTail) {
+			size = s->port.txBufferHead - s->port.txBufferTail;
+			s->port.txBufferTail = s->port.txBufferHead;
+		} else {
+			size = s->port.txBufferSize - s->port.txBufferTail;
+			s->port.txBufferTail = 0;
+		}
+		if(size>0){
+			//usart_callback_transmit_flag = false;
+			usart_write_buffer_wait(&usart_instance, (uint8_t *) &s->port.txBuffer[fromWhere], size);
+		}
+	//}
+}
 static void uartWrite(serialPort_t *instance, uint8_t ch)
 {
 	uartPort_t *s = (uartPort_t *)instance;
@@ -23,21 +44,7 @@ static void uartWrite(serialPort_t *instance, uint8_t ch)
 	} else {
 		s->port.txBufferHead++;
 	}
-
-	if (usart_callback_transmit_flag) {
-		uint16_t size;
-		uint32_t fromWhere = s->port.txBufferTail;
-
-		if (s->port.txBufferHead > s->port.txBufferTail) {
-			size = s->port.txBufferHead - s->port.txBufferTail;
-			s->port.txBufferTail = s->port.txBufferHead;
-		} else {
-			size = s->port.txBufferSize - s->port.txBufferTail;
-			s->port.txBufferTail = 0;
-		}
-		usart_callback_transmit_flag = false;
-		usart_write_buffer_job(&usart_instance, (uint8_t *) &s->port.txBuffer[fromWhere], size);
-	}
+	write_buffer();
 }
 
 

@@ -15,6 +15,7 @@ void accInit(void) {
     bma2x2_set_range(BMA2x2_RANGE_8G);
     bma2x2_set_bw(BMA2x2_BW_500HZ);
     bma2x2_set_power_mode(BMA2x2_MODE_NORMAL);
+    sensorsSet(SENSOR_ACC);
 }
 
 SENSOR_OPERATION_STATUS readAccData(void) {

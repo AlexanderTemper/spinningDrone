@@ -92,7 +92,6 @@ void usart_initialize(void)
 {
 	/* Initialize the variables */
 	usart_rx_byte = 0;
-	usart_rx_count = 0;
 	
 	/* Configure the USART Module */
 	usart_configure();
