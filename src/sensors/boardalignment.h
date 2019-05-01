@@ -20,16 +20,15 @@
 
 #pragma once
 
-#define FAST_CODE
-#define FAST_RAM_ZERO_INIT
+#include "pg/pg.h"
 
-#define NOINLINE __attribute__((noinline))
+typedef struct boardAlignment_s {
+    int32_t rollDegrees;
+    int32_t pitchDegrees;
+    int32_t yawDegrees;
+} boardAlignment_t;
 
-//#if !defined(UNIT_TEST) && !defined(SIMULATOR_BUILD) && !(USBD_DEBUG_LEVEL > 0)
-//#pragma GCC poison sprintf snprintf
-//#endif
+PG_DECLARE(boardAlignment_t, boardAlignment);
 
-//#include "target/common_fc_pre.h"
-//#include "target.h"
-//#include "target/common_fc_post.h"
-//#include "target/common_defaults_post.h"
+void alignSensors(float *dest, uint8_t rotation);
+void initBoardAlignment(const boardAlignment_t *boardAlignment);

@@ -17,7 +17,7 @@ typedef struct {
 extern SENSOR_DATA accData;
 extern rawAccData_t rawAccData;
 
-void accInit(void);
+void acclegacyInit(void);
 SENSOR_OPERATION_STATUS readAccData(void);
 
 #endif /* !ACC_H_ */

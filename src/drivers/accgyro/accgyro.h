@@ -20,16 +20,17 @@
 
 #pragma once
 
-#define FAST_CODE
-#define FAST_RAM_ZERO_INIT
+#include "platform.h"
 
-#define NOINLINE __attribute__((noinline))
 
-//#if !defined(UNIT_TEST) && !defined(SIMULATOR_BUILD) && !(USBD_DEBUG_LEVEL > 0)
-//#pragma GCC poison sprintf snprintf
-//#endif
+#include "common/axis.h"
+#include "drivers/sensor.h"
 
-//#include "target/common_fc_pre.h"
-//#include "target.h"
-//#include "target/common_fc_post.h"
-//#include "target/common_defaults_post.h"
+typedef struct accDev_s {
+    float acc_1G_rec;
+    sensorAccInitFuncPtr initFn;                              // initialize function
+    sensorAccReadFuncPtr readFn; // read 3 axis data function
+    uint16_t acc_1G;
+    int16_t ADCRaw[XYZ_AXIS_COUNT];
+    sensor_align_e accAlign;
+} accDev_t;

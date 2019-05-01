@@ -9,7 +9,7 @@ rawAccData_t rawAccData;
 
 void rawToRawAccData(struct bma2x2_accel_data *raw);
 
-void accInit(void) {
+void acclegacyInit(void) {
     /* Initialize BMA280 */
     bma_init();
     bma2x2_set_range(BMA2x2_RANGE_8G);

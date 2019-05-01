@@ -19,6 +19,8 @@ VL53L0X_CSRCS = \
 
 # List of C source files.
 CSRCS = \
+	src/build/debug.c \
+	src/drivers/accgyro/acc_bma280.c \
 	src/drivers/bma2x2_support.c \
 	src/drivers/bma2x2.c \
 	src/drivers/bmg160_support.c \
@@ -28,6 +30,9 @@ CSRCS = \
 	src/drivers/vl53l0x_i2c_platform.c \
 	src/drivers/vl53l0x_platform.c \
 	src/drivers/vl53l0x_platform_log.c \
+	src/sensors/acceleration.c \
+	src/sensors/initialisation.c \
+	src/sensors/boardalignment.c \
 	src/sensors/sensor.c \
 	src/sensors/gyro.c \
 	src/sensors/acc.c \
@@ -44,8 +49,9 @@ CSRCS = \
 	src/common/time.c \
 	src/imu/MahonyAHRS.c \
 	src/common/bitarray.c\
-	src/common/maths.c \
 	src/common/crc.c\
+	src/common/filter.c\
+	src/common/maths.c \
 	src/common/streambuf.c\
 	src/config/feature.c\
 	src/drivers/time.c\
@@ -70,10 +76,12 @@ ASSRCS = \
 # List of include paths.
 INC_PATH = \
 	src \
+	src/build \
 	src/ASF_Support \
 	src/imu \
 	src/sensors \
 	src/drivers \
+	src/drivers/accgyro \
 	src/fc \
 	src/telemetry \
 	src/config \
@@ -123,6 +131,7 @@ CPPFLAGS = \
        -D USART_CALLBACK_MODE=true \
        -D I2C_MASTER_CALLBACK_MODE=false \
        -D TC_ASYNC=true \
+       -D USE_ACC \
  #      -D VL53L0X_LOG_ENABLE
 
 # Extra flags to use when linking

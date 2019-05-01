@@ -1,5 +1,6 @@
 #include "imu.h"
 
+#include "sensors/acceleration.h"
 /************************************************************************/
 /* Globals                                                              */
 /************************************************************************/
@@ -13,11 +14,15 @@ float imuCalcKpGain(void);
 
 bool speedUp = true;
 
+float accAverage[XYZ_AXIS_COUNT];
+
 void updateAtt(void) {
 
     twoKp = imuCalcKpGain();
 
-    MahonyAHRSupdate(gyroData.x, gyroData.y, gyroData.z, accData.x, accData.y, accData.z, magData.x, magData.y, magData.z);
+    accGetAccumulationAverage(accAverage);
+
+    MahonyAHRSupdate(gyroData.x, gyroData.y, gyroData.z, accAverage[X], accAverage[Y], accAverage[Z], magData.x, magData.y, magData.z);
     getMahAttitude();
 
     if (attitude.values.yaw < 0) {

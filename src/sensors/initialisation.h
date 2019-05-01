@@ -20,16 +20,5 @@
 
 #pragma once
 
-#define FAST_CODE
-#define FAST_RAM_ZERO_INIT
-
-#define NOINLINE __attribute__((noinline))
-
-//#if !defined(UNIT_TEST) && !defined(SIMULATOR_BUILD) && !(USBD_DEBUG_LEVEL > 0)
-//#pragma GCC poison sprintf snprintf
-//#endif
-
-//#include "target/common_fc_pre.h"
-//#include "target.h"
-//#include "target/common_fc_post.h"
-//#include "target/common_defaults_post.h"
+void sensorsPreInit(void);
+bool sensorsAutodetect(void);

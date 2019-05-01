@@ -4,9 +4,9 @@
 
 #include "imu.h"
 
-
+#include <math.h>
 #include "common/utils.h"
-
+#include "build/debug.h"
 #include "config/feature.h"
 #include "common/bitarray.h"
 
@@ -18,7 +18,7 @@
 #include "fc/rc_modes.h"
 #include "fc/runtime_config.h"
 #include "sensors/sensors.h"
-
+#include "sensors/acceleration.h"
 
 #include "msp.h"
 
@@ -111,7 +111,11 @@ static bool mspCommonProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProce
         sbufWriteU16(dst, test++); // send current in 0.01 A steps, range is -320A to 320A
         sbufWriteU16(dst, test++);
         break;
-
+    case MSP_DEBUG:
+            for (int i = 0; i < DEBUG16_VALUE_COUNT; i++) {
+                sbufWriteU16(dst, debug[i]);      // 4 variables are here for general monitoring purpose
+            }
+    break;
     case MSP_UID:
         sbufWriteU32(dst, 0);
         sbufWriteU32(dst, 1);
@@ -170,11 +174,21 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
 	        break;
 
 	case MSP_RAW_IMU: {
-		for (int i = 0; i < 3; i++) {
-			sbufWriteU16(dst, 100);
+		uint8_t scale;
+			if (acc.dev.acc_1G > 512 * 4) {
+				scale = 8;
+			} else if (acc.dev.acc_1G > 512 * 2) {
+				scale = 4;
+			} else if (acc.dev.acc_1G >= 512) {
+				scale = 2;
+			} else {
+				scale = 1;
 		}
 		for (int i = 0; i < 3; i++) {
-			sbufWriteU16(dst, 100);
+			sbufWriteU16(dst, lrintf(acc.accADC[i] / scale));
+		}
+		for (int i = 0; i < 3; i++) {
+			sbufWriteU16(dst, acc.accADC[i]);
 		}
 		for (int i = 0; i < 3; i++) {
 			sbufWriteU16(dst, 100);

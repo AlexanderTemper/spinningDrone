@@ -16,6 +16,8 @@
 #include "io/serial.h"
 #include "msp/msp_serial.h"
 #include "msp/msp_protocol.h"
+#include "sensors/acceleration.h"
+#include "sensors/initialisation.h"
 #include "drivers/serial_uart_bmf.h"
 /************************************************************************/
 /* Macro Definitions                                                    */
@@ -65,7 +67,9 @@ int main(void) {
 
     /* Initialize the sensors */
     gyroInit();
-    accInit();
+    //acclegacyInit();
+    sensorsAutodetect();
+    accSetCalibrationCycles(CALIBRATING_ACC_CYCLES);
     magInit();
     tofInit();
 
@@ -82,7 +86,8 @@ int main(void) {
         if (READ_SENSORS_FLAG) {
 
             //time = getTimeMs();
-            readAccData();
+            //readAccData();
+        	accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
             readGyroData();
             readMagData();
             readTofData();
