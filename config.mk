@@ -35,7 +35,6 @@ CSRCS = \
 	src/sensors/boardalignment.c \
 	src/sensors/sensor.c \
 	src/sensors/gyro.c \
-	src/sensors/acc.c \
 	src/sensors/mag.c \
 	src/sensors/tof.c \
 	src/debug.c \
