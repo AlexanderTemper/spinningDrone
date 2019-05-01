@@ -78,7 +78,7 @@ bool isRangeActive(uint8_t auxChannelIndex, const channelRange_t *range) {
             channelValue < 900 + (range->endStep * 25));
 }
 
-void updateMasksForMac(const modeActivationCondition_t *mac, boxBitmask_t *andMask, boxBitmask_t *newMask)
+static void updateMasksForMac(const modeActivationCondition_t *mac, boxBitmask_t *andMask, boxBitmask_t *newMask)
 {
     bool bAnd = (mac->modeLogic == MODELOGIC_AND) || bitArrayGet(andMask, mac->modeId);
     bool bAct = isRangeActive(mac->auxChannelIndex, &mac->range);
@@ -90,7 +90,7 @@ void updateMasksForMac(const modeActivationCondition_t *mac, boxBitmask_t *andMa
     }
 }
 
-void updateMasksForStickyModes(const modeActivationCondition_t *mac, boxBitmask_t *andMask, boxBitmask_t *newMask)
+static void updateMasksForStickyModes(const modeActivationCondition_t *mac, boxBitmask_t *andMask, boxBitmask_t *newMask)
 {
     if (IS_RC_MODE_ACTIVE(mac->modeId)) {
         bitArrayClr(andMask, mac->modeId);
@@ -106,7 +106,7 @@ void updateMasksForStickyModes(const modeActivationCondition_t *mac, boxBitmask_
     }
 }
 
-void updateMasksForLinkedMac(const modeActivationCondition_t *mac, boxBitmask_t *andMask, boxBitmask_t *newMask)
+static void updateMasksForLinkedMac(const modeActivationCondition_t *mac, boxBitmask_t *andMask, boxBitmask_t *newMask)
 {
     bool bAnd = (mac->modeLogic == MODELOGIC_AND) || bitArrayGet(andMask, mac->modeId);
     bool bAct = bitArrayGet(andMask, mac->linkedTo) != bitArrayGet(newMask, mac->linkedTo);

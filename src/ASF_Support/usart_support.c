@@ -191,6 +191,8 @@ void usart_callback_receive(struct usart_module *const usart_module_ptr)
 	usart_read_job(&usart_instance, &usart_rx_byte);
 }
 
+
+
 /*!
 * @brief		Called after USART transmissions
 *
@@ -203,6 +205,30 @@ void usart_callback_receive(struct usart_module *const usart_module_ptr)
 */
 void usart_callback_transmit(struct usart_module *const usart_module_ptr)
 {
-	/* Set the corresponding flag */
-	usart_callback_transmit_flag = true;
+	uartDevice_t *uartdev = &uartDevice;
+	uartPort_t *s = &uartdev->port;
+
+	uint32_t fromWhere = s->port.txBufferTail;
+	// already running
+	if(usart_instance.remaining_tx_buffer_length > 0){
+		return;
+	}
+	// nothing to transmit
+	if(s->port.txBufferHead == s->port.txBufferTail ){
+		usart_callback_transmit_flag = true;
+		return;
+	}
+	// start transmitting
+	if (s->port.txBufferHead > s->port.txBufferTail) {
+		usart_write_buffer_job(&usart_instance, (uint8_t *) &s->port.txBuffer[fromWhere], s->port.txBufferHead - s->port.txBufferTail);
+		s->port.txBufferTail = s->port.txBufferHead;
+	}
+	else {
+		usart_write_buffer_job(&usart_instance, (uint8_t *) &s->port.txBuffer[fromWhere], s->port.txBufferSize - s->port.txBufferTail);
+		s->port.txBufferTail = 0;
+	}
+	usart_callback_transmit_flag = false;
 }
+
+
+

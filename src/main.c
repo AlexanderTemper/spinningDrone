@@ -71,18 +71,17 @@ int main(void) {
 
     mspInit();
 
-    timeMs_t time = 0;
+    //timeMs_t time = 0;
     /************************** Infinite Loop *******************************/
     while (true) {
     	//mspSerialPush(MSP_API_VERSION, NULL, 0, MSP_DIRECTION_REQUEST);
-    	//write_buffer();//clear Buffer;
-    	mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand, mspFcProcessReply);
 
+    	mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand, mspFcProcessReply);
     	//DEBUG_WAIT(MODUL_DEFAULT, "Bin Da %d",timeing.imuLoop)
         /* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
         if (READ_SENSORS_FLAG) {
 
-            time = getTimeMs();
+            //time = getTimeMs();
             readAccData();
             readGyroData();
             readMagData();
@@ -93,8 +92,8 @@ int main(void) {
 
             // 10MS * 10 == 100ms
             if (timer > 10) {
-                timeing.imuLoop = cmpTimeMs(getTimeMs(),time);
-                timeing.total = getTimeMs();
+                //timeing.imuLoop = cmpTimeMs(getTimeMs(),time);
+                //timeing.total = getTimeMs();
                 //sendData();
                 timer = 0;
             } else {

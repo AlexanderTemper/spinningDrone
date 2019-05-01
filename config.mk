@@ -43,16 +43,22 @@ CSRCS = \
 	src/imu/imu.c \
 	src/common/time.c \
 	src/imu/MahonyAHRS.c \
+	src/common/bitarray.c\
 	src/common/maths.c \
 	src/common/crc.c\
 	src/common/streambuf.c\
+	src/config/feature.c\
 	src/drivers/time.c\
 	src/drivers/serial_uart.c\
 	src/drivers/serial_uart_bmf.c\
 	src/drivers/serial.c\
+	src/fc/rc_modes.c\
+	src/fc/runtime_config.c\
 	src/io/serial.c\
+	src/io/beeper.c\
 	src/msp/msp.c\
 	src/msp/msp_serial.c\
+	src/msp/msp_box.c\
 	src/main.c
 
 CSRCS += $(ASF_CSRCS)
@@ -68,6 +74,7 @@ INC_PATH = \
 	src/imu \
 	src/sensors \
 	src/drivers \
+	src/fc \
 	src/telemetry \
 	src/config \
 	src/common \
