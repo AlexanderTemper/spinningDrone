@@ -3,7 +3,6 @@
 
 #include "MahonyAHRS.h"
 #include "sensor.h"
-#include "gyro.h"
 #include "mag.h"
 #include "time.h"
 #include "maths.h"

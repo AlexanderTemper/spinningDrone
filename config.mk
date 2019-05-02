@@ -21,6 +21,8 @@ VL53L0X_CSRCS = \
 CSRCS = \
 	src/build/debug.c \
 	src/drivers/accgyro/acc_bma280.c \
+	src/drivers/accgyro/gyro_bmg160.c \
+	src/drivers/accgyro/gyro_sync.c \
 	src/drivers/bma2x2_support.c \
 	src/drivers/bma2x2.c \
 	src/drivers/bmg160_support.c \

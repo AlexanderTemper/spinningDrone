@@ -4,7 +4,6 @@
 #include "sensor.h"
 #include "imu.h"
 #include "tof.h"
-#include "tof.h"
 
 #include "clock_support.h"
 #include "spi_support.h"
@@ -17,6 +16,7 @@
 #include "msp/msp_serial.h"
 #include "msp/msp_protocol.h"
 #include "sensors/acceleration.h"
+#include "sensors/gyro.h"
 #include "sensors/initialisation.h"
 #include "drivers/serial_uart_bmf.h"
 /************************************************************************/
@@ -66,7 +66,7 @@ int main(void) {
     system_interrupt_enable_global();/* All interrupts have a priority of level 0 which is the highest. */
 
     /* Initialize the sensors */
-    gyroInit();
+    //gyroInit();
     //acclegacyInit();
     sensorsAutodetect();
     accSetCalibrationCycles(CALIBRATING_ACC_CYCLES);
@@ -87,8 +87,9 @@ int main(void) {
 
             //time = getTimeMs();
             //readAccData();
+        	gyroUpdate(micros());
         	accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
-            readGyroData();
+            //readGyroData();
             readMagData();
             readTofData();
 

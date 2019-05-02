@@ -26,35 +26,35 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro/accgyro.h"
 #include "sensors/sensors.h"
-#include "bma2x2_support.h"
+#include "drivers/bmg160_support.h"
 #include "fc/runtime_config.h"
-#include "acc_bma280.h"
+#include "gyro_bmg160.h"
 
-static void bma280Init(accDev_t *acc) {
-	bma_init();
-	bma2x2_set_range(BMA2x2_RANGE_8G);
-	bma2x2_set_bw(BMA2x2_BW_500HZ);
-	bma2x2_set_power_mode(BMA2x2_MODE_NORMAL);
-	//Normalizing Factor to 1G at +-8 with +-2^13 = 8192/8 = 1024
-	acc->acc_1G = 1024;
-	acc->accAlign = CW0_DEG;
+static void bmg160Init(gyroDev_t *gyro) {
+	bmg_init();
+	bmg160_set_range_reg(0x00);
+	bmg160_set_bw(C_BMG160_BW_116HZ_U8X);
+	bmg160_set_power_mode(BMG160_MODE_NORMAL);
+	gyro->scale = 1.0f / 16.4f;
+	gyro->gyroAlign = CW0_DEG;
 }
 
-static bool bma280Read(accDev_t *acc) {
+static bool bmg160Read(gyroDev_t *gyro) {
 
-	struct bma2x2_accel_data rawData;
-	if (bma2x2_read_accel_xyz(&rawData) != 0) {
+	struct bmg160_data_t rawData;
+	if (bmg160_get_data_XYZ(&rawData) != 0) {
 		return false;
 	}
-	acc->ADCRaw[0] = rawData.x;
-	acc->ADCRaw[1] = rawData.y;
-	acc->ADCRaw[2] = rawData.z;
+	gyro->gyroADCRaw[X] = rawData.datax;
+	gyro->gyroADCRaw[Y] = rawData.datay;
+	gyro->gyroADCRaw[Z] = rawData.dataz;
 
 	return true;
 }
 
-bool bma280Detect(accDev_t *acc) {
-	acc->initFn = bma280Init;
-	acc->readFn = bma280Read;
-	return true;
+uint8_t bmg160Detect(gyroDev_t *gyro) {
+	gyro->initFn = bmg160Init;
+	gyro->readFn = bmg160Read;
+
+	return GYRO_BMG160;
 }

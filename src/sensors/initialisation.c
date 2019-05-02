@@ -62,6 +62,7 @@ void sensorsPreInit(void)
 
 bool sensorsAutodetect(void)
 {
+	gyroInit();
 #ifdef USE_ACC
     accInit(1000);
 #endif

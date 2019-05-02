@@ -7,12 +7,12 @@ void delay(timeMs_t ms){
 	tc4_wait_for_msec(ms);
 }
 
-/*timeUs_t micros(void){
-    return 1;
+timeUs_t micros(void){
+    return tc1_ticks*1000;
 }
 timeUs_t microsISR(void){
     return 1;
-}*/
+}
 timeMs_t millis(void){
     return tc1_ticks;
 }

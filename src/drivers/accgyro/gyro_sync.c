@@ -18,6 +18,13 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * gyro_sync.c
+ *
+ *  Created on: 3 aug. 2015
+ *      Author: borisb
+ */
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -25,36 +32,26 @@
 
 #include "drivers/sensor.h"
 #include "drivers/accgyro/accgyro.h"
-#include "sensors/sensors.h"
-#include "bma2x2_support.h"
-#include "fc/runtime_config.h"
-#include "acc_bma280.h"
+#include "drivers/accgyro/gyro_sync.h"
 
-static void bma280Init(accDev_t *acc) {
-	bma_init();
-	bma2x2_set_range(BMA2x2_RANGE_8G);
-	bma2x2_set_bw(BMA2x2_BW_500HZ);
-	bma2x2_set_power_mode(BMA2x2_MODE_NORMAL);
-	//Normalizing Factor to 1G at +-8 with +-2^13 = 8192/8 = 1024
-	acc->acc_1G = 1024;
-	acc->accAlign = CW0_DEG;
+
+bool gyroSyncCheckUpdate(gyroDev_t *gyro)
+{
+
+    return true;
 }
 
-static bool bma280Read(accDev_t *acc) {
+uint32_t gyroSetSampleRate(gyroDev_t *gyro, uint8_t lpf, uint8_t gyroSyncDenominator)
+{
+    float gyroSamplePeriod;
 
-	struct bma2x2_accel_data rawData;
-	if (bma2x2_read_accel_xyz(&rawData) != 0) {
-		return false;
-	}
-	acc->ADCRaw[0] = rawData.x;
-	acc->ADCRaw[1] = rawData.y;
-	acc->ADCRaw[2] = rawData.z;
+	gyro->gyroRateKHz = GYRO_RATE_160_Hz;
+	gyroSamplePeriod = 160.0f;
+	gyroSyncDenominator = 1; // Always full Sampling 1khz
 
-	return true;
-}
 
-bool bma280Detect(accDev_t *acc) {
-	acc->initFn = bma280Init;
-	acc->readFn = bma280Read;
-	return true;
+    // calculate gyro divider and targetLooptime (expected cycleTime)
+    gyro->mpuDividerDrops  = gyroSyncDenominator - 1;
+    const uint32_t targetLooptime = (uint32_t)(gyroSyncDenominator * gyroSamplePeriod);
+    return targetLooptime;
 }

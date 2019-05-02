@@ -19,6 +19,7 @@
 #include "fc/runtime_config.h"
 #include "sensors/sensors.h"
 #include "sensors/acceleration.h"
+#include "sensors/gyro.h"
 
 #include "msp.h"
 
@@ -188,7 +189,7 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
 			sbufWriteU16(dst, lrintf(acc.accADC[i] / scale));
 		}
 		for (int i = 0; i < 3; i++) {
-			sbufWriteU16(dst, acc.accADC[i]);
+			sbufWriteU16(dst, gyroRateDps(i));
 		}
 		for (int i = 0; i < 3; i++) {
 			sbufWriteU16(dst, 100);
