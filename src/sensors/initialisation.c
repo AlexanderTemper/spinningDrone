@@ -44,8 +44,8 @@
 
 
 // requestedSensors is not actually used
-uint8_t requestedSensors[SENSOR_INDEX_COUNT] = { 0, ACC_NONE, 0, 0, 0 };
-uint8_t detectedSensors[SENSOR_INDEX_COUNT] = { 0, ACC_NONE, 0, 0, 0 };
+uint8_t requestedSensors[SENSOR_INDEX_COUNT] = { GYRO_NONE, ACC_NONE, 0, 0, 0 };
+uint8_t detectedSensors[SENSOR_INDEX_COUNT] = { GYRO_NONE, ACC_NONE, 0, 0, 0 };
 
 void sensorsPreInit(void)
 {

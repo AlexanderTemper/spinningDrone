@@ -46,9 +46,7 @@ CSRCS = \
     src/ASF_Support/i2c_support.c \
 	src/ASF_Support/tc_support.c \
 	src/ASF_Support/usart_support.c \
-	src/imu/imu.c \
 	src/common/time.c \
-	src/imu/MahonyAHRS.c \
 	src/common/bitarray.c\
 	src/common/crc.c\
 	src/common/filter.c\
@@ -61,6 +59,7 @@ CSRCS = \
 	src/drivers/serial.c\
 	src/fc/rc_modes.c\
 	src/fc/runtime_config.c\
+	src/flight/imu.c\
 	src/io/serial.c\
 	src/io/beeper.c\
 	src/msp/msp.c\
@@ -79,11 +78,11 @@ INC_PATH = \
 	src \
 	src/build \
 	src/ASF_Support \
-	src/imu \
 	src/sensors \
 	src/drivers \
 	src/drivers/accgyro \
 	src/fc \
+	src/flight \
 	src/telemetry \
 	src/config \
 	src/common \

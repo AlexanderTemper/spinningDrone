@@ -1,8 +1,6 @@
 #include "asf.h"
 #include <math.h>
 #include <float.h>
-#include "sensor.h"
-#include "imu.h"
 #include "tof.h"
 
 #include "clock_support.h"
@@ -17,8 +15,11 @@
 #include "msp/msp_protocol.h"
 #include "sensors/acceleration.h"
 #include "sensors/gyro.h"
+#include "build/debug.h"
 #include "sensors/initialisation.h"
 #include "drivers/serial_uart_bmf.h"
+
+
 /************************************************************************/
 /* Macro Definitions                                                    */
 /************************************************************************/
@@ -70,12 +71,16 @@ int main(void) {
     //acclegacyInit();
     sensorsAutodetect();
     accSetCalibrationCycles(CALIBRATING_ACC_CYCLES);
-    magInit();
+    gyroInitFilters();
+    gyroStartCalibration(false);
+    //magInit();
     tofInit();
 
+    imuConfigure(800, 0);
+    imuInit();
     mspInit();
 
-    //timeMs_t time = 0;
+    timeMs_t time = 0;
     /************************** Infinite Loop *******************************/
     while (true) {
     	//mspSerialPush(MSP_API_VERSION, NULL, 0, MSP_DIRECTION_REQUEST);
@@ -85,17 +90,17 @@ int main(void) {
         /* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
         if (READ_SENSORS_FLAG) {
 
-            //time = getTimeMs();
+            time = getTimeMs();
             //readAccData();
         	gyroUpdate(micros());
         	accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
             //readGyroData();
-            readMagData();
+            //readMagData();
             readTofData();
 
-            updateAtt();
+            imuUpdateAttitude(micros());
 
-
+            DEBUG_SET(DEBUG_STACK, 0, cmpTimeMs(getTimeMs(),time));
             // 10MS * 10 == 100ms
             if (timer > 10) {
                 //timeing.imuLoop = cmpTimeMs(getTimeMs(),time);

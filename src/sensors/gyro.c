@@ -342,51 +342,16 @@ bool gyroInit(void)
 
     gyroDetectionFlags = NO_GYROS_DETECTED;
 
+    pgResetFn_gyroConfig(gyroConfig());
     gyroToUse = gyroConfig()->gyro_to_use;
 
     if (gyroDetectSensor(&gyroSensor1)) {
         gyroDetectionFlags |= DETECTED_GYRO_1;
     }
 
-#if defined(USE_MULTI_GYRO)
-    if (gyroDetectSensor(&gyroSensor2, gyroDeviceConfig(1))) {
-        gyroDetectionFlags |= DETECTED_GYRO_2;
-    }
-#endif
-
     if (gyroDetectionFlags == NO_GYROS_DETECTED) {
         return false;
     }
-
-#if defined(USE_MULTI_GYRO)
-    if ((gyroToUse == GYRO_CONFIG_USE_GYRO_BOTH && !((gyroDetectionFlags & DETECTED_BOTH_GYROS) == DETECTED_BOTH_GYROS))
-        || (gyroToUse == GYRO_CONFIG_USE_GYRO_1 && !(gyroDetectionFlags & DETECTED_GYRO_1))
-        || (gyroToUse == GYRO_CONFIG_USE_GYRO_2 && !(gyroDetectionFlags & DETECTED_GYRO_2))) {
-        if (gyroDetectionFlags & DETECTED_GYRO_1) {
-            gyroToUse = GYRO_CONFIG_USE_GYRO_1;
-        } else {
-            gyroToUse = GYRO_CONFIG_USE_GYRO_2;
-        }
-
-        gyroConfigMutable()->gyro_to_use = gyroToUse;
-    }
-
-    // Only allow using both gyros simultaneously if they are the same hardware type.
-    if (((gyroDetectionFlags & DETECTED_BOTH_GYROS) == DETECTED_BOTH_GYROS) && gyroSensor1.gyroDev.gyroHardware == gyroSensor2.gyroDev.gyroHardware) {
-        gyroDetectionFlags |= DETECTED_DUAL_GYROS;
-    } else if (gyroToUse == GYRO_CONFIG_USE_GYRO_BOTH) {
-        // If the user selected "BOTH" and they are not the same type, then reset to using only the first gyro.
-        gyroToUse = GYRO_CONFIG_USE_GYRO_1;
-        gyroConfigMutable()->gyro_to_use = gyroToUse;
-    }
-
-    if (gyroToUse == GYRO_CONFIG_USE_GYRO_2 || gyroToUse == GYRO_CONFIG_USE_GYRO_BOTH) {
-        gyroInitSensor(&gyroSensor2, gyroDeviceConfig(1));
-        gyroHasOverflowProtection =  gyroHasOverflowProtection && gyroSensor2.gyroDev.gyroHasOverflowProtection;
-        detectedSensors[SENSOR_INDEX_GYRO] = gyroSensor2.gyroDev.gyroHardware;
-    }
-#endif
-
     if (gyroToUse == GYRO_CONFIG_USE_GYRO_1 || gyroToUse == GYRO_CONFIG_USE_GYRO_BOTH) {
         gyroInitSensor(&gyroSensor1);
         gyroHasOverflowProtection =  gyroHasOverflowProtection && gyroSensor1.gyroDev.gyroHasOverflowProtection;
@@ -613,20 +578,7 @@ FAST_CODE bool isGyroSensorCalibrationComplete(const gyroSensor_t *gyroSensor)
 
 FAST_CODE bool isGyroCalibrationComplete(void)
 {
-    switch (gyroToUse) {
-        default:
-        case GYRO_CONFIG_USE_GYRO_1: {
-            return isGyroSensorCalibrationComplete(&gyroSensor1);
-        }
-#ifdef USE_MULTI_GYRO
-        case GYRO_CONFIG_USE_GYRO_2: {
-            return isGyroSensorCalibrationComplete(&gyroSensor2);
-        }
-        case GYRO_CONFIG_USE_GYRO_BOTH: {
-            return isGyroSensorCalibrationComplete(&gyroSensor1) && isGyroSensorCalibrationComplete(&gyroSensor2);
-        }
-#endif
-    }
+	return isGyroSensorCalibrationComplete(&gyroSensor1);
 }
 
 static bool isOnFinalGyroCalibrationCycle(const gyroCalibration_t *gyroCalibration)
@@ -646,17 +598,14 @@ static bool isOnFirstGyroCalibrationCycle(const gyroCalibration_t *gyroCalibrati
 
 static void gyroSetCalibrationCycles(gyroSensor_t *gyroSensor)
 {
-    gyroSensor->calibration.cyclesRemaining = gyroCalculateCalibratingCycles();
+	//TODO FIX
+    gyroSensor->calibration.cyclesRemaining = 400;//gyroCalculateCalibratingCycles();
 }
 
 void gyroStartCalibration(bool isFirstArmingCalibration)
 {
     if (!(isFirstArmingCalibration && firstArmingCalibrationWasStarted)) {
         gyroSetCalibrationCycles(&gyroSensor1);
-#ifdef USE_MULTI_GYRO
-        gyroSetCalibrationCycles(&gyroSensor2);
-#endif
-
         if (isFirstArmingCalibration) {
             firstArmingCalibrationWasStarted = true;
         }
@@ -843,15 +792,13 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
     }
 
     //gyroSensor->gyroDev.dataReady = false;
-    timeDelta_t delta = cmpTimeUs(lastGyroReadTime,currentTimeUs);
-    lastGyroReadTime = currentTimeUs;
+
     if (isGyroSensorCalibrationComplete(gyroSensor)) {
         // move 16-bit gyro data into 32-bit variables to avoid overflows in calculations
 
         gyroSensor->gyroDev.gyroADC[X] = gyroSensor->gyroDev.gyroADCRaw[X] - gyroSensor->gyroDev.gyroZero[X];
         gyroSensor->gyroDev.gyroADC[Y] = gyroSensor->gyroDev.gyroADCRaw[Y] - gyroSensor->gyroDev.gyroZero[Y];
         gyroSensor->gyroDev.gyroADC[Z] = gyroSensor->gyroDev.gyroADCRaw[Z] - gyroSensor->gyroDev.gyroZero[Z];
-
 
         alignSensors(gyroSensor->gyroDev.gyroADC, gyroSensor->gyroDev.gyroAlign);
     } else {
@@ -861,9 +808,9 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
     }
 
     if (gyroDebugMode == DEBUG_NONE) {
-        filterGyro(gyroSensor,delta);
+        filterGyro(gyroSensor);
     } else {
-        filterGyroDebug(gyroSensor,delta);
+        filterGyroDebug(gyroSensor);
     }
 }
 
@@ -938,16 +885,6 @@ void gyroReadTemperature(void)
     case GYRO_CONFIG_USE_GYRO_1:
         gyroSensorTemperature = gyroReadSensorTemperature(gyroSensor1);
         break;
-
-#ifdef USE_MULTI_GYRO
-    case GYRO_CONFIG_USE_GYRO_2:
-        gyroSensorTemperature = gyroReadSensorTemperature(gyroSensor2);
-        break;
-
-    case GYRO_CONFIG_USE_GYRO_BOTH:
-        gyroSensorTemperature = MAX(gyroReadSensorTemperature(gyroSensor1), gyroReadSensorTemperature(gyroSensor2));
-        break;
-#endif // USE_MULTI_GYRO
     }
 }
 
@@ -1004,30 +941,12 @@ void dynLpfGyroUpdate(float throttle)
             DEBUG_SET(DEBUG_DYN_LPF, 2, cutoffFreq);
             const float gyroDt = gyro.targetLooptime * 1e-6f;
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-#ifdef USE_MULTI_GYRO
-                if (gyroToUse == GYRO_CONFIG_USE_GYRO_1 || gyroToUse == GYRO_CONFIG_USE_GYRO_BOTH) {
-                    pt1FilterUpdateCutoff(&gyroSensor1.lowpassFilter[axis].pt1FilterState, pt1FilterGain(cutoffFreq, gyroDt));
-                }
-                if (gyroToUse == GYRO_CONFIG_USE_GYRO_2 || gyroToUse == GYRO_CONFIG_USE_GYRO_BOTH) {
-                    pt1FilterUpdateCutoff(&gyroSensor2.lowpassFilter[axis].pt1FilterState, pt1FilterGain(cutoffFreq, gyroDt));
-                }
-#else
                 pt1FilterUpdateCutoff(&gyroSensor1.lowpassFilter[axis].pt1FilterState, pt1FilterGain(cutoffFreq, gyroDt));
-#endif
             }
         } else if (dynLpfFilter == DYN_LPF_BIQUAD) {
             DEBUG_SET(DEBUG_DYN_LPF, 2, cutoffFreq);
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-#ifdef USE_MULTI_GYRO
-                if (gyroToUse == GYRO_CONFIG_USE_GYRO_1 || gyroToUse == GYRO_CONFIG_USE_GYRO_BOTH) {
-                    biquadFilterUpdateLPF(&gyroSensor1.lowpassFilter[axis].biquadFilterState, cutoffFreq, gyro.targetLooptime);
-                }
-                if (gyroToUse == GYRO_CONFIG_USE_GYRO_2 || gyroToUse == GYRO_CONFIG_USE_GYRO_BOTH) {
-                    biquadFilterUpdateLPF(&gyroSensor2.lowpassFilter[axis].biquadFilterState, cutoffFreq, gyro.targetLooptime);
-                }
-#else
                 biquadFilterUpdateLPF(&gyroSensor1.lowpassFilter[axis].biquadFilterState, cutoffFreq, gyro.targetLooptime);
-#endif
             }
         }
     }
