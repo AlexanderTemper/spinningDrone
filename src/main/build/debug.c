@@ -25,7 +25,7 @@
 #include "debug.h"
 
 int16_t debug[DEBUG16_VALUE_COUNT];
-uint8_t debugMode = DEBUG_STACK;
+uint8_t debugMode;
 
 #ifdef DEBUG_SECTION_TIMES
 uint32_t sectionTimes[2][4];
@@ -85,6 +85,4 @@ const char * const debugModeNames[DEBUG_COUNT] = {
     "D_MIN",
     "AC_CORRECTION",
     "AC_ERROR",
-    "DUAL_GYRO_SCALED",
-    "DSHOT_RPM_ERRORS",
 };

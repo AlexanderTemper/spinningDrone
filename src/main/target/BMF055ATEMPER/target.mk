@@ -1,0 +1,16 @@
+SAMD20J18_TARGET    += $(TARGET)
+
+TARGET_FLAGS = \
+       -DARM_MATH_CM0PLUS=true \
+       -D__SAMD20J18__ \
+       -DBOARD=USER_BOARD \
+       -DSPI_CALLBACK_MODE=true \
+       -DUSART_CALLBACK_MODE=true \
+       -DI2C_MASTER_CALLBACK_MODE=false \
+       -DTC_ASYNC=true
+       
+TARGET_FLASH := 256
+
+HSE_VALUE :=    32000   
+
+DEVICE_STDPERIPH_SRC := 

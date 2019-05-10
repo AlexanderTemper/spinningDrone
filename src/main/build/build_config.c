@@ -18,20 +18,9 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "stdbool.h"
+#include "stdint.h"
 
-#define FAST_CODE
-#define FAST_CODE_NOINLINE
-#define FAST_RAM_ZERO_INIT
-#define STATIC_UNIT_TESTED static
+#include "platform.h"
 
-#define NOINLINE __attribute__((noinline))
-
-//#if !defined(UNIT_TEST) && !defined(SIMULATOR_BUILD) && !(USBD_DEBUG_LEVEL > 0)
-//#pragma GCC poison sprintf snprintf
-//#endif
-
-//#include "target/common_fc_pre.h"
-//#include "target.h"
-//#include "target/common_fc_post.h"
-//#include "target/common_defaults_post.h"
+#include "build_config.h"
