@@ -664,7 +664,7 @@ enum status_code eeprom_emulator_init(void)
 	/* Configure the EEPROM instance starting physical address in FLASH and
 	 * pre-compute the index of the first page in FLASH used for EEPROM */
 	_eeprom_instance.flash =
-			(void*)(FLASH_SIZE -
+			(void*)(FLASH_SIZE_ASF -
 			((uint32_t)_eeprom_instance.physical_pages * NVMCTRL_PAGE_SIZE));
 
 	/* Clear EEPROM page write cache on initialization */

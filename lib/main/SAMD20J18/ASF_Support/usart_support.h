@@ -25,15 +25,15 @@
 
 /*! SERCOM USART driver software instance structure, used to retain
 * software state information of the associated hardware module instance */
-struct usart_module usart_instance;
+extern struct usart_module usart_instance;
 /*! USART receive callback flag (set after each USART reception) */
-volatile bool usart_callback_receive_flag;
+extern volatile bool usart_callback_receive_flag;
 
 /*! USART receive callback flag (set after each USART transmission) */
-volatile bool usart_callback_transmit_flag;
+extern volatile bool usart_callback_transmit_flag;
 
 /*! USART Rx byte */
-uint16_t usart_rx_byte;
+extern uint16_t usart_rx_byte;
 
 /************************************************************************/
 /* Function Declarations                                                */

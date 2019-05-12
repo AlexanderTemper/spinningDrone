@@ -1,6 +1,15 @@
 #include "tc_support.h"
 
 
+
+struct tc_module tc1_instance;
+struct tc_module tc4_instance;
+struct tc_module tc6_instance;
+
+volatile uint32_t tc1_ticks;
+volatile bool tc4_callback_flag;
+volatile bool tc6_callback_flag;
+
 void tc_initialize(void)
 {
 	tc1_configure ();

@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "imu.h"
+#include "flight/imu.h"
 
 #include <math.h>
 #include "common/utils.h"
@@ -26,14 +26,7 @@
 uint16_t test = 0;
 // TODO besser machen ----
 static const char * const flightControllerIdentifier = BETAFLIGHT_IDENTIFIER; // 4 UPPER
-#define FC_VERSION_MAJOR 4 // increment when a major release is made (big new feature, etc)
-#define FC_VERSION_MINOR 1 // increment when a minor release is made (small new feature, change etc)
-#define FC_VERSION_PATCH_LEVEL 0 // increment when a bug is fixed
 #define SIGNATURE_LENGTH 32
-const char * const targetName = "UNITTEST";
-const char* const buildDate = "Jan 01 2017";
-const char * const buildTime = "00:00:00";
-const char * const shortGitRevision = "MASTER";
 #define GIT_SHORT_REVISION_LENGTH   7 // lower case hexadecimal digits.
 #define BUILD_DATE_LENGTH 11
 #define BUILD_TIME_LENGTH 8
@@ -198,7 +191,7 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
 	}
 	case MSP_NAME:
 	{
-	   const char pilotname[] = "Alex";
+	   const char pilotname[] = "AlexBETA";
 	   const int nameLen = strlen(pilotname);
 	   for (int i = 0; i < nameLen; i++) {
 		   sbufWriteU8(dst, pilotname[i]);

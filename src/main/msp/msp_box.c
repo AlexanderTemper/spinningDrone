@@ -247,11 +247,11 @@ void initActiveBoxIds(void)
 #endif
 
 #ifdef USE_SERVOS
-    if (mixerConfig()->mixerMode == MIXER_CUSTOM_AIRPLANE) {
+    /*if (mixerConfig()->mixerMode == MIXER_CUSTOM_AIRPLANE) {
         BME(BOXSERVO1);
         BME(BOXSERVO2);
         BME(BOXSERVO3);
-    }
+    }*/
 #endif
 
 #ifdef USE_RCDEVICE
@@ -270,7 +270,7 @@ void initActiveBoxIds(void)
 #ifdef USE_PINIOBOX
     // Turn BOXUSERx only if pinioBox facility monitors them, as the facility is the only BOXUSERx observer.
     // Note that pinioBoxConfig can be set to monitor any box.
-    for (int i = 0; i < PINIO_COUNT; i++) {
+    /*for (int i = 0; i < PINIO_COUNT; i++) {
         if (pinioBoxConfig()->permanentId[i] != PERMANENT_ID_NONE) {
             const box_t *box = findBoxByPermanentId(pinioBoxConfig()->permanentId[i]);
             if (box) {
@@ -286,7 +286,7 @@ void initActiveBoxIds(void)
                 }
             }
         }
-    }
+    }*/
 #endif
 
 #if defined(USE_PID_AUDIO)

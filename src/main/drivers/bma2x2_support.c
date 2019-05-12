@@ -72,6 +72,10 @@
 
 #include "bma2x2_support.h"
 
+struct bma2x2_t  bma2x2;
+
+struct spi_slave_inst bma2x2_spi_slave;
+
 /************************************************************************/
 /* Function Definitions                                                 */
 /************************************************************************/

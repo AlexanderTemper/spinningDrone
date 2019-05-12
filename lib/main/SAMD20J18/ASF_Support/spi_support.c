@@ -64,7 +64,7 @@
 *
 *
 */
-
+struct spi_module spi_master_instance;
 
 /************************************************************************/
 /* Include Own Header                                                   */

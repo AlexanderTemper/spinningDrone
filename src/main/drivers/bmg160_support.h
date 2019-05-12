@@ -22,11 +22,11 @@
 
 /*! Instantiates a bmg160 software instance structure, which holds
 * relevant information about BMG160 and links communication to the SPI bus. */
-struct bmg160_t bmg160;
+extern struct bmg160_t bmg160;
 /*! It instantiates an SPI slave software instance structure, used to configure
 * the correct SPI transfer mode settings for an attached slave (here BMM160 is the slave).
 * For example it holds the SS pin number of the corresponding slave. */
-struct spi_slave_inst bmg160_spi_slave;
+extern struct spi_slave_inst bmg160_spi_slave;
 
 /************************************************************************/
 /* Function Declarations                                                */

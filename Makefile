@@ -110,9 +110,10 @@ FC_VER := $(FC_VER_MAJOR).$(FC_VER_MINOR).$(FC_VER_PATCH)
 
 # Search path for sources
 VPATH           := $(SRC_DIR):$(SRC_DIR)/startup
-#USBFS_DIR       = $(ROOT)/lib/main/STM32_USB-FS-Device_Driver
-#USBPERIPH_SRC   = $(notdir $(wildcard $(USBFS_DIR)/src/*.c))
-#FATFS_DIR       = $(ROOT)/lib/main/FatFS
+USBFS_DIR       = $(ROOT)/lib/main/STM32_USB-FS-Device_Driver
+USBPERIPH_SRC   = $(notdir $(wildcard $(USBFS_DIR)/src/*.c))
+FATFS_DIR       = $(ROOT)/lib/main/FatFS
+FATFS_SRC       = $(notdir $(wildcard $(FATFS_DIR)/*.c))
 
 CSOURCES        := $(shell find $(SRC_DIR) -name '*.c')
 
@@ -159,7 +160,6 @@ endif
 DEVICE_FLAGS  := $(DEVICE_FLAGS) -DFLASH_SIZE=$(FLASH_SIZE)
 
 ifneq ($(HSE_VALUE),)
-
 DEVICE_FLAGS  := $(DEVICE_FLAGS) -DHSE_VALUE=$(HSE_VALUE)
 endif
 
@@ -188,6 +188,7 @@ INCLUDE_DIRS    := $(INCLUDE_DIRS) \
 VPATH           := $(VPATH):$(TARGET_DIR)
 
 include $(ROOT)/make/source.mk
+
 
 ###############################################################################
 # Things that might need changing to use different tools
@@ -263,6 +264,8 @@ LD_FLAGS     = -lm \
               -T$(LD_SCRIPT)
 endif
 
+#$(error $(CFLAGS))
+
 ###############################################################################
 # No user-serviceable parts below
 ###############################################################################
@@ -289,6 +292,7 @@ CLEAN_ARTIFACTS += $(TARGET_HEX)
 CLEAN_ARTIFACTS += $(TARGET_ELF) $(TARGET_OBJS) $(TARGET_MAP)
 CLEAN_ARTIFACTS += $(TARGET_LST)
 
+#$(error $(TARGET_OBJS))
 # Make sure build date and revision is updated on every incremental build
 $(OBJECT_DIR)/$(TARGET)/build/version.o : $(SRC)
 
@@ -300,7 +304,7 @@ $(TARGET_LST): $(TARGET_ELF)
 
 $(TARGET_HEX): $(TARGET_ELF)
 	@echo "Creating HEX $(TARGET_HEX)" "$(STDOUT)"
-	$(V1) $(OBJCOPY) -O ihex --set-start 0x8000000 $< $@
+	$(V1) $(OBJCOPY) -O ihex $< $@
 
 $(TARGET_BIN): $(TARGET_ELF)
 	@echo "Creating BIN $(TARGET_BIN)" "$(STDOUT)"
@@ -310,6 +314,8 @@ $(TARGET_ELF): $(TARGET_OBJS) $(LD_SCRIPT)
 	@echo "Linking $(TARGET)" "$(STDOUT)"
 	$(V1) $(CROSS_CC) -o $@ $(filter-out %.ld,$^) $(LD_FLAGS)
 	$(V1) $(SIZE) $(TARGET_ELF)
+	$(SIZE) -Ax $@
+	$(SIZE) -Bx $@
 
 # Compile
 
@@ -614,4 +620,3 @@ $(TARGET_OBJS): Makefile $(TARGET_DIR)/target.mk $(wildcard make/*)
 
 # include auto-generated dependencies
 -include $(TARGET_DEPS)
-

@@ -93,12 +93,12 @@
 
 /*! Instantiates a bma2x2 software instance structure, which holds
 * relevant information about BMA2x2 and links communication to the SPI bus. */
-struct bma2x2_t	bma2x2;
+extern struct bma2x2_t	bma2x2;
 
 /*! It instantiates an SPI slave software instance structure, used to configure
 * the correct SPI transfer mode settings for an attached slave (here BMA280 is the slave).
 * For example it holds the SS pin number of the corresponding slave. */
-struct spi_slave_inst bma2x2_spi_slave;
+extern struct spi_slave_inst bma2x2_spi_slave;
 
 /************************************************************************/
 /* Function Declarations                                                */

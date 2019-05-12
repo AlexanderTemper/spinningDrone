@@ -488,7 +488,7 @@ void PTC_Handler                 ( void );
 /**  MEMORY MAPPING DEFINITIONS FOR SAMD20J18 */
 /* ************************************************************************** */
 
-#define FLASH_SIZE            0x40000UL /* 256 kB */
+#define FLASH_SIZE_ASF           0x40000UL /* 256 kB */
 #define FLASH_PAGE_SIZE       64
 #define FLASH_NB_OF_PAGES     4096
 #define FLASH_USER_PAGE_SIZE  64

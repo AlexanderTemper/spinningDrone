@@ -40,7 +40,6 @@
  * \asf_license_stop
  *
  */
-
 #ifndef ASF_H
 #define ASF_H
 

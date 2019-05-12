@@ -1,15 +1,15 @@
 #include "asf.h"
 #include <math.h>
 #include <float.h>
-#include "tof.h"
+
 
 #include "clock_support.h"
 #include "spi_support.h"
 #include "i2c_support.h"
 #include "tc_support.h"
 #include "usart_support.h"
-#include "simbleeBridge.h"
-#include "simbleeBridge.h"
+//#include "simbleeBridge.h"
+
 #include "io/serial.h"
 #include "msp/msp_serial.h"
 #include "msp/msp_protocol.h"
@@ -18,17 +18,11 @@
 #include "build/debug.h"
 #include "sensors/initialisation.h"
 #include "drivers/serial_uart_bmf.h"
-
+#include "flight/imu.h"
 
 /************************************************************************/
 /* Macro Definitions                                                    */
 /************************************************************************/
-static void errorwait(enum status_code status){
-    if(status != STATUS_OK){
-        DEBUG_WAIT(MODUL_DEFAULT, "Fail code 0x%x",status);
-        while(1);
-    }
-}
 /*! Sensors data are read in accordance with TC6 callback. */
 #define READ_SENSORS_FLAG				tc6_callback_flag
 
@@ -36,7 +30,7 @@ int main(void) {
     /********************* Initialize global variables **********************/
 
     uint16_t timer = 0;
-    uint8_t status = STATUS_OK;
+    //uint8_t status = STATUS_OK;
 
     /************************* Initializations ******************************/
 
@@ -59,8 +53,7 @@ int main(void) {
     mspSerialInit();
 
     /*Initialize I2C for communication*/
-    status = i2c_initialize();
-    errorwait(status);
+    //i2c_initialize();
 
 
     /*Enable the system interrupts*/
@@ -74,7 +67,6 @@ int main(void) {
     gyroInitFilters();
     gyroStartCalibration(false);
     //magInit();
-    tofInit();
 
     imuConfigure(800, 0);
     imuInit();
@@ -96,7 +88,7 @@ int main(void) {
         	accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
             //readGyroData();
             //readMagData();
-            readTofData();
+            //readTofData();
 
             imuUpdateAttitude(micros());
 

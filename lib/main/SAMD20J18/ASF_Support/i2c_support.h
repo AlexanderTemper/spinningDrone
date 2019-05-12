@@ -12,7 +12,7 @@
 /* Global Variables                                                     */
 /************************************************************************/
 
-struct i2c_master_module i2c_master_instance;
+extern struct i2c_master_module i2c_master_instance;
 
 /************************************************************************/
 /* Function Declarations                                                */

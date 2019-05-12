@@ -26,7 +26,7 @@
 
 #include "platform.h"
 
-//#include "build/build_config.h"
+#include "build/build_config.h"
 #include "build/debug.h"
 
 #include "common/axis.h"

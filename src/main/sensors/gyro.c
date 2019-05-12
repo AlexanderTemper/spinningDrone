@@ -39,6 +39,7 @@
 //#include "pg/gyrodev.h"
 
 #include "drivers/accgyro/accgyro.h"
+#include "build/build_config.h"
 #include "drivers/accgyro/gyro_bmg160.h"
 /*#include "drivers/accgyro/accgyro_fake.h"
 #include "drivers/accgyro/accgyro_mpu.h"
@@ -102,7 +103,6 @@ static FAST_RAM_ZERO_INIT float accumulatedMeasurements[XYZ_AXIS_COUNT];
 static FAST_RAM_ZERO_INIT float gyroPrevious[XYZ_AXIS_COUNT];
 static FAST_RAM_ZERO_INIT timeUs_t accumulatedMeasurementTimeUs;
 static FAST_RAM_ZERO_INIT timeUs_t accumulationLastTimeSampledUs;
-static timeUs_t lastGyroReadTime;
 
 static FAST_RAM_ZERO_INIT int16_t gyroSensorTemperature;
 
@@ -334,7 +334,6 @@ bool gyroInit(void)
     case DEBUG_DUAL_GYRO_COMBINE:
     case DEBUG_DUAL_GYRO_DIFF:
     case DEBUG_DUAL_GYRO_RAW:
-    case DEBUG_DUAL_GYRO_SCALED:
         useDualGyroDebugging = true;
         break;
     }
@@ -812,6 +811,28 @@ static FAST_CODE FAST_CODE_NOINLINE void gyroUpdateSensor(gyroSensor_t *gyroSens
     } else {
         filterGyroDebug(gyroSensor);
     }
+
+#ifdef USE_GYRO_OVERFLOW_CHECK
+    if (gyroConfig()->checkOverflow && !gyroHasOverflowProtection) {
+        checkForOverflow(gyroSensor, currentTimeUs);
+    }
+#endif
+
+#ifdef USE_YAW_SPIN_RECOVERY
+    if (gyroConfig()->yaw_spin_recovery) {
+        checkForYawSpin(gyroSensor, currentTimeUs);
+    }
+#endif
+
+#ifdef USE_GYRO_DATA_ANALYSE
+    if (isDynamicFilterActive()) {
+        gyroDataAnalyse(&gyroSensor->gyroAnalyseState, gyroSensor->notchFilterDyn, gyroSensor->notchFilterDyn2);
+    }
+#endif
+
+#if (!defined(USE_GYRO_OVERFLOW_CHECK) && !defined(USE_YAW_SPIN_RECOVERY))
+    UNUSED(currentTimeUs);
+#endif
 }
 
 FAST_CODE void gyroUpdate(timeUs_t currentTimeUs)
@@ -835,8 +856,6 @@ FAST_CODE void gyroUpdate(timeUs_t currentTimeUs)
             DEBUG_SET(DEBUG_DUAL_GYRO, 1, lrintf(gyroSensor1.gyroDev.gyroADCf[Y]));
             DEBUG_SET(DEBUG_DUAL_GYRO_COMBINE, 0, lrintf(gyro.gyroADCf[X]));
             DEBUG_SET(DEBUG_DUAL_GYRO_COMBINE, 1, lrintf(gyro.gyroADCf[Y]));
-            DEBUG_SET(DEBUG_DUAL_GYRO_SCALED, 0, lrintf(gyroSensor1.gyroDev.gyroADC[X] * gyroSensor1.gyroDev.scale));
-            DEBUG_SET(DEBUG_DUAL_GYRO_SCALED, 1, lrintf(gyroSensor1.gyroDev.gyroADC[Y] * gyroSensor1.gyroDev.scale));
         }
         break;
     }

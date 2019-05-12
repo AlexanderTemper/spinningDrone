@@ -23,7 +23,7 @@
 #define NOINLINE __attribute__((noinline))
 
 #if !defined(UNIT_TEST) && !defined(SIMULATOR_BUILD) && !(USBD_DEBUG_LEVEL > 0)
-#pragma GCC poison sprintf snprintf
+//#pragma GCC poison sprintf snprintf
 #endif
 
 #if defined(STM32F722xx) || defined(STM32F745xx) || defined(STM32F746xx) || defined(STM32F765xx)

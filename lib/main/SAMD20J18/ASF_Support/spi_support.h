@@ -64,7 +64,7 @@
 *
 * TC support uses ASF timer/counter driver modules and defines
 * initialization, configuration and callback functions for
-* the microcontroller’s timer/counter peripherals that that are needed
+* the microcontrollerï¿½s timer/counter peripherals that that are needed
 * for scheduling tasks or initiating delays. In addition to these
 * some wrapper functions are defined that are needed.
 *
@@ -96,7 +96,7 @@
 
 /*! Instantiates a SERCOM SPI driver software structure, used to retain
 * software state information of the associated hardware module instance. */
-struct spi_module spi_master_instance;
+extern struct spi_module spi_master_instance;
 
 /************************************************************************/
 /* Function Declarations                                                */
