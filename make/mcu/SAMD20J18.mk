@@ -129,6 +129,12 @@ MCU_COMMON_SRC := \
 	$(SAM_LIB_PATH)/ASF_Support/i2c_support.c \
 	$(SAM_LIB_PATH)/ASF_Support/tc_support.c \
 	$(SAM_LIB_PATH)/ASF_Support/usart_support.c \
+	$(SAM_LIB_PATH)/drivers/bma2x2_support.c \
+	$(SAM_LIB_PATH)/drivers/bma2x2.c \
+	$(SAM_LIB_PATH)/drivers/bmg160_support.c \
+	$(SAM_LIB_PATH)/drivers/bmg160.c \
+	$(SAM_LIB_PATH)/drivers/bmm050_support.c \
+	$(SAM_LIB_PATH)/drivers/bmm050.c
 	
 MCU_COMMON_SRC := 	$(MCU_COMMON_SRC)\
 					$(ASF_CSRCS)

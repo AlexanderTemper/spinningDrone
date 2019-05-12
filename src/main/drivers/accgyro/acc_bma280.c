@@ -26,7 +26,7 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro/accgyro.h"
 #include "sensors/sensors.h"
-#include "drivers/bma2x2_support.h"
+#include "../../../../lib/main/SAMD20J18/drivers/bma2x2_support.h"
 #include "fc/runtime_config.h"
 #include "acc_bma280.h"
 

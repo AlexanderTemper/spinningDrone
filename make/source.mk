@@ -18,12 +18,6 @@ COMMON_SRC = \
             drivers/accgyro/acc_bma280.c \
 			drivers/accgyro/gyro_bmg160.c \
 			drivers/accgyro/gyro_sync.c \
-			drivers/bma2x2_support.c \
-			drivers/bma2x2.c \
-			drivers/bmg160_support.c \
-			drivers/bmg160.c \
-			drivers/bmm050_support.c \
-			drivers/bmm050.c \
             drivers/accgyro/gyro_sync.c \
             fc/rc_modes.c \
             flight/imu.c \
