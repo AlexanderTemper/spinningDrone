@@ -63,7 +63,7 @@
 * @brief	Clock Management ASF Driver Support Header File
 *
 * Clock support uses ASF clock management modules and defines
-* initialization and configuration functions for the microcontroller’s
+* initialization and configuration functions for the microcontrollerï¿½s
 * clock sources and generic clock generators that are needed.
 *
 *
@@ -90,17 +90,17 @@
 *
 * This function calls configuration functions for DFLL48M and OSC8M clock sources,
 * generic clock generators 1 and 2 and0 the main clock of the system (generic clock generator 0).
-* After initialization, the clock sources’ and generic clock generators’ frequencies are as follows:
+* After initialization, the clock sourcesï¿½ and generic clock generatorsï¿½ frequencies are as follows:
 *
 *	Clock Source OSC8M   :	8 MHz clock source of MCU used as the source for multiple modules (Frequency 2 MHz)
-*	Clock Source DFLL48M :	DFLL clock source of MCU used as the source for multiple modules (Frequency 48 MHz – Open Loop)
-*	GCLK 0				 :	Generates the main system clock, using DFLL as its source (Frequency 24 MHz)
+*	Clock Source DFLL48M :	DFLL clock source of MCU used as the source for multiple modules (Frequency 48 MHz ï¿½ Open Loop)
+*	GCLK 0				 :	Generates the main system clock, using DFLL as its source (Frequency 48 MHz)
 *	GCLK 1				 :	Generates clock signal for TC4, using OSC8M as its source (Frequency 500 KHz)
 *	GCLK 2				 :	Generates clock signal for USART, using OSC8M as its source (Frequency 2 MHz)
 *
 *
 * @param[in]	NULL
-*
+*s
 * @param[out]	NULL
 *
 * @return		NULL
@@ -167,6 +167,8 @@ void clock_configure_gclk_generator_1(void);
 *
 */
 void clock_configure_gclk_generator_2(void);
+
+void clock_configure_gclk_generator_3(void);
 
 
 #endif /* CLOCK_SUPPORT_H_ */

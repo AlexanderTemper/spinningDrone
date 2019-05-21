@@ -20,11 +20,6 @@
 #include "drivers/serial_uart_bmf.h"
 #include "flight/imu.h"
 
-/************************************************************************/
-/* Macro Definitions                                                    */
-/************************************************************************/
-/*! Sensors data are read in accordance with TC6 callback. */
-#define READ_SENSORS_FLAG				tc6_callback_flag
 
 int main(void) {
     /********************* Initialize global variables **********************/
@@ -73,16 +68,17 @@ int main(void) {
     mspInit();
 
     timeMs_t time = 0;
+    timeMs_t imutimer = 0;
     /************************** Infinite Loop *******************************/
     while (true) {
     	//mspSerialPush(MSP_API_VERSION, NULL, 0, MSP_DIRECTION_REQUEST);
 
     	mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand, mspFcProcessReply);
-    	//DEBUG_WAIT(MODUL_DEFAULT, "Bin Da %d",timeing.imuLoop)
-        /* Print sensor data periodically regarding TC6 interrupt flag (Default Period 10 ms)*/
-        if (READ_SENSORS_FLAG) {
 
-            time = getTimeMs();
+        if (cmpTimeUs(millis(),imutimer) >= 10) {
+            timeMs_t timeel = cmpTimeUs(millis(),imutimer);
+            imutimer = millis();
+            time = micros();
             //readAccData();
         	gyroUpdate(micros());
         	accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
@@ -92,19 +88,9 @@ int main(void) {
 
             imuUpdateAttitude(micros());
 
-            DEBUG_SET(DEBUG_STACK, 0, cmpTimeMs(getTimeMs(),time));
-            // 10MS * 10 == 100ms
-            if (timer > 10) {
-                //timeing.imuLoop = cmpTimeMs(getTimeMs(),time);
-                //timeing.total = getTimeMs();
-                //sendData();
-                timer = 0;
-            } else {
-                timer++;
-            }
-
-
-            READ_SENSORS_FLAG = false;
+            DEBUG_SET(DEBUG_STACK, 0, cmpTimeUs(micros(),time));
+            DEBUG_SET(DEBUG_STACK, 1, timeel);
+            DEBUG_SET(DEBUG_STACK, 2, millis());
         }
 
     } /* !while (true) */

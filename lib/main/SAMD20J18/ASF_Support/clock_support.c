@@ -76,7 +76,6 @@
 /* Function Definitions                                                 */
 /************************************************************************/
 
-
 /*!
 * @brief		Initializes clock sources, generic clock generators and system main clock of the MCU
 *
@@ -87,9 +86,9 @@
 *	Clock Source OSC8M   :	8 MHz clock source of MCU used as the source for multiple modules (Frequency 2 MHz)
 *	Clock Source DFLL48M :	DFLL clock source of MCU used as the source for multiple modules (Frequency 48 MHz � Open Loop)
 *	GCLK 0				 :	Generates the main system clock, using DFLL as its source (Frequency 24 MHz)
-*	GCLK 1				 :	Generates clock signal for TC4, using OSC8M as its source (Frequency 500 KHz)
+*	GCLK 1				 :	Generates clock signal for WaitTimer, using OSC8M as its source (Frequency 500 KHz)
 *	GCLK 2				 :	Generates clock signal for USART, using OSC8M as its source (Frequency 2 MHz)
-*
+*   GCLK 3               :  Generates clock signal for muTimer, using OSC8M as its source (Frequency 1 MHz)
 *
 * @param[in]	NULL
 *
@@ -105,6 +104,7 @@ void clock_initialize(void)
 	clock_configure_system_clock ();
 	clock_configure_gclk_generator_1();
 	clock_configure_gclk_generator_2();
+	clock_configure_gclk_generator_3();
 }
 
 /*!
@@ -231,4 +231,31 @@ void clock_configure_gclk_generator_2(void)
 	
 	/* Enable GCLK2 */
 	system_gclk_gen_enable(GCLK_GENERATOR_2);
+}
+
+/*
+*!
+* @brief        Configures generic clock generator 3
+*
+* @param[in]    NULL
+*
+* @param[out]   NULL
+*
+* @return       NULL
+*
+*/
+void clock_configure_gclk_generator_3(void)
+{
+    /* structure for GCLK's configuration */
+    struct system_gclk_gen_config gclock_gen_conf;
+
+    /* Get GCLK configuration defaults */
+    system_gclk_gen_get_config_defaults(&gclock_gen_conf);
+
+    gclock_gen_conf.division_factor = 2;
+    /* Initialize GCLK2 with current configurations */
+    system_gclk_gen_set_config(GCLK_GENERATOR_3, &gclock_gen_conf);
+
+    /* Enable GCLK3 */
+    system_gclk_gen_enable(GCLK_GENERATOR_3);
 }
