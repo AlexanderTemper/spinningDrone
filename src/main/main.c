@@ -69,25 +69,25 @@ int main(void) {
 
     timeMs_t time = 0;
     timeMs_t imutimer = 0;
+    timeMs_t timergyro = 0;
     /************************** Infinite Loop *******************************/
     while (true) {
     	//mspSerialPush(MSP_API_VERSION, NULL, 0, MSP_DIRECTION_REQUEST);
 
     	mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand, mspFcProcessReply);
 
-        if (cmpTimeUs(millis(),imutimer) >= 10) {
-            timeMs_t timeel = cmpTimeUs(millis(),imutimer);
-            imutimer = millis();
+    	if (cmpTimeUs(micros(),timergyro) >= 6250){
+    	    timergyro = micros();
+    	    gyroUpdate(micros());
+    	    accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
+    	}
+
+
+        if (cmpTimeUs(micros(),imutimer) >= 10000) {
+            timeMs_t timeel = cmpTimeUs(micros(),imutimer);
+            imutimer = micros();
             time = micros();
-            //readAccData();
-        	gyroUpdate(micros());
-        	accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
-            //readGyroData();
-            //readMagData();
-            //readTofData();
-
             imuUpdateAttitude(micros());
-
             DEBUG_SET(DEBUG_STACK, 0, cmpTimeUs(micros(),time));
             DEBUG_SET(DEBUG_STACK, 1, timeel);
             DEBUG_SET(DEBUG_STACK, 2, millis());
