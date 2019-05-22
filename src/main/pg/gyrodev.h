@@ -20,9 +20,21 @@
 
 #pragma once
 
-#define TARGET_BOARD_IDENTIFIER "B55A"
 
-#define USBD_PRODUCT_STRING "Bmf055ATemper"
+#include <stdint.h>
 
-#define USE_ACC
-#define USE_ACCGYRO_BMG160
+#include "pg/pg.h"
+#include "drivers/io_types.h"
+
+typedef struct gyroDeviceConfig_s {
+    int8_t index;
+    uint8_t bustype;
+    uint8_t spiBus;
+    ioTag_t csnTag;
+    uint8_t i2cBus;
+    uint8_t i2cAddress;
+    ioTag_t extiTag;
+    uint8_t align;        // sensor_align_e
+} gyroDeviceConfig_t;
+
+PG_DECLARE_ARRAY(gyroDeviceConfig_t, MAX_GYRODEV_COUNT, gyroDeviceConfig);

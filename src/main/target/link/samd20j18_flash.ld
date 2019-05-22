@@ -119,6 +119,20 @@ SECTIONS
     } > rom
     PROVIDE_HIDDEN (__exidx_end = .);
 
+	.pg_registry :
+    {
+	    PROVIDE_HIDDEN (__pg_registry_start = .);
+	    KEEP (*(.pg_registry))
+	    KEEP (*(SORT(.pg_registry.*)))
+	    PROVIDE_HIDDEN (__pg_registry_end = .);
+  	} > rom
+  	.pg_resetdata :
+  	{
+    	PROVIDE_HIDDEN (__pg_resetdata_start = .);
+    	KEEP (*(.pg_resetdata))
+    	PROVIDE_HIDDEN (__pg_resetdata_end = .);
+	} > rom
+	
     . = ALIGN(4);
     _etext = .;
 

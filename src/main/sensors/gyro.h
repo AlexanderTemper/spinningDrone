@@ -104,7 +104,7 @@ typedef struct gyroConfig_s {
     int16_t  yaw_spin_threshold;
 
     uint16_t gyroCalibrationDuration;   // Gyro calibration duration in 1/100 second
-
+    
     uint16_t dyn_lpf_gyro_min_hz;
     uint16_t dyn_lpf_gyro_max_hz;
     uint8_t  dyn_notch_range;            // ignore any FFT bin below this threshold
@@ -120,8 +120,9 @@ void gyroPreInit(void);
 bool gyroInit(void);
 
 void gyroInitFilters(void);
-void gyroUpdate(timeMs_t currentTimeUs);
+void gyroUpdate(timeUs_t currentTimeUs);
 bool gyroGetAccumulationAverage(float *accumulation);
+//const busDevice_t *gyroSensorBus(void);
 struct mpuDetectionResult_s;
 const struct mpuDetectionResult_s *gyroMpuDetectionResult(void);
 void gyroStartCalibration(bool isFirstArmingCalibration);

@@ -56,7 +56,7 @@ CMSIS_DIR       := $(ROOT)/lib/main/CMSIS
 INCLUDE_DIRS    := $(SRC_DIR) \
                    $(ROOT)/src/main/target \
                    $(ROOT)/src/main/startup
-LINKER_DIR      := $(ROOT)/src/link
+LINKER_DIR      := $(ROOT)/src/main/target/link
 
 ## V                 : Set verbosity level based on the V= parameter
 ##                     V=0 Low
@@ -189,7 +189,6 @@ VPATH           := $(VPATH):$(TARGET_DIR)
 
 include $(ROOT)/make/source.mk
 
-
 ###############################################################################
 # Things that might need changing to use different tools
 #
@@ -263,8 +262,6 @@ LD_FLAGS     = -lm \
               -Wl,--print-memory-usage \
               -T$(LD_SCRIPT)
 endif
-
-#$(error $(CFLAGS))
 
 ###############################################################################
 # No user-serviceable parts below

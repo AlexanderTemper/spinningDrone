@@ -54,6 +54,8 @@ int main(void) {
     /*Enable the system interrupts*/
     system_interrupt_enable_global();/* All interrupts have a priority of level 0 which is the highest. */
 
+    //Reset Configs
+    pgResetAll();
     /* Initialize the sensors */
     //gyroInit();
     //acclegacyInit();
