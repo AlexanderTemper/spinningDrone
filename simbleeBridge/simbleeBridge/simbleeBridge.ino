@@ -1,31 +1,51 @@
 #include <SimbleeBLE.h>
+#include <LoopbackStream.h>
 
-char serialbuffer[20] = "";        
-uint8_t top;
+LoopbackStream inBuffer(256);
+LoopbackStream outBuffer(256);
 
+unsigned long t;
 
+uint8_t bleBuffer[20];
 void setup() {
   // initialize serial:
-  Serial.begin(9600,3,2);
-
+  Serial.begin(19200);//,3,2);
+  override_uart_limit = true;
   SimbleeBLE.deviceName = "Drone";
   SimbleeBLE.begin();
-
-  top = 0;
+  t = millis();
 }
 
 void loop() {
+  
 
-  while (Serial.available()) { 
-    char inChar = (char)Serial.read();
-    serialbuffer[top] = inChar;
-    top++;
-    if(top == 20){
-      SimbleeBLE.send(serialbuffer,20);
-      top = 0;
-    }
+  // Copy Serial Buffer
+  while (Serial.available()) {
+    inBuffer.write((char)Serial.read());
+    t = millis();
+  }
+  // Send inBuffer
+  if (inBuffer.available() >= 20 || (inBuffer.available() > 0  && ((millis()-t) > 5) )) {
+    sendBle();
   }
   
+}
+
+void SimbleeBLE_onReceive(char *dataBLE, int len) {
+  Serial.write((uint8_t *)dataBLE,len);
+}
+
+
+void sendBle() {
+  int i = 0;
+  while(inBuffer.available()){
+    bleBuffer[i] = inBuffer.read();
+    i++;
+    if(i==20){
+      break;
+    }
+  }
+  SimbleeBLE.send((char *)&bleBuffer[0], i);
 }
 
 
