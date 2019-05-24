@@ -25,7 +25,7 @@ static void uartWrite(serialPort_t *instance, uint8_t ch)
 		s->port.txBufferHead++;
 	}
 
-	usart_callback_transmit(&usart_instance);
+	msp_usart_callback_transmit(&msp_usart_instance);
 }
 
 

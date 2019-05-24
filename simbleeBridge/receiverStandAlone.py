@@ -15,11 +15,16 @@ ADDRESS_TYPE   = pygatt.BLEAddressType.random
 DEVICE_ADDRESS = "C4:D0:0D:79:59:91"
 adapter = pygatt.GATTToolBackend()
 
+counter = 0;
 
 def sendControlData(device):
+    global counter
+    counter = counter + 1
+    if counter == 256:
+        counter = 0
     try: 
-        print('try send')
-        device.char_write_handle(0x0014, [65,66,67,68,10,13]) 
+        print('send %d' % counter)
+        device.char_write_handle(0x0014, [counter]) 
         return True
     except pygatt.exceptions.NotConnectedError:
         print('error')

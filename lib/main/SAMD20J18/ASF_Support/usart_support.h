@@ -25,79 +25,32 @@
 
 /*! SERCOM USART driver software instance structure, used to retain
 * software state information of the associated hardware module instance */
-extern struct usart_module usart_instance;
+extern struct usart_module msp_usart_instance;
+extern struct usart_module rx_usart_instance;
+
+extern volatile uint16_t rx_byte;
+
 /*! USART receive callback flag (set after each USART reception) */
 extern volatile bool usart_callback_receive_flag;
 
 /*! USART receive callback flag (set after each USART transmission) */
 extern volatile bool usart_callback_transmit_flag;
 
-/*! USART Rx byte */
-extern uint16_t usart_rx_byte;
-
 /************************************************************************/
 /* Function Declarations                                                */
 /************************************************************************/
 
-/*!
-* @brief		Initializes the USART module of the MCU
-*
-* @param[in]	NULL
-*
-* @param[out]	NULL
-*
-* @return		NULL
-*
-*/
+
 void usart_initialize(void);
 
-/*!
-* @brief		Configures the USART module of the MCU
-*
-* @param[in]	NULL
-*
-* @param[out]	NULL
-*
-* @return		NULL
-*
-*/
-void usart_configure(void);
 
-/*!
-* @brief		Configures USART callback register
-*
-* @param[in]	NULL
-*
-* @param[out]	NULL
-*
-* @return		NULL
-*
-*/
-void usart_configure_callbacks(void);
-
-/*!
-* @brief		Called after USART receptions
-*
-* @param[in]	usart_module_ptr	Pointer to the USART module which triggers the interrupt
-*
-* @param[out]	NULL
-*
-* @return		NULL
-*
-*/
-void usart_callback_receive(struct usart_module *const usart_module_ptr);
-
-/*!
-* @brief		Called after USART transmissions
-*
-* @param[in]	usart_module_ptr	Pointer to the USART module which triggers the interrupt
-*
-* @param[out]	NULL
-*
-* @return		NULL
-*
-*/
-void usart_callback_transmit(struct usart_module *const usart_module_ptr);
-
+void msp_usart_configure(void);
+void msp_usart_configure_callbacks(void);
+void msp_usart_callback_receive(struct usart_module *const usart_module_ptr);
+void msp_usart_callback_transmit(struct usart_module *const usart_module_ptr);
+void rx_usart_configure(void);
+void rx_usart_configure_callbacks(void);
+void rx_usart_callback_receive(struct usart_module *const usart_module_ptr);
+void rx_usart_callback_transmit(struct usart_module *const usart_module_ptr);
 
 #endif /* usart_support_h_ */

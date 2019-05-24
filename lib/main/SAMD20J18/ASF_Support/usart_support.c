@@ -78,7 +78,9 @@
 
 /*! SERCOM USART driver software instance structure, used to retain
 * software state information of the associated hardware module instance */
-struct usart_module usart_instance;
+struct usart_module msp_usart_instance;
+struct usart_module rx_usart_instance;
+
 /*! USART receive callback flag (set after each USART reception) */
 volatile bool usart_callback_receive_flag;
 
@@ -87,6 +89,8 @@ volatile bool usart_callback_transmit_flag;
 
 /*! USART Rx byte */
 uint16_t usart_rx_byte;
+
+volatile uint16_t rx_byte;
 
 /************************************************************************/
 /* Function Definitions                                                 */
@@ -108,13 +112,16 @@ void usart_initialize(void)
 	usart_rx_byte = 0;
 	
 	/* Configure the USART Module */
-	usart_configure();
+	msp_usart_configure();
+	rx_usart_configure();
 	
 	/* Configure USART callbacks */
-	usart_configure_callbacks();
+	msp_usart_configure_callbacks();
+	rx_usart_configure_callbacks();
 	
 	/* Enable the interrupt to receive the first byte */
-	usart_read_job(&usart_instance, &usart_rx_byte);
+	usart_read_job(&msp_usart_instance, &usart_rx_byte);
+	usart_read_job(&rx_usart_instance, &rx_byte);
 }
 
 /*!
@@ -127,7 +134,7 @@ void usart_initialize(void)
 * @return		NULL
 *
 */
-void usart_configure(void)
+void msp_usart_configure(void)
 {
 	/* USART's configuration structure */
 	struct usart_config config_usart;
@@ -151,46 +158,25 @@ void usart_configure(void)
 	config_usart.pinmux_pad3 = PINMUX_UNUSED;
 	
 	/* Initialize SERCOM5 as a USART module*/
-	while (usart_init(&usart_instance,SERCOM5, &config_usart) != STATUS_OK) ;
+	while (usart_init(&msp_usart_instance,SERCOM5, &config_usart) != STATUS_OK) ;
 	
 	/* Enable the USART module */
-	usart_enable(&usart_instance);
+	usart_enable(&msp_usart_instance);
 }
 
-/*!
-* @brief		Configures USART callback register
-*
-* @param[in]	NULL
-*
-* @param[out]	NULL
-*
-* @return		NULL
-*
-*/
-void usart_configure_callbacks(void)
+void msp_usart_configure_callbacks(void)
 {
 	/* Configure USART receive callback */
-	usart_register_callback(&usart_instance, usart_callback_receive, USART_CALLBACK_BUFFER_RECEIVED);
-	usart_callback_receive_flag = false;
-	usart_enable_callback(&usart_instance, USART_CALLBACK_BUFFER_RECEIVED);
+	usart_register_callback(&msp_usart_instance, msp_usart_callback_receive, USART_CALLBACK_BUFFER_RECEIVED);
+	usart_enable_callback(&msp_usart_instance, USART_CALLBACK_BUFFER_RECEIVED);
 	
 	/* Configure USART transmit callback */
-	usart_register_callback(&usart_instance, usart_callback_transmit, USART_CALLBACK_BUFFER_TRANSMITTED);
+	usart_register_callback(&msp_usart_instance, msp_usart_callback_transmit, USART_CALLBACK_BUFFER_TRANSMITTED);
 	usart_callback_transmit_flag = true;
-	usart_enable_callback(&usart_instance, USART_CALLBACK_BUFFER_TRANSMITTED);
+	usart_enable_callback(&msp_usart_instance, USART_CALLBACK_BUFFER_TRANSMITTED);
 }
 
-/*!
-* @brief		Called after USART receptions
-*
-* @param[in]	usart_module_ptr	Pointer to the USART module which triggers the interrupt
-*
-* @param[out]	NULL
-*
-* @return		NULL
-*
-*/
-void usart_callback_receive(struct usart_module *const usart_module_ptr)
+void msp_usart_callback_receive(struct usart_module *const usart_module_ptr)
 {
 	uartDevice_t *uartdev = &uartDevice;
 	uartPort_t *s = &uartdev->port;
@@ -202,46 +188,88 @@ void usart_callback_receive(struct usart_module *const usart_module_ptr)
 	   s->port.rxBufferHead++;
 	}
 	/* Initiate a new job to listen to USART port for a new byte */
-	usart_read_job(&usart_instance, &usart_rx_byte);
+	usart_read_job(&msp_usart_instance, &usart_rx_byte);
 }
 
 
-
-/*!
-* @brief		Called after USART transmissions
-*
-* @param[in]	usart_module_ptr	Pointer to the USART module which triggers the interrupt
-*
-* @param[out]	NULL
-*
-* @return		NULL
-*
-*/
-void usart_callback_transmit(struct usart_module *const usart_module_ptr)
+void msp_usart_callback_transmit(struct usart_module *const usart_module_ptr)
 {
 	uartDevice_t *uartdev = &uartDevice;
 	uartPort_t *s = &uartdev->port;
 
 	uint32_t fromWhere = s->port.txBufferTail;
 	// already running
-	if(usart_instance.remaining_tx_buffer_length > 0){
+	if(msp_usart_instance.remaining_tx_buffer_length > 0){
 		return;
 	}
 	// nothing to transmit
 	if(s->port.txBufferHead == s->port.txBufferTail ){
-		usart_callback_transmit_flag = true;
 		return;
 	}
 	// start transmitting
 	if (s->port.txBufferHead > s->port.txBufferTail) {
-		usart_write_buffer_job(&usart_instance, (uint8_t *) &s->port.txBuffer[fromWhere], s->port.txBufferHead - s->port.txBufferTail);
+		usart_write_buffer_job(&msp_usart_instance, (uint8_t *) &s->port.txBuffer[fromWhere], s->port.txBufferHead - s->port.txBufferTail);
 		s->port.txBufferTail = s->port.txBufferHead;
 	}
 	else {
-		usart_write_buffer_job(&usart_instance, (uint8_t *) &s->port.txBuffer[fromWhere], s->port.txBufferSize - s->port.txBufferTail);
+		usart_write_buffer_job(&msp_usart_instance, (uint8_t *) &s->port.txBuffer[fromWhere], s->port.txBufferSize - s->port.txBufferTail);
 		s->port.txBufferTail = 0;
 	}
-	usart_callback_transmit_flag = false;
+}
+
+void rx_usart_configure(void)
+{
+    /* USART's configuration structure */
+    struct usart_config config_usart;
+
+    /* get USART configuration defaults */
+    usart_get_config_defaults(&config_usart);
+
+    /* set USART Baudrate*/
+    config_usart.baudrate = UINT32_C(19200);
+    /* Set USART GCLK */
+    config_usart.generator_source = GCLK_GENERATOR_2;
+    /* Se USART MUX setting */
+    config_usart.mux_setting = USART_RX_3_TX_2_XCK_3;
+    /* Configure pad 0 for unused */
+    config_usart.pinmux_pad0 = PINMUX_UNUSED;
+    /* Configure pad 1 for unused */
+    config_usart.pinmux_pad1 = PINMUX_UNUSED;
+    /* Configure pad 2 for tx */
+    config_usart.pinmux_pad2 = PINMUX_PA20D_SERCOM3_PAD2;
+    /* Configure pad 3 for rx */
+    config_usart.pinmux_pad3 = PINMUX_PA21D_SERCOM3_PAD3;
+
+    /* Initialize SERCOM3 as a USART module*/
+    while (usart_init(&rx_usart_instance,SERCOM3, &config_usart) != STATUS_OK) ;
+
+    /* Enable the USART module */
+    usart_enable(&rx_usart_instance);
+}
+
+void rx_usart_configure_callbacks(void)
+{
+    /* Configure USART receive callback */
+    usart_register_callback(&rx_usart_instance, rx_usart_callback_receive, USART_CALLBACK_BUFFER_RECEIVED);
+    usart_enable_callback(&rx_usart_instance, USART_CALLBACK_BUFFER_RECEIVED);
+
+    /* Configure USART transmit callback */
+    usart_register_callback(&rx_usart_instance, rx_usart_callback_transmit, USART_CALLBACK_BUFFER_TRANSMITTED);
+    usart_enable_callback(&rx_usart_instance, USART_CALLBACK_BUFFER_TRANSMITTED);
+}
+
+
+void rx_usart_callback_receive(struct usart_module *const usart_module_ptr)
+{
+    usart_read_job(&rx_usart_instance, &rx_byte);
+}
+
+
+
+
+void rx_usart_callback_transmit(struct usart_module *const usart_module_ptr)
+{
+    usart_callback_transmit_flag = true;
 }
 
 

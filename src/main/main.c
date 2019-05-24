@@ -5,10 +5,9 @@
 
 #include "clock_support.h"
 #include "spi_support.h"
-#include "i2c_support.h"
 #include "tc_support.h"
 #include "usart_support.h"
-//#include "simbleeBridge.h"
+#include "telemetry/simbleeBridge.h"
 
 #include "io/serial.h"
 #include "msp/msp_serial.h"
@@ -47,8 +46,7 @@ int main(void) {
     serialInit();
     mspSerialInit();
 
-    /*Initialize I2C for communication*/
-    //i2c_initialize();
+
 
 
     /*Enable the system interrupts*/
@@ -93,6 +91,8 @@ int main(void) {
             DEBUG_SET(DEBUG_STACK, 0, cmpTimeUs(micros(),time));
             DEBUG_SET(DEBUG_STACK, 1, timeel);
             DEBUG_SET(DEBUG_STACK, 2, millis());
+            DEBUG_SET(DEBUG_STACK, 3, rx_byte);
+            debugNonBlock();
         }
 
     } /* !while (true) */

@@ -2,7 +2,6 @@
 #include <LoopbackStream.h>
 
 LoopbackStream inBuffer(256);
-LoopbackStream outBuffer(256);
 
 unsigned long t;
 

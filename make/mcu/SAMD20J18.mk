@@ -124,6 +124,7 @@ LD_FLAGS     = --specs=nano.specs \
 MCU_COMMON_SRC := \
 	drivers/serial_uart_bmf.c \
 	drivers/time.c \
+	telemetry/simbleeBridge.c \
 	$(SAM_LIB_PATH)/ASF_Support/clock_support.c \
 	$(SAM_LIB_PATH)/ASF_Support/spi_support.c \
 	$(SAM_LIB_PATH)/ASF_Support/i2c_support.c \
