@@ -19,12 +19,12 @@ COMMON_SRC = \
 			drivers/accgyro/gyro_bmg160.c \
 			drivers/accgyro/gyro_sync.c \
             drivers/accgyro/gyro_sync.c \
-            fc/rc_modes.c \
-            flight/imu.c \
             sensors/acceleration.c \
             sensors/boardalignment.c \
             sensors/gyro.c \
-            sensors/initialisation.c
+            sensors/initialisation.c \
+            flight/imu.c \
+			fc/rc_modes.c \
 
 COMMON_DEVICE_SRC = \
             $(CMSIS_SRC) \
@@ -41,42 +41,14 @@ SIZE_OPTIMISED_SRC  := ""
 
 ifneq ($(TARGET),$(filter $(TARGET),$(F1_TARGETS)))
 SPEED_OPTIMISED_SRC := $(SPEED_OPTIMISED_SRC) \
-            common/filter.c \
-            common/maths.c \
-			drivers/accgyro/acc_bma280.c \
-			drivers/accgyro/gyro_bmg160.c \
-			drivers/accgyro/gyro_sync.c \
-			drivers/bma2x2_support.c \
-			drivers/bma2x2.c \
-			drivers/bmg160_support.c \
-			drivers/bmg160.c \
-			drivers/bmm050_support.c \
-			drivers/bmm050.c \
-            drivers/serial.c \
-            drivers/serial_uart.c \
-            fc/runtime_config.c \
-            flight/imu.c \
-            sensors/acceleration.c \
-            sensors/boardalignment.c \
-            sensors/gyro.c \
             $(CMSIS_SRC) \
             $(DEVICE_STDPERIPH_SRC) \
 
-SIZE_OPTIMISED_SRC := $(SIZE_OPTIMISED_SRC) \
-            config/feature.c \
-            io/serial.c \
-            msp/msp_serial.c \
-            pg/pg.h
+SIZE_OPTIMISED_SRC := $(SIZE_OPTIMISED_SRC) 
 
 # F4 and F7 optimizations
 ifneq ($(TARGET),$(filter $(TARGET),$(F3_TARGETS)))
-SPEED_OPTIMISED_SRC := $(SPEED_OPTIMISED_SRC) \
-            drivers/bus_i2c_hal.c \
-            drivers/bus_spi_ll.c \
-            drivers/max7456.c \
-            drivers/pwm_output_dshot.c \
-            drivers/pwm_output_dshot_shared.c \
-            drivers/pwm_output_dshot_hal.c
+SPEED_OPTIMISED_SRC := $(SPEED_OPTIMISED_SRC) 
 endif #!F3
 endif #!F1
 

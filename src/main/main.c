@@ -21,18 +21,25 @@
 
 
 int main(void) {
-    /********************* Initialize global variables **********************/
-
-    uint16_t timer = 0;
-    //uint8_t status = STATUS_OK;
-
     /************************* Initializations ******************************/
+
+
+
 
     /*Initialize SAMD20 MCU*/
     system_init();
 
     /*Initialize clock module of SAMD20 MCU - Internal RC clock*/
     clock_initialize();
+
+
+    // led inti
+    struct port_config config_prt_pin;
+    port_get_config_defaults(&config_prt_pin);
+    config_prt_pin.direction = PORT_PIN_DIR_OUTPUT;
+    port_pin_set_config(PIN_PA28,&config_prt_pin);
+    port_pin_set_config(PIN_PB02,&config_prt_pin);
+    port_pin_set_config(PIN_PA24,&config_prt_pin);
 
     /*SPI master for communicating with sensors*/
     spi_initialize();
@@ -70,6 +77,8 @@ int main(void) {
     timeMs_t time = 0;
     timeMs_t imutimer = 0;
     timeMs_t timergyro = 0;
+
+    uint8_t lauflicht = 0;
     /************************** Infinite Loop *******************************/
     while (true) {
     	//mspSerialPush(MSP_API_VERSION, NULL, 0, MSP_DIRECTION_REQUEST);
@@ -93,6 +102,11 @@ int main(void) {
             DEBUG_SET(DEBUG_STACK, 2, millis());
             DEBUG_SET(DEBUG_STACK, 3, rx_byte);
             debugNonBlock();
+            lauflicht ++;
+
+            port_pin_set_output_level(PIN_PA28,0b1000000&lauflicht);
+            port_pin_set_output_level(PIN_PB02,0b0100000&lauflicht);
+            port_pin_set_output_level(PIN_PA24,0b0010000&lauflicht);
         }
 
     } /* !while (true) */

@@ -26,3 +26,7 @@
 
 #define USE_ACC
 #define USE_ACCGYRO_BMG160
+
+#define LED0_PIN PA0
+#define LED1_PIN PB1
+#define LED2_PIN PB1
