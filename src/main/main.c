@@ -101,7 +101,7 @@ int main(void) {
             DEBUG_SET(DEBUG_STACK, 1, timeel);
             DEBUG_SET(DEBUG_STACK, 2, millis());
             DEBUG_SET(DEBUG_STACK, 3, rx_byte);
-            debugNonBlock();
+            //debugNonBlock();
             lauflicht ++;
 
             port_pin_set_output_level(PIN_PA28,0b1000000&lauflicht);

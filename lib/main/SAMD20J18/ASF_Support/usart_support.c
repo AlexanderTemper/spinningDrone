@@ -134,7 +134,7 @@ void usart_initialize(void)
 * @return		NULL
 *
 */
-void msp_usart_configure(void)
+void rx_usart_configure(void)
 {
 	/* USART's configuration structure */
 	struct usart_config config_usart;
@@ -158,10 +158,40 @@ void msp_usart_configure(void)
 	config_usart.pinmux_pad3 = PINMUX_UNUSED;
 	
 	/* Initialize SERCOM5 as a USART module*/
-	while (usart_init(&msp_usart_instance,SERCOM5, &config_usart) != STATUS_OK) ;
+	while (usart_init(&rx_usart_instance,SERCOM5, &config_usart) != STATUS_OK) ;
 	
 	/* Enable the USART module */
-	usart_enable(&msp_usart_instance);
+	usart_enable(&rx_usart_instance);
+}
+
+void msp_usart_configure(void)
+{
+    /* USART's configuration structure */
+    struct usart_config config_usart;
+
+    /* get USART configuration defaults */
+    usart_get_config_defaults(&config_usart);
+
+    /* set USART Baudrate*/
+    config_usart.baudrate = UINT32_C(19200);
+    /* Set USART GCLK */
+    config_usart.generator_source = GCLK_GENERATOR_2;
+    /* Se USART MUX setting */
+    config_usart.mux_setting = USART_RX_3_TX_2_XCK_3;
+    /* Configure pad 0 for unused */
+    config_usart.pinmux_pad0 = PINMUX_UNUSED;
+    /* Configure pad 1 for unused */
+    config_usart.pinmux_pad1 = PINMUX_UNUSED;
+    /* Configure pad 2 for tx */
+    config_usart.pinmux_pad2 = PINMUX_PA20D_SERCOM3_PAD2;
+    /* Configure pad 3 for rx */
+    config_usart.pinmux_pad3 = PINMUX_PA21D_SERCOM3_PAD3;
+
+    /* Initialize SERCOM3 as a USART module*/
+    while (usart_init(&msp_usart_instance,SERCOM3, &config_usart) != STATUS_OK) ;
+
+    /* Enable the USART module */
+    usart_enable(&msp_usart_instance);
 }
 
 void msp_usart_configure_callbacks(void)
@@ -215,36 +245,6 @@ void msp_usart_callback_transmit(struct usart_module *const usart_module_ptr)
 		usart_write_buffer_job(&msp_usart_instance, (uint8_t *) &s->port.txBuffer[fromWhere], s->port.txBufferSize - s->port.txBufferTail);
 		s->port.txBufferTail = 0;
 	}
-}
-
-void rx_usart_configure(void)
-{
-    /* USART's configuration structure */
-    struct usart_config config_usart;
-
-    /* get USART configuration defaults */
-    usart_get_config_defaults(&config_usart);
-
-    /* set USART Baudrate*/
-    config_usart.baudrate = UINT32_C(19200);
-    /* Set USART GCLK */
-    config_usart.generator_source = GCLK_GENERATOR_2;
-    /* Se USART MUX setting */
-    config_usart.mux_setting = USART_RX_3_TX_2_XCK_3;
-    /* Configure pad 0 for unused */
-    config_usart.pinmux_pad0 = PINMUX_UNUSED;
-    /* Configure pad 1 for unused */
-    config_usart.pinmux_pad1 = PINMUX_UNUSED;
-    /* Configure pad 2 for tx */
-    config_usart.pinmux_pad2 = PINMUX_PA20D_SERCOM3_PAD2;
-    /* Configure pad 3 for rx */
-    config_usart.pinmux_pad3 = PINMUX_PA21D_SERCOM3_PAD3;
-
-    /* Initialize SERCOM3 as a USART module*/
-    while (usart_init(&rx_usart_instance,SERCOM3, &config_usart) != STATUS_OK) ;
-
-    /* Enable the USART module */
-    usart_enable(&rx_usart_instance);
 }
 
 void rx_usart_configure_callbacks(void)

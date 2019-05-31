@@ -2,7 +2,10 @@
 import pygatt
 import time
 import binascii
+import socket
 
+TCP_IP = '127.0.0.1'
+TCP_PORT = 5005
 
 # Many devices, e.g. Fitbit, use random addressing - this is required to
 # connect.
@@ -15,23 +18,26 @@ ADDRESS_TYPE   = pygatt.BLEAddressType.random
 DEVICE_ADDRESS = "C4:D0:0D:79:59:91"
 adapter = pygatt.GATTToolBackend()
 
-counter = 0;
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind((TCP_IP, TCP_PORT))
+print("socket binded to post", TCP_PORT) 
+s.listen(1)
+conn, addr = s.accept()
+print('Connected to :', addr[0], ':', addr[1]) 
 
-def sendControlData(device):
-    global counter
-    counter = counter + 1
-    if counter == 256:
-        counter = 0
+
+def sendControlData(device,data):
     try: 
-        print('send %d' % counter)
-        device.char_write_handle(0x0014, [counter]) 
+        #print "ble send", data
+        device.char_write_handle(0x0014, bytearray(data)) 
         return True
     except pygatt.exceptions.NotConnectedError:
         print('error')
         return False;
 
 def handle_data(handle, value):
-    print("Received data: %s" % (value))
+    conn.sendall(value)
+    #print("Received data: %s" % (value))
     
 
 
@@ -47,7 +53,6 @@ def connect():
 
 try:
     adapter.start()
-    
     device = connect()
     while not device:
         device = connect()
@@ -56,11 +61,16 @@ try:
     
     while True:
         time.sleep(0.01)
-        sendControlData(device)
+        # data received from client 
+        data = conn.recv(20) 
+        if data:
+            sendControlData(device,data)
+        
         
 except KeyboardInterrupt:
     print('kill signal')
- 
+
 finally:
     print('Adapter Stop')
     adapter.stop()
+    conn.close()
