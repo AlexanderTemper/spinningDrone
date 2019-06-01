@@ -21,6 +21,8 @@
 #include "sensors/acceleration.h"
 #include "sensors/gyro.h"
 
+#include "rx/sbus.h"
+
 #include "msp.h"
 
 uint16_t test = 0;
@@ -197,6 +199,11 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
 		   sbufWriteU8(dst, pilotname[i]);
 	   }
 	}
+	break;
+	case MSP_RC:
+	        for (int i = 0; i < 18; i++) {
+	            sbufWriteU16(dst, rxCh[i]);
+	        }
 	break;
 	case MSP_ATTITUDE:
 		sbufWriteU16(dst, attitude.values.roll);

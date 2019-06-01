@@ -25,7 +25,7 @@
 #include "drivers/resource.h"
 
 
-#define SERIAL_PORT_COUNT 1
+#define SERIAL_PORT_COUNT 2
 
 typedef enum {
     MODE_RX = 1 << 0,

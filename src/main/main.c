@@ -106,7 +106,6 @@ int main(void) {
 
             port_pin_set_output_level(PIN_PA28,0b1000000&lauflicht);
             port_pin_set_output_level(PIN_PB02,0b0100000&lauflicht);
-            port_pin_set_output_level(PIN_PA24,0b0010000&lauflicht);
         }
 
     } /* !while (true) */

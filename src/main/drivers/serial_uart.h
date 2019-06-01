@@ -56,7 +56,7 @@ typedef struct uartDevice_s {
     volatile uint8_t txBuffer[256];
 } uartDevice_t;
 
-extern uartDevice_t uartDevice;
+extern uartDevice_t mspDevice;
 extern const struct serialPortVTable uartVTable[];
 
 uartPort_t *serialUART(UARTDevice_e device, uint32_t baudRate, portMode_e mode, portOptions_e options);

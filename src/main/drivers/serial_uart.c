@@ -5,7 +5,7 @@
 #include "common/utils.h"
 
 
-uartDevice_t uartDevice;
+uartDevice_t mspDevice;
 
 serialPort_t *uartOpen(UARTDevice_e device, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudRate, portMode_e mode, portOptions_e options)
 {

@@ -18,26 +18,38 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "platform.h"
 
-#define TARGET_BOARD_IDENTIFIER "B55A"
+#ifdef USE_BEEPER
 
-#define USBD_PRODUCT_STRING "Bmf055ATemper"
+#include "drivers/io.h"
+#include "pg/pg.h"
+#include "pg/pg_ids.h"
 
-#define USE_ACC
-#define USE_ACCGYRO_BMG160
+#include "beeper_dev.h"
 
-#define LED0_PIN PA0
-#define LED1_PIN PB1
-#define LED2_PIN PB1
+PG_REGISTER_WITH_RESET_TEMPLATE(beeperDevConfig_t, beeperDevConfig, PG_BEEPER_DEV_CONFIG, 0);
 
-#define USE_SERIAL_RX
-#define USE_SERIALRX_SBUS
+#ifdef BEEPER_INVERTED
+#define IS_OPEN_DRAIN   false
+#define IS_INVERTED     true
+#else
+#define IS_OPEN_DRAIN   true
+#define IS_INVERTED     false
+#endif
 
-#define RC_SMOOTHING_AUTO 0
-#define INTERPOLATION_CHANNELS_RPYT 0
-#define RC_SMOOTHING_TYPE_FILTER 0
-#define RC_SMOOTHING_INPUT_BIQUAD 0
-#define RC_SMOOTHING_DERIVATIVE_BIQUAD 0
+#ifndef BEEPER_PWM_HZ
+#define BEEPER_PWM_HZ   0
+#endif
 
+#ifndef BEEPER_PIN
+#define BEEPER_PIN      NONE
+#endif
 
+PG_RESET_TEMPLATE(beeperDevConfig_t, beeperDevConfig,
+    .isOpenDrain = IS_OPEN_DRAIN,
+    .isInverted = IS_INVERTED,
+    .ioTag = IO_TAG(BEEPER_PIN),
+    .frequency = BEEPER_PWM_HZ
+);
+#endif

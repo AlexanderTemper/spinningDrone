@@ -14,7 +14,7 @@
 const struct serialPortVTable uartVTable[];
 
 
-static void uartWrite(serialPort_t *instance, uint8_t ch)
+static void mspWrite(serialPort_t *instance, uint8_t ch)
 {
 	uartPort_t *s = (uartPort_t *)instance;
 	s->port.txBuffer[s->port.txBufferHead] = ch;
@@ -29,7 +29,7 @@ static void uartWrite(serialPort_t *instance, uint8_t ch)
 }
 
 
-static uint32_t uartTotalRxBytesWaiting(const serialPort_t *instance)
+static uint32_t mspTotalRxBytesWaiting(const serialPort_t *instance)
 {
     const uartPort_t *s = (const uartPort_t*)instance;
     if (s->port.rxBufferHead >= s->port.rxBufferTail) {
@@ -39,7 +39,7 @@ static uint32_t uartTotalRxBytesWaiting(const serialPort_t *instance)
    }
 }
 
-static uint32_t uartTotalTxBytesFree(const serialPort_t *instance)
+static uint32_t mspTotalTxBytesFree(const serialPort_t *instance)
 {
 	uartPort_t *s = (uartPort_t*)instance;
 
@@ -55,7 +55,7 @@ static uint32_t uartTotalTxBytesFree(const serialPort_t *instance)
 	return (s->port.txBufferSize - 1) - bytesUsed;
 }
 
-static uint8_t uartRead(serialPort_t *instance)
+static uint8_t mspRead(serialPort_t *instance)
 {
     uint8_t ch;
     uartPort_t *s = (uartPort_t *)instance;
@@ -71,12 +71,12 @@ static uint8_t uartRead(serialPort_t *instance)
     //printf("Lese:%c int:%d\n",ch,ch);
     return ch;
 }
-static void uartSetBaudRate(serialPort_t *instance, uint32_t baudRate)
+static void mspSetBaudRate(serialPort_t *instance, uint32_t baudRate)
 {
     uartPort_t *uartPort = (uartPort_t *)instance;
     uartPort->port.baudRate = baudRate;
 }
-static bool isUartTransmitBufferEmpty(const serialPort_t *instance)
+static bool ismspTransmitBufferEmpty(const serialPort_t *instance)
 {
     return true;
 }
@@ -97,7 +97,7 @@ const char *devName;
 
 uartPort_t *serialUART(UARTDevice_e device, uint32_t baudRate, portMode_e mode, portOptions_e options)
 {
-    uartDevice_t *uartdev = &uartDevice; ///dev/pts/2"
+    uartDevice_t *uartdev = &mspDevice; ///dev/pts/2"
     uartPort_t *s = &uartdev->port;
     s->port.vTable = uartVTable;
     s->port.baudRate = baudRate;
@@ -110,6 +110,23 @@ uartPort_t *serialUART(UARTDevice_e device, uint32_t baudRate, portMode_e mode, 
 }
 
 const struct serialPortVTable uartVTable[] = {
+    {
+        .serialWrite = mspWrite,
+        .serialTotalRxWaiting = mspTotalRxBytesWaiting,
+        .serialTotalTxFree = mspTotalTxBytesFree,
+        .serialRead = mspRead,
+        .serialSetBaudRate = mspSetBaudRate,
+        .isSerialTransmitBufferEmpty = ismspTransmitBufferEmpty,
+        .setMode = uartSetMode,
+        .setCtrlLineStateCb = NULL,
+        .setBaudRateCb = NULL,
+        .writeBuf = NULL,
+        .beginWrite = NULL,
+        .endWrite = NULL,
+    }
+};
+
+/*const struct serialPortVTable uartVTable[] = {
     {
         .serialWrite = uartWrite,
         .serialTotalRxWaiting = uartTotalRxBytesWaiting,
@@ -124,5 +141,5 @@ const struct serialPortVTable uartVTable[] = {
         .beginWrite = NULL,
         .endWrite = NULL,
     }
-};
+};*/
 

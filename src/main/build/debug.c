@@ -25,7 +25,7 @@
 #include "debug.h"
 
 int16_t debug[DEBUG16_VALUE_COUNT];
-uint8_t debugMode = DEBUG_STACK;
+uint8_t debugMode = DEBUG_SBUS;
 
 #ifdef DEBUG_SECTION_TIMES
 uint32_t sectionTimes[2][4];

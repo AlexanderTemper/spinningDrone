@@ -20,24 +20,40 @@
 
 #pragma once
 
-#define TARGET_BOARD_IDENTIFIER "B55A"
 
-#define USBD_PRODUCT_STRING "Bmf055ATemper"
+typedef enum {
+    RGB_RED = 0,
+    RGB_GREEN,
+    RGB_BLUE
+} colorComponent_e;
 
-#define USE_ACC
-#define USE_ACCGYRO_BMG160
+#define RGB_COLOR_COMPONENT_COUNT (RGB_BLUE + 1)
 
-#define LED0_PIN PA0
-#define LED1_PIN PB1
-#define LED2_PIN PB1
+struct rgbColor24bpp_s {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+};
 
-#define USE_SERIAL_RX
-#define USE_SERIALRX_SBUS
+typedef union {
+    struct rgbColor24bpp_s rgb;
+    uint8_t raw[RGB_COLOR_COMPONENT_COUNT];
+} rgbColor24bpp_t;
 
-#define RC_SMOOTHING_AUTO 0
-#define INTERPOLATION_CHANNELS_RPYT 0
-#define RC_SMOOTHING_TYPE_FILTER 0
-#define RC_SMOOTHING_INPUT_BIQUAD 0
-#define RC_SMOOTHING_DERIVATIVE_BIQUAD 0
+#define HSV_HUE_MAX 359
+#define HSV_SATURATION_MAX 255
+#define HSV_VALUE_MAX 255
 
+typedef enum {
+    HSV_HUE = 0,
+    HSV_SATURATION,
+    HSV_VALUE
+} hsvColorComponent_e;
 
+#define HSV_COLOR_COMPONENT_COUNT (HSV_VALUE + 1)
+
+typedef struct hsvColor_s {
+    uint16_t h; // 0 - 359
+    uint8_t s; // 0 - 255
+    uint8_t v; // 0 - 255
+} hsvColor_t;

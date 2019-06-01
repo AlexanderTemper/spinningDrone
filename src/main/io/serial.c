@@ -30,7 +30,7 @@
 #include "pg/pg.h"
 #include "pg/pg_ids.h"
 
-const serialPortIdentifier_e serialPortIdentifiers[SERIAL_PORT_COUNT] = {SERIAL_PORT_USART1};
+const serialPortIdentifier_e serialPortIdentifiers[SERIAL_PORT_COUNT] = {SERIAL_PORT_USART1, SERIAL_PORT_USART2};
 
 static uint8_t serialPortCount;
 

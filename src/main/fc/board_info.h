@@ -20,24 +20,18 @@
 
 #pragma once
 
-#define TARGET_BOARD_IDENTIFIER "B55A"
+void initBoardInformation(void);
 
-#define USBD_PRODUCT_STRING "Bmf055ATemper"
+char *getBoardName(void);
+char *getManufacturerId(void);
+bool boardInformationIsSet(void);
 
-#define USE_ACC
-#define USE_ACCGYRO_BMG160
+bool setBoardName(char *newBoardName);
+bool setManufacturerId(char *newManufacturerId);
+bool persistBoardInformation(void);
 
-#define LED0_PIN PA0
-#define LED1_PIN PB1
-#define LED2_PIN PB1
+uint8_t * getSignature(void);
+bool signatureIsSet(void);
 
-#define USE_SERIAL_RX
-#define USE_SERIALRX_SBUS
-
-#define RC_SMOOTHING_AUTO 0
-#define INTERPOLATION_CHANNELS_RPYT 0
-#define RC_SMOOTHING_TYPE_FILTER 0
-#define RC_SMOOTHING_INPUT_BIQUAD 0
-#define RC_SMOOTHING_DERIVATIVE_BIQUAD 0
-
-
+bool setSignature(uint8_t *newSignature);
+bool persistSignature(void);

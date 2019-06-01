@@ -71,6 +71,7 @@
 #include "usart_support.h"
 #include "drivers/serial.h"
 #include "drivers/serial_uart.h"
+#include "rx/sbus.h"
 
 /************************************************************************/
 /* Global Variables                                                     */
@@ -143,7 +144,9 @@ void rx_usart_configure(void)
 	usart_get_config_defaults(&config_usart);
 	
 	/* set USART Baudrate*/
-	config_usart.baudrate = USART_BAUDRATE;
+	config_usart.baudrate = UINT32_C(100000);
+    config_usart.stopbits         = USART_STOPBITS_2;
+    config_usart.parity           = USART_PARITY_EVEN;
 	/* Set USART GCLK */
 	config_usart.generator_source = GCLK_GENERATOR_2;
 	/* Se USART MUX setting */
@@ -208,7 +211,7 @@ void msp_usart_configure_callbacks(void)
 
 void msp_usart_callback_receive(struct usart_module *const usart_module_ptr)
 {
-	uartDevice_t *uartdev = &uartDevice;
+	uartDevice_t *uartdev = &mspDevice;
 	uartPort_t *s = &uartdev->port;
 	
 	s->port.rxBuffer[s->port.rxBufferHead] = usart_rx_byte;
@@ -224,7 +227,7 @@ void msp_usart_callback_receive(struct usart_module *const usart_module_ptr)
 
 void msp_usart_callback_transmit(struct usart_module *const usart_module_ptr)
 {
-	uartDevice_t *uartdev = &uartDevice;
+	uartDevice_t *uartdev = &mspDevice;
 	uartPort_t *s = &uartdev->port;
 
 	uint32_t fromWhere = s->port.txBufferTail;
@@ -261,6 +264,7 @@ void rx_usart_configure_callbacks(void)
 
 void rx_usart_callback_receive(struct usart_module *const usart_module_ptr)
 {
+    sbusDataReceive(rx_byte);
     usart_read_job(&rx_usart_instance, &rx_byte);
 }
 

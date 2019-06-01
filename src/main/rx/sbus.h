@@ -20,24 +20,7 @@
 
 #pragma once
 
-#define TARGET_BOARD_IDENTIFIER "B55A"
-
-#define USBD_PRODUCT_STRING "Bmf055ATemper"
-
-#define USE_ACC
-#define USE_ACCGYRO_BMG160
-
-#define LED0_PIN PA0
-#define LED1_PIN PB1
-#define LED2_PIN PB1
-
-#define USE_SERIAL_RX
-#define USE_SERIALRX_SBUS
-
-#define RC_SMOOTHING_AUTO 0
-#define INTERPOLATION_CHANNELS_RPYT 0
-#define RC_SMOOTHING_TYPE_FILTER 0
-#define RC_SMOOTHING_INPUT_BIQUAD 0
-#define RC_SMOOTHING_DERIVATIVE_BIQUAD 0
-
-
+//bool sbusInit(const rxConfig_t *initialRxConfig, rxRuntimeConfig_t *rxRuntimeConfig);
+void sbusDataReceive(uint16_t c);
+uint8_t sbusFrameStatus();
+extern uint16_t *rxCh;
