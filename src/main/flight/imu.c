@@ -40,7 +40,7 @@
 
 //#include "flight/gps_rescue.h"
 #include "flight/imu.h"
-//#include "flight/mixer.h"
+#include "globals.h" //#include "flight/mixer.h"
 //#include "flight/pid.h"
 
 //#include "io/gps.h"
@@ -538,7 +538,7 @@ void imuUpdateAttitude(timeUs_t currentTimeUs)
         if (throttleAngleValue && (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(HORIZON_MODE)) && ARMING_FLAG(ARMED)) {
             throttleAngleCorrection = calculateThrottleAngleCorrection();
         }
-        // mixerSetThrottleAngleCorrection(throttleAngleCorrection); TODO
+        mixerSetThrottleAngleCorrection(throttleAngleCorrection);
 
     } else {
         acc.accADC[X] = 0;

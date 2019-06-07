@@ -12,6 +12,7 @@ COMMON_SRC = \
             fc/runtime_config.c \
             io/beeper.c \
 			io/serial.c \
+			output.c\
 			rx/rx.c\
 			rx/sbus.c\
 			rx/sbus_channels.c\

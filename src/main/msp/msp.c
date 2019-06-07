@@ -22,6 +22,7 @@
 #include "sensors/gyro.h"
 
 #include "rx/sbus.h"
+#include "globals.h"
 
 #include "msp.h"
 
@@ -199,6 +200,12 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
 		   sbufWriteU8(dst, pilotname[i]);
 	   }
 	}
+	break;
+	case MSP_MOTOR:
+	        for (unsigned i = 0; i < 6; i++) {
+	            sbufWriteU16(dst, motor[i]);
+	        }
+
 	break;
 	case MSP_RC:
 	        for (int i = 0; i < 18; i++) {
