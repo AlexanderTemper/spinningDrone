@@ -45,8 +45,8 @@ uint32_t gyroSetSampleRate(gyroDev_t *gyro, uint8_t lpf, uint8_t gyroSyncDenomin
 {
     float gyroSamplePeriod;
 
-	gyro->gyroRateKHz = GYRO_RATE_160_Hz;
-	gyroSamplePeriod = 1000000.0f / 160.0f;
+	gyro->gyroRateKHz = GYRO_RATE_400_Hz;
+	gyroSamplePeriod = 1000000.0f / 400.0f;
 	gyroSyncDenominator = 1; // Always full Sampling 1khz
 
 

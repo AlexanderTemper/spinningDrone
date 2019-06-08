@@ -26,60 +26,14 @@
 #define ONESHOT_MIN_PULSE		UINT16_C(2400)
 
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-//#define abs(x) ((x)>0?(x):-(x))
-#define PI 3.14159265358979323846
-
-#define ACC 1
-#define MAG 0
-#define GYRO 1
-#define BARO 0
-#define SONAR 0
-#define GPS 0
-
-#define SPEK_MAX_CHANNEL 7
-#define SPEK_FRAME_SIZE 16
 
 #define RCINPUT_LOOPTIME_US	20000	// 50Hz
 #define MAINCONTROL_LOOPTIME_US	2500 // 400Hz
-
-//******  advanced users settings *******************
-/* Set the Low Pass Filter factor for ACC */
-/* Increasing this value would reduce ACC noise (visible in GUI), but would increase ACC lag time*/
-/* Comment this if  you do not want filter at all.*/
-#ifndef ACC_LPF_FACTOR
-#define ACC_LPF_FACTOR 100
-#endif
-
-
-/* Set the Gyro Weight for Gyro/Acc complementary filter */
-/* Increasing this value would reduce and delay Acc influence on the output of the filter*/
-#ifndef GYR_CMPF_FACTOR
-#define GYR_CMPF_FACTOR 400.0f
-#endif
-
-/* Set the Gyro Weight for Gyro/Magnetometer complementary filter */
-/* Increasing this value would reduce and delay Magnetometer influence on the output of the filter*/
-#ifndef GYR_CMPFM_FACTOR
-#define GYR_CMPFM_FACTOR 200.0f
-#endif
-
-//****** end of advanced users settings *************
-
-#define GYRO_PTS_FOR_CALIBRATION	1000
-
-#define INV_GYR_CMPF_FACTOR   (1.0f / (GYR_CMPF_FACTOR  + 1.0f))
-#define INV_GYR_CMPFM_FACTOR  (1.0f / (GYR_CMPFM_FACTOR + 1.0f))
-#if GYRO
-#define GYRO_SCALE ((2000 * PI)/((32767.0f) * 180.0f * 1000000.0f)) //(BMF055 scale factor ready for multiplication with microseconds = dt)
-
-#else
-#define GYRO_SCALE (1.0f/200e6f)
-// empirical, depends on WMP on IDG datasheet, tied of deg/ms sensibility
-// !!!!should be adjusted to the rad/sec
-#endif 
-// Small angle approximation
 #define ssin(val) (val)
 #define scos(val) 1.0f
+
+#define RC_MAX 1811
+#define RC_MIN 172
 
 enum pid {
 	PIDROLL,
@@ -171,6 +125,6 @@ extern uint8_t  MULTITYPE;
 extern uint8_t throttleTest;
 extern uint8_t rcOptions[CHECKBOX_ITEM_COUNT];
 
-mixerSetThrottleAngleCorrection(int16_t correctionValue);
+void mixerSetThrottleAngleCorrection(int16_t correctionValue);
 
 #endif /* GLOBALS_H_ */

@@ -21,6 +21,7 @@
 #include "sensors/acceleration.h"
 #include "sensors/gyro.h"
 
+#include "rx/rx.h"
 #include "rx/sbus.h"
 #include "globals.h"
 
@@ -202,14 +203,24 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
 	}
 	break;
 	case MSP_MOTOR:
-	        for (unsigned i = 0; i < 6; i++) {
+	        for (unsigned i = 0; i < 4; i++) {
 	            sbufWriteU16(dst, motor[i]);
 	        }
 
 	break;
+	case MSP_MOTOR_3D_CONFIG:
+	        sbufWriteU16(dst, conf.s3DMIDDLE-conf.MIDDLEDEADBAND);
+	        sbufWriteU16(dst, conf.s3DMIDDLE+conf.MIDDLEDEADBAND);
+	        sbufWriteU16(dst, conf.s3DMIDDLE);
+	break;
+	case MSP_MOTOR_CONFIG:
+	        sbufWriteU16(dst, conf.MINTHROTTLE);
+	        sbufWriteU16(dst, conf.MAXTHROTTLE);
+	        sbufWriteU16(dst, conf.MINCOMMAND);
+	break;
 	case MSP_RC:
-	        for (int i = 0; i < 18; i++) {
-	            sbufWriteU16(dst, rxCh[i]);
+	        for (int i = 0; i < MAX_SUPPORTED_RC_CHANNEL_COUNT; i++) {
+	            sbufWriteU16(dst, rcData[i]);
 	        }
 	break;
 	case MSP_ATTITUDE:
@@ -222,7 +233,7 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
 		sbufWriteU16(dst, 0);
 	break;
 	case MSP_MIXER_CONFIG: //TODO
-		sbufWriteU8(dst, 2);
+		sbufWriteU8(dst, 3); //QUADX
 		sbufWriteU8(dst, 0);
 	break;
 	default:
