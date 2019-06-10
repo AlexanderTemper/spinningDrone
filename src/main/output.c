@@ -23,7 +23,8 @@
 #include "globals.h"
 #include "rx/rx.h"
 
-static uint8_t  cycleCounter = 0;
+int16_t motor_disarmed[MAX_MOTORS];
+
 struct tc_module tc_instance1,tc_instance2;
 
 volatile bool tc_instance1_callback_flag;
@@ -34,8 +35,7 @@ volatile bool tc_instance2_callback_flag;
 /**************************************************************************************/
 void writeMotors() {
 
-	/*if(tc_instance1_callback_flag &&
-			tc_instance2_callback_flag){
+	if(tc_instance1_callback_flag && tc_instance2_callback_flag){
 
 		uint16_t timer_val = COUNT_MAX_16BIT-ONESHOT_MIN_PULSE;
 		if(conf.sOneShot != 1) timer_val=COUNT_MAX_16BIT-PWM_MIN_PULSE; 
@@ -61,29 +61,29 @@ void writeMotors() {
 		tc_enable(&tc_instance1); 
 		tc_enable(&tc_instance2);
 
-	}*/
+	}
 }
 
 
 /**************************************************************************************/
 /************        Initialize the PWM Timers and Registers         ******************/
 /**************************************************************************************/
-/*void tc_instance1_callback (struct tc_module *const module_inst_ptr)
+void tc_instance1_callback (struct tc_module *const module_inst_ptr)
 {
 	tc_instance1_callback_flag = true;
 }
 void tc_instance2_callback (struct tc_module *const module_inst_ptr)
 {
 	tc_instance2_callback_flag = true;
-}*/
+}
 
 
 void initOutput() {
-	/*struct	tc_config config_tc1;
+	struct	tc_config config_tc1;
 	tc_get_config_defaults(&config_tc1);
 	config_tc1.counter_size    = TC_COUNTER_SIZE_16BIT;
 	config_tc1.wave_generation = TC_WAVE_GENERATION_NORMAL_PWM;
-	config_tc1.clock_source = GCLK_GENERATOR_1;
+	config_tc1.clock_source = GCLK_GENERATOR_4;
 	config_tc1.oneshot = true;
 	config_tc1.pwm_channel[0].enabled = true;
 	config_tc1.pwm_channel[0].pin_out = PIN_PA22F_TC4_WO0;
@@ -100,7 +100,7 @@ void initOutput() {
 	tc_get_config_defaults(&config_tc2);
 	config_tc2.counter_size    = TC_COUNTER_SIZE_16BIT;
 	config_tc2.wave_generation = TC_WAVE_GENERATION_NORMAL_PWM;
-	config_tc2.clock_source = GCLK_GENERATOR_1;
+	config_tc2.clock_source = GCLK_GENERATOR_4;
 	config_tc2.oneshot = true;
 	config_tc2.pwm_channel[0].enabled = true;
 	config_tc2.pwm_channel[0].pin_out = PIN_PB00F_TC7_WO0;
@@ -112,188 +112,95 @@ void initOutput() {
 	tc_register_callback(&tc_instance2, tc_instance2_callback,TC_CALLBACK_OVERFLOW);
 	tc_enable_callback(&tc_instance2, TC_CALLBACK_OVERFLOW);
 	tc_instance2_callback_flag = true;
-*/
-
 }
 
-/**************************************************************************************/
-/********** Mixes the Computed stabilize values to the Motors & Servos  ***************/
-/**************************************************************************************/
-void mixTable() {
-	int16_t maxMotor;
-	int16_t minMotor;
-	int16_t useThrottle;
-	uint8_t i;
 
-	if(s3D == 1){
-		if ((rcData[THROTTLE]) > conf.s3DMIDDLE){
-			useThrottle = constrain(rcData[THROTTLE], conf.s3DMIDDLE+conf.MIDDLEDEADBAND, conf.MAXTHROTTLE);
-		}else{
-			useThrottle = constrain(rcData[THROTTLE], conf.MINCOMMAND, conf.s3DMIDDLE-conf.MIDDLEDEADBAND);
-		}
-		axisPID[ROLL] = axisPID[ROLL]/2;
-		axisPID[PITCH] = axisPID[PITCH]/2;
-		axisPID[YAW] = axisPID[YAW]/2;
-	}else if(conf.F3D == 1){
-		useThrottle = constrain(((rcData[THROTTLE]-1000)>>1)+conf.s3DMIDDLE, conf.s3DMIDDLE+((conf.MINCOMMAND-1000)>>1), conf.MAXTHROTTLE);
-		if(f.ACC_MODE){
-			useThrottle = useThrottle + Zadd;
-		}
-		axisPID[ROLL] = axisPID[ROLL]/2;
-		axisPID[PITCH] = axisPID[PITCH]/2;
-		axisPID[YAW] = axisPID[YAW]/2;
-	}else{
-		if(f.ACC_MODE){
-			useThrottle = rcData[THROTTLE] + Zadd;
-		}else{
-			useThrottle = rcData[THROTTLE];
-		}
-	}
+static uint8_t numberMotor = 0;
+static motorMixer_t currentMixer[MAX_MOTORS];
 
-	if (NUMBER_MOTOR > 3){
-		//prevent "yaw jump" during yaw correction
-		axisPID[YAW] = constrain(axisPID[YAW],-100-abs(rcData[YAW]),+100+abs(rcData[YAW]));
-	}
+static const motorMixer_t mixerQuadX[] = {
+    { 1.0f, -1.0f,  1.0f, -1.0f },          // REAR_R
+    { 1.0f, -1.0f, -1.0f,  1.0f },          // FRONT_R
+    { 1.0f,  1.0f,  1.0f,  1.0f },          // REAR_L
+    { 1.0f,  1.0f, -1.0f, -1.0f },          // FRONT_L
+};
 
-#define PIDMIX(X,Y,Z) useThrottle + axisPID[ROLL]*X + axisPID[PITCH]*Y + conf.YAW_DIRECTION * axisPID[YAW]*Z
-
-
-	/****************                   main Mix Table                ******************/
-	if(conf.copterType == 0){ // BI
-		motor[0] = PIDMIX(+1, 0, 0); //LEFT
-		motor[1] = PIDMIX(-1, 0, 0); //RIGHT
-		servo[4]  = constrain(conf.BILeftMiddle + ((conf.YAW_DIRECTION * axisPID[YAW]) + axisPID[PITCH])*conf.BiLeftDir, 900, 2100); //LEFT
-		servo[5]  = constrain(conf.BIRightMiddle + ((conf.YAW_DIRECTION * axisPID[YAW]) - axisPID[PITCH])*conf.BiRightDir, 900, 2100); //RIGHT
-	}else if(conf.copterType == 1){ // TRI
-		motor[0] = PIDMIX( 0,+4/3, 0); //REAR
-		motor[1] = PIDMIX(-1,-2/3, 0); //RIGHT
-		motor[2] = PIDMIX(+1,-2/3, 0); //LEFT
-		servo[5] = constrain(conf.TriYawMiddle + conf.YAW_DIRECTION * axisPID[YAW], 900, 2100); //REAR
-	}else if(conf.copterType == 2){ // QUADP
-		motor[0] = PIDMIX( 0,+1,-1); //REAR
-		motor[1] = PIDMIX(-1, 0,+1); //RIGHT
-		motor[2] = PIDMIX(+1, 0,+1); //LEFT
-		motor[3] = PIDMIX( 0,-1,-1); //FRONT
-	}else if(conf.copterType == 3){ // QUADX
-		motor[0] = PIDMIX(-1,+1,-1); //REAR_R
-		motor[1] = PIDMIX(-1,-1,+1); //FRONT_R
-		motor[2] = PIDMIX(+1,+1,+1); //REAR_L
-		motor[3] = PIDMIX(+1,-1,-1); //FRONT_L
-	}else if(conf.copterType == 4){ // Y4
-		motor[0] = PIDMIX(+0,+1,-1);   //REAR_1 CW
-		motor[1] = PIDMIX(-1,-1, 0); //FRONT_R CCW
-		motor[2] = PIDMIX(+0,+1,+1);   //REAR_2 CCW
-		motor[3] = PIDMIX(+1,-1, 0); //FRONT_L CW
-	}else if(conf.copterType == 5){ // Y6
-		motor[0] = PIDMIX(+0,+4/3,+1); //REAR
-		motor[1] = PIDMIX(-1,-2/3,-1); //RIGHT
-		motor[2] = PIDMIX(+1,-2/3,-1); //LEFT
-		motor[3] = PIDMIX(+0,+4/3,-1); //UNDER_REAR
-		motor[4] = PIDMIX(-1,-2/3,+1); //UNDER_RIGHT
-		motor[5] = PIDMIX(+1,-2/3,+1); //UNDER_LEFT
-	}else if(conf.copterType == 6){ // HEXFP
-		motor[0] = PIDMIX(-7/8,+1/2,+1); //REAR_R
-		motor[1] = PIDMIX(-7/8,-1/2,-1); //FRONT_R
-		motor[2] = PIDMIX(+7/8,+1/2,+1); //REAR_L
-		motor[3] = PIDMIX(+7/8,-1/2,-1); //FRONT_L
-		motor[4] = PIDMIX(+0  ,-1  ,+1); //FRONT
-		motor[5] = PIDMIX(+0  ,+1  ,-1); //REAR
-	}else if(conf.copterType == 7){ // HEXFX
-		motor[0] = PIDMIX(-1/2,+7/8,+1); //REAR_R
-		motor[1] = PIDMIX(-1/2,-7/8,+1); //FRONT_R
-		motor[2] = PIDMIX(+1/2,+7/8,-1); //REAR_L
-		motor[3] = PIDMIX(+1/2,-7/8,-1); //FRONT_L
-		motor[4] = PIDMIX(-1  ,+0  ,-1); //RIGHT
-		motor[5] = PIDMIX(+1  ,+0  ,+1); //LEFT
-	}else if(conf.copterType == 8){ // V Tail
-		motor[0] = PIDMIX(+0,+1, +1); //REAR_R
-		motor[1] = PIDMIX(-1, -1, +0); //FRONT_R
-		motor[2] = PIDMIX(+0,+1, -1); //REAR_L
-		motor[3] = PIDMIX(+1, -1, -0); //FRONT_L
-	}
-
-	/****************                Filter the Motors values                ******************/
-	maxMotor=motor[0];
-	minMotor=motor[0];
-
-
-	if(s3D == 1){
-		for(i=1;i< NUMBER_MOTOR;i++){
-			if (motor[i]>maxMotor) maxMotor=motor[i];
-			if (motor[i]<minMotor) minMotor=motor[i];
-		}
-		for (i = 0; i < NUMBER_MOTOR; i++) {
-			if (maxMotor > conf.MAXTHROTTLE) // this is a way to still have good gyro corrections if at least one motor reaches its max.
-				motor[i] -= maxMotor - conf.MAXTHROTTLE;
-
-			if (minMotor < conf.MINCOMMAND) // this is a way to still have good gyro corrections if at least one motor reaches its min.
-				motor[i] += conf.MINCOMMAND - minMotor;
-
-			if ((rcData[THROTTLE]) > conf.s3DMIDDLE){
-				motor[i] = constrain(motor[i], conf.s3DMIDDLE+conf.MIDDLEDEADBAND, conf.MAXTHROTTLE);
-			}else{
-				motor[i] = constrain(motor[i], conf.MINCOMMAND, conf.s3DMIDDLE-conf.MIDDLEDEADBAND);
-			}
-			if (!f.ARMED)
-				motor[i] = conf.s3DMIDDLE;
-		}
-	}else if(conf.F3D == 1){
-		for(i=1;i< NUMBER_MOTOR;i++){
-			if (motor[i]>maxMotor) maxMotor=motor[i];
-			if (motor[i]<minMotor) minMotor=motor[i];
-		}
-		for (i = 0; i < NUMBER_MOTOR; i++) {
-			if (maxMotor > conf.MAXTHROTTLE) // this is a way to still have good gyro corrections if at least one motor reaches its max.
-				motor[i] -= maxMotor - conf.MAXTHROTTLE;
-
-			if (minMotor < conf.s3DMIDDLE+((conf.MINTHROTTLE-1000)>>1)) // this is a way to still have good gyro corrections if at least one motor reaches its min.
-				motor[i] += conf.s3DMIDDLE+((conf.MINTHROTTLE-1000)>>1) - minMotor;
-
-			motor[i] = constrain(motor[i], conf.s3DMIDDLE+((conf.MINTHROTTLE-1000)>>1), conf.MAXTHROTTLE);
-			/*      if ((rcData[THROTTLE]) < conf.MINCHECK)
-        motor[i] = conf.s3DMIDDLE+((conf.MINTHROTTLE-1000)>>1);*/
-			if (!f.ARMED){
-				motor[i] = conf.s3DMIDDLE;
-				/*if(!(usart_instance.hw->USART.CTRLA.reg & SERCOM_USART_CTRLA_ENABLE)){
-					usart_initialize();
-				}*/
-			}else{
-				//usart_disable(&usart_instance);
-			}
-		}
-	}else{
-		for(i=1;i< NUMBER_MOTOR;i++){
-			if (motor[i]>maxMotor) maxMotor=motor[i];
-			if (motor[i]<minMotor) minMotor=motor[i];
-		}
-		for (i = 0; i < NUMBER_MOTOR; i++) {
-			if (maxMotor > conf.MAXTHROTTLE) // this is a way to still have good gyro corrections if at least one motor reaches its max.
-				motor[i] -= maxMotor - conf.MAXTHROTTLE;
-			motor[i] = constrain(motor[i], conf.MINTHROTTLE, conf.MAXTHROTTLE);
-
-			if (minMotor < conf.MINTHROTTLE) // this is a way to still have good gyro corrections if at least one motor reaches its min.
-				motor[i] += conf.MINTHROTTLE - minMotor;
-
-			/*      if ((rcData[THROTTLE]) < conf.MINCHECK)
-        motor[i] = conf.MINTHROTTLE;*/
-			if (!f.ARMED){
-				motor[i] = conf.MINCOMMAND;
-				/*if(!(usart_instance.hw->USART.CTRLA.reg & SERCOM_USART_CTRLA_ENABLE)){
-					usart_initialize();
-				}*/
-			}else{
-				//usart_disable(&usart_instance);
-			}
-		}
-	}
-	if(throttleTest){
-		for(i=0;i< NUMBER_MOTOR;i++){
-			if(rcData[THROTTLE] > 1500){
-				motor[i] = conf.MAXTHROTTLE;
-			}else if(rcData[THROTTLE] < 1500){
-				motor[i] = conf.MINCOMMAND;
-			}else
-				motor[i] = rcData[THROTTLE];
-		}
-	}
+static void mixerResetMotors(void)
+{
+    int i;
+    // set disarmed motor values
+    for (i = 0; i < MAX_MOTORS; i++){
+        motor_disarmed[i] = conf.F3D ? conf.s3DMIDDLE : conf.MINCOMMAND;
+    }
 }
+
+void mixerInit(void)
+{
+    int i;
+    numberMotor = 4;
+    // copy motor-based mixers
+    for (i = 0; i < numberMotor; i++) {
+        currentMixer[i] = mixerQuadX[i];
+    }
+    // in 3D mode, mixer gain has to be halved
+    if (conf.F3D) {
+        if (numberMotor > 1) {
+            for (i = 0; i < numberMotor; i++) {
+                currentMixer[i].pitch *= 0.5f;
+                currentMixer[i].roll *= 0.5f;
+                currentMixer[i].yaw *= 0.5f;
+            }
+        }
+    }
+
+    mixerResetMotors();
+}
+
+
+
+void mixTable(void)
+{
+    int16_t maxMotor;
+    uint32_t i;
+
+    if (numberMotor > 3) {
+        // prevent "yaw jump" during yaw correction
+        axisPID[YAW] = constrain(axisPID[YAW], -100 - abs(rcCommand[YAW]), +100 + abs(rcCommand[YAW]));
+    }
+
+    // motors for non-servo mixes
+    if (numberMotor > 1) {
+        for (i = 0; i < numberMotor; i++) {
+            motor[i] = rcCommand[THROTTLE] * currentMixer[i].throttle + axisPID[PITCH] * currentMixer[i].pitch + axisPID[ROLL] * currentMixer[i].roll + -conf.YAW_DIRECTION * axisPID[YAW] * currentMixer[i].yaw;
+        }
+    }
+
+    maxMotor = motor[0];
+    for (i = 1; i < numberMotor; i++) {
+        if (motor[i] > maxMotor) {
+            maxMotor = motor[i];
+        }
+    }
+    for (i = 0; i < numberMotor; i++) {
+        if (maxMotor > conf.MAXTHROTTLE) {    // this is a way to still have good gyro corrections if at least one motor reaches its max.
+            motor[i] -= maxMotor - conf.MAXTHROTTLE;
+        }
+
+        if (conf.F3D) {
+            if ((rcData[THROTTLE]) > conf.MIDRC) {
+                motor[i] = constrain(motor[i], conf.deadband3d_high, conf.MAXTHROTTLE);
+            } else {
+                motor[i] = constrain(motor[i], conf.MINCOMMAND, conf.deadband3d_low);
+            }
+        } else {
+            motor[i] = constrain(motor[i], conf.MINTHROTTLE, conf.MAXTHROTTLE);
+            if ((rcData[THROTTLE]) < conf.MINCHECK) {
+                motor[i] = conf.MINCOMMAND;
+            }
+        }
+        if (!f.ARMED) {
+            motor[i] = motor_disarmed[i];
+        }
+    }
+}
+

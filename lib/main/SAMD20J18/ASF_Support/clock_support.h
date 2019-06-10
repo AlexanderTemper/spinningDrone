@@ -169,6 +169,7 @@ void clock_configure_gclk_generator_1(void);
 void clock_configure_gclk_generator_2(void);
 
 void clock_configure_gclk_generator_3(void);
+void clock_configure_gclk_generator_4(void);
 
 
 #endif /* CLOCK_SUPPORT_H_ */

@@ -52,10 +52,9 @@ enum pid {
 struct flags_struct {
 	uint8_t OK_TO_ARM :1 ;
 	uint8_t ARMED :1 ;
-	uint8_t I2C_INIT_DONE :1 ; // For i2c gps we have to now when i2c init is done, so we can update parameters to the i2cgps from eeprom (at startup it is done in setup())
-	uint8_t ACC_CALIBRATED :1 ;
 	uint8_t ACC_MODE :1 ;
 	uint8_t HORIZON_MODE :1 ;
+	uint8_t ANGLE_MODE :1 ;
 	uint8_t SMALL_ANGLES_25 :1 ;
 	uint8_t FSBEEP :1 ;
 };
@@ -70,17 +69,22 @@ struct config{
 	uint8_t P8[PIDITEMS], I8[PIDITEMS], D8[PIDITEMS];
 	uint8_t rcRate8;
 	uint8_t rcExpo8;
-	uint8_t rollPitchRate;
+	uint8_t rollPitchRate[2];
 	uint8_t yawRate;
 	uint8_t dynThrPID;
 	uint8_t thrMid8;
 	uint8_t thrExpo8;
 	int16_t accZero[3];
 	int16_t angleTrim[2];
+	uint16_t max_angle_inclination;
 	uint16_t activate[CHECKBOX_ITEM_COUNT];
-
+	uint16_t tpa_breakpoint; // Breakpoint where TPA is activated
+	uint8_t deadband;    // introduce a deadband around the stick center for pitch and roll axis. Must be greater than zero.
+	uint8_t yawdeadband; // introduce a deadband around the stick center for yaw axis. Must be greater than zero.
 	uint8_t F3D;
 	uint8_t MIDDLEDEADBAND;
+	int16_t deadband3d_high;
+	int16_t deadband3d_low;
 
 	uint8_t sOneShot;
 
@@ -95,35 +99,43 @@ struct config{
 	int16_t MINCHECK;
 	int16_t MAXCHECK;
 
-	uint16_t BILeftMiddle;
-	uint16_t BIRightMiddle;
-	uint16_t TriYawMiddle;
 	uint8_t  YAW_DIRECTION;
-	uint8_t  BiLeftDir;
-	uint8_t  BiRightDir;
-	uint8_t  DigiServo;
 
 	uint8_t  ArmRoll;
-
-	uint8_t  MPU6050_DLPF_CFG;
-
 	uint16_t  s3DMIDDLE;
 
 	uint8_t calibState;
 };
 
+// Custom mixer data per motor
+typedef struct motorMixer_t {
+    float throttle;
+    float roll;
+    float pitch;
+    float yaw;
+} motorMixer_t;
+
+// Custom mixer configuration
+typedef struct mixer_t {
+    uint8_t numberMotor;
+    const motorMixer_t *motor;
+} mixer_t;
+
+#define MAX_MOTORS 4
+
 extern struct config conf;
 
 extern int16_t axisPID[3];
-extern int16_t motor[6];
+extern int16_t motor[MAX_MOTORS];
 extern int16_t servo[6];
 extern int16_t Zadd;
 
 extern uint8_t s3D;
 extern uint8_t NUMBER_MOTOR;
-extern uint8_t  MULTITYPE;
+extern uint8_t MULTITYPE;
 extern uint8_t throttleTest;
 extern uint8_t rcOptions[CHECKBOX_ITEM_COUNT];
+extern int16_t rcCommand[4]; // interval [1000;2000] for THROTTLE and [-500;+500] for
 
 void mixerSetThrottleAngleCorrection(int16_t correctionValue);
 

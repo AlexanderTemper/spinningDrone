@@ -208,11 +208,11 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
 	        }
 
 	break;
-	case MSP_MOTOR_3D_CONFIG:
+	/*case MSP_MOTOR_3D_CONFIG:
 	        sbufWriteU16(dst, conf.s3DMIDDLE-conf.MIDDLEDEADBAND);
 	        sbufWriteU16(dst, conf.s3DMIDDLE+conf.MIDDLEDEADBAND);
 	        sbufWriteU16(dst, conf.s3DMIDDLE);
-	break;
+	break;*/
 	case MSP_MOTOR_CONFIG:
 	        sbufWriteU16(dst, conf.MINTHROTTLE);
 	        sbufWriteU16(dst, conf.MAXTHROTTLE);
