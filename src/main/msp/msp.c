@@ -138,7 +138,7 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
 	        	boxBitmask_t flightModeFlags;
 	            const int flagBits = packFlightModeFlags(&flightModeFlags);
 
-	            sbufWriteU16(dst, 10);//getTaskDeltaTime(TASK_GYROPID));
+	            sbufWriteU16(dst, cycleTime);
 	#ifdef USE_I2C
 	            sbufWriteU16(dst, i2cGetErrorCounter());
 	#else

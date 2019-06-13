@@ -33,6 +33,7 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro/accgyro.h"
 #include "drivers/accgyro/gyro_sync.h"
+#include "globals.h"
 
 
 bool gyroSyncCheckUpdate(gyroDev_t *gyro)
@@ -46,7 +47,7 @@ uint32_t gyroSetSampleRate(gyroDev_t *gyro, uint8_t lpf, uint8_t gyroSyncDenomin
     float gyroSamplePeriod;
 
 	gyro->gyroRateKHz = GYRO_RATE_400_Hz;
-	gyroSamplePeriod = 1000000.0f / 400.0f;
+	gyroSamplePeriod = MAINCONTROL_LOOPTIME_US;
 	gyroSyncDenominator = 1; // Always full Sampling 1khz
 
 

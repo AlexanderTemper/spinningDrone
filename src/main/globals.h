@@ -28,7 +28,7 @@
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 #define RCINPUT_LOOPTIME_US	20000	// 50Hz
-#define MAINCONTROL_LOOPTIME_US	2500 // 400Hz
+#define MAINCONTROL_LOOPTIME_US	3000 // 333Hz
 #define ssin(val) (val)
 #define scos(val) 1.0f
 
@@ -129,6 +129,9 @@ extern int16_t axisPID[3];
 extern int16_t motor[MAX_MOTORS];
 extern int16_t servo[6];
 extern int16_t Zadd;
+
+extern uint32_t cycleTime; // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
+
 
 extern uint8_t s3D;
 extern uint8_t NUMBER_MOTOR;

@@ -35,8 +35,9 @@ timeUs_t micros(void){
 timeUs_t microsISR(void){
     return muTimer.hw->COUNT32.COUNT.reg;
 }
+
 timeMs_t millis(void){
-    return muTimer.hw->COUNT32.COUNT.reg/1000;
+    return (4294967.296*muTimerOverflow)+(muTimer.hw->COUNT32.COUNT.reg/1000);
 }
 
 /*uint32_t ticks(void){

@@ -24,3 +24,4 @@
 void sbusDataReceive(uint16_t c);
 uint8_t sbusFrameStatus();
 extern uint16_t *rxCh;
+extern uint16_t sbustimeout;

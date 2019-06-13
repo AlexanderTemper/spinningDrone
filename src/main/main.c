@@ -22,6 +22,13 @@
 #include "fc/rc_modes.h"
 #include "globals.h"
 #include "output.h"
+#include "fc/runtime_config.h"
+
+#include "drivers/accgyro/gyro_bmg160.h"
+
+#define LED_ROT PIN_PA24
+#define LED_GELB PIN_PB02
+#define LED_GRUEN PIN_PA28
 
 // *************************
 // motor and servo functions
@@ -39,17 +46,22 @@ int16_t rcCommand[4]; // interval [1000;2000] for THROTTLE and [-500;+500] for
 int16_t lookupThrottleRC[THROTTLE_LOOKUP_LENGTH];
 #define PITCH_LOOKUP_LENGTH 7
 int16_t lookupPitchRollRC[PITCH_LOOKUP_LENGTH]; // lookup table for expo & RC rate
+timeUs_t cycleTime = 0; // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
+static int32_t errorGyroI[3] = { 0, 0, 0 };
+static int32_t errorAngleI[2] = { 0, 0 };
 
 
+uint32_t mst = 0;
+bool led2 = false;
 struct config conf;
 struct flags_struct f;
 
 static void checkFirstTime(uint8_t guiReset)
 {
-    conf.P8[ROLL] = 40;
+    conf.P8[ROLL] = 80;
     conf.I8[ROLL] = 30;
     conf.D8[ROLL] = 23;
-    conf.P8[PITCH] = 40;
+    conf.P8[PITCH] = 80;
     conf.I8[PITCH] = 30;
     conf.D8[PITCH] = 23;
     conf.P8[YAW] = 85;
@@ -67,7 +79,7 @@ static void checkFirstTime(uint8_t guiReset)
     conf.P8[PIDNAVR] = 14; // NAV_P * 10;
     conf.I8[PIDNAVR] = 20; // NAV_I * 100;
     conf.D8[PIDNAVR] = 80; // NAV_D * 1000;
-    conf.P8[PIDLEVEL] = 90;
+    conf.P8[PIDLEVEL] = 20;
     conf.I8[PIDLEVEL] = 10;
     conf.D8[PIDLEVEL] = 100;
     conf.P8[PIDMAG] = 40;
@@ -97,11 +109,11 @@ static void checkFirstTime(uint8_t guiReset)
         conf.RxType = 2; //0StandardRX,1sat1024-DSM2,2sat2048-DSMX,3PPMGrSp,4PPMRobHiFu,5PPMHiSanOthers
 
         conf.tpa_breakpoint = 1500;
-        conf.MINTHROTTLE = 1180;
-        conf.MAXTHROTTLE = 1400;
+        conf.MINTHROTTLE = 1020;
+        conf.MAXTHROTTLE = 2000;
         conf.MINCOMMAND = 1000;
         conf.MIDRC = 1500;
-        conf.MINCHECK = 1100;
+        conf.MINCHECK = 1000;
         conf.MAXCHECK = 1900;
         conf.YAW_DIRECTION = 1;
 
@@ -130,9 +142,13 @@ inline int16_t scaleRC(int16_t x){ // 1000 <-> 2000
     x = x - RC_MIN;
     return constrain((int16_t)((float)x * rc_scale) + 1000,1000,2000);
 }
+
+
 static void convertRCData()
 {
-    if(rxCh[15]>500) { // RSSI
+    sbustimeout++; // Count each time Called and no RC Update
+
+    if(rxCh[15]>500 && sbustimeout < 10) { // RSSI
         rcData[THROTTLE] = scaleRC(rxCh[0]);
         rcData[ROLL] = scaleRC(rxCh[1]);
         rcData[PITCH] = scaleRC(rxCh[2]);
@@ -140,7 +156,7 @@ static void convertRCData()
         rcData[AUX1] = rxCh[4];
         rcData[AUX2] = rxCh[5];
     } else {
-        rcData[THROTTLE] = conf.MINCHECK;
+        rcData[THROTTLE] = 1000;
         rcData[ROLL] = conf.MIDRC;
         rcData[PITCH] = conf.MIDRC;
         rcData[YAW] = conf.MIDRC;
@@ -149,9 +165,43 @@ static void convertRCData()
     }
 }
 
+#define ARME_FORCE 0
+static void handleFlags(){
+    if(rcData[AUX1] > 1000){
+        f.ARMED = 1;
+        ENABLE_ARMING_FLAG(ARMED);
+    } else {
+        f.ARMED = 0;
+        DISABLE_ARMING_FLAG(ARMED);
+    }
 
-static int32_t errorGyroI[3] = { 0, 0, 0 };
-static int32_t errorAngleI[2] = { 0, 0 };
+    if(rcData[AUX2] > 500){
+        f.ANGLE_MODE = 1;
+        enableFlightMode(ANGLE_MODE);
+    } else {
+        f.ANGLE_MODE = 0;
+        disableFlightMode(ANGLE_MODE);
+    }
+
+    if(ARME_FORCE){
+        f.ARMED = 1;
+        ENABLE_ARMING_FLAG(ARMED);
+    }
+
+    // perform actions
+    if (!f.ARMED)
+    {
+        errorGyroI[ROLL] = 0;
+        errorGyroI[PITCH] = 0;
+        errorGyroI[YAW] = 0;
+        errorAngleI[ROLL] = 0;
+        errorAngleI[PITCH] = 0;
+    }
+
+    port_pin_set_output_level(LED_GRUEN, f.ARMED);
+}
+
+
 
 static void pidMultiWii(void)
 {
@@ -166,12 +216,10 @@ static void pidMultiWii(void)
     int16_t angle[2] = { 0, 0 };
     angle[ROLL]= attitude.values.roll;
     angle[PITCH]= attitude.values.pitch;
-    float gyroAverage[XYZ_AXIS_COUNT];
-    gyroGetAccumulationAverage(gyroAverage);
     int16_t gyroData[3];
-    gyroData[0] = gyroAverage[0];
-    gyroData[1] = gyroAverage[1];
-    gyroData[2] = gyroAverage[2];
+    gyroData[0] = lrintf(gyro.gyroADCf[0]);
+    gyroData[1] = lrintf(gyro.gyroADCf[1]);
+    gyroData[2] = lrintf(gyro.gyroADCf[2]);
 
     // **** PITCH & ROLL & YAW PID ****
     prop = max(abs(rcCommand[PITCH]), abs(rcCommand[ROLL])); // range [0;500]
@@ -221,6 +269,90 @@ static void pidMultiWii(void)
     }
 }
 
+#define DEBUG_PID 0
+
+static void pidRewrite(void)
+{
+    int32_t errorAngle = 0;
+    int axis;
+    int32_t delta, deltaSum;
+    static int32_t delta1[3], delta2[3];
+    int32_t PTerm, ITerm, DTerm;
+    static int32_t lastError[3] = { 0, 0, 0 };
+    int32_t AngleRateTmp, RateError;
+
+    int16_t angle[2] = { 0, 0 };
+    angle[ROLL]= attitude.values.roll;
+    angle[PITCH]= attitude.values.pitch;
+    int16_t gyroData[3];
+    gyroData[0] = lrintf(gyro.gyroADCf[0]);
+    gyroData[1] = lrintf(gyro.gyroADCf[1]);
+    gyroData[2] = lrintf(gyro.gyroADCf[2]);
+
+    // ----------PID controller----------
+    for (axis = 0; axis < 3; axis++) {
+        // -----Get the desired angle rate depending on flight mode
+        if (axis == 2) { // YAW is always gyro-controlled (MAG correction is applied to rcCommand)
+            AngleRateTmp = (((int32_t)(conf.yawRate + 27) * rcCommand[YAW]) >> 5);
+        } else {
+            // calculate error and limit the angle to 50 degrees max inclination
+            errorAngle = (constrain(rcCommand[axis], -500, +500) - angle[axis] + conf.angleTrim[axis]) / 10.0f; // 16 bits is ok here
+            if (!f.ANGLE_MODE) { //control is GYRO based (ACRO and HORIZON - direct sticks control is applied to rate PID
+                AngleRateTmp = ((int32_t)(conf.rollPitchRate[axis] + 27) * rcCommand[axis]) >> 4;
+
+                if (f.HORIZON_MODE) {
+                    // mix up angle error to desired AngleRateTmp to add a little auto-level feel
+                    AngleRateTmp += (errorAngle * conf.I8[PIDLEVEL]) >> 8;
+                }
+            } else { // it's the ANGLE mode - control is angle based, so control loop is needed
+                AngleRateTmp = (errorAngle * conf.P8[PIDLEVEL]) >> 2;
+            }
+        }
+
+        // --------low-level gyro-based PID. ----------
+        // Used in stand-alone mode for ACRO, controlled by higher level regulators in other modes
+        // -----calculate scaled error.AngleRates
+        // multiplication of rcCommand corresponds to changing the sticks scaling here
+        RateError = AngleRateTmp - gyroData[axis];
+
+        // -----calculate P component
+        PTerm = (RateError * conf.P8[axis]) >> 7;
+        // -----calculate I component
+        // there should be no division before accumulating the error to integrator, because the precision would be reduced.
+        // Precision is critical, as I prevents from long-time drift. Thus, 32 bits integrator is used.
+        // Time correction (to avoid different I scaling for different builds based on average cycle time)
+        // is normalized to cycle time = 2048.
+        errorGyroI[axis] = errorGyroI[axis] + ((RateError * (int32_t)cycleTime) >> 11) * conf.I8[axis];
+
+        // limit maximum integrator value to prevent WindUp - accumulating extreme values when system is saturated.
+        // I coefficient (I8) moved before integration to make limiting independent from PID settings
+        errorGyroI[axis] = constrain(errorGyroI[axis], -2097152, +2097152);
+        ITerm = errorGyroI[axis] >> 13;
+
+        //-----calculate D-term
+        delta = RateError - lastError[axis];  // 16 bits is ok here, the dif between 2 consecutive gyro reads is limited to 800
+        lastError[axis] = RateError;
+
+        // Correct difference by cycle time. Cycle time is jittery (can be different 2 times), so calculated difference
+        // would be scaled by different dt each time. Division by dT fixes that.
+        delta = (delta * ((uint16_t)0xFFFF / (cycleTime >> 4))) >> 6;
+        // add moving average here to reduce noise
+        deltaSum = delta1[axis] + delta2[axis] + delta;
+        delta2[axis] = delta1[axis];
+        delta1[axis] = delta;
+        DTerm = (deltaSum * conf.D8[axis]) >> 8;
+
+        // -----calculate total PID output
+        if(DEBUG_PID && axis == 0){
+            DEBUG_SET(DEBUG_STACK, 0, PTerm);
+            DEBUG_SET(DEBUG_STACK, 1, ITerm);
+            DEBUG_SET(DEBUG_STACK, 2, RateError);
+            DEBUG_SET(DEBUG_STACK, 3, errorAngle);
+        }
+
+        axisPID[axis] = PTerm + ITerm + DTerm;
+    }
+}
 static void activateConfig(void)
 {
     uint8_t i;
@@ -304,6 +436,8 @@ static void annexCode(void)
     }*/
 }
 
+
+
 int main(void)
 {
     /************************* Initializations ******************************/
@@ -317,9 +451,9 @@ int main(void)
     struct port_config config_prt_pin;
     port_get_config_defaults(&config_prt_pin);
     config_prt_pin.direction = PORT_PIN_DIR_OUTPUT;
-    port_pin_set_config(PIN_PA28, &config_prt_pin);
-    port_pin_set_config(PIN_PB02, &config_prt_pin);
-    port_pin_set_config(PIN_PA24, &config_prt_pin);
+    port_pin_set_config(LED_ROT, &config_prt_pin);
+    port_pin_set_config(LED_GELB, &config_prt_pin);
+    port_pin_set_config(LED_GRUEN, &config_prt_pin);
 
     /*SPI master for communicating with sensors*/
     spi_initialize();
@@ -358,20 +492,16 @@ int main(void)
     imuInit();
     mspInit();
 
-    timeMs_t currentTime = 0;
-    timeMs_t controlloopTime = 0;
-    timeMs_t cycleTime = 0;
-    timeMs_t previousTime = 0;
-    timeMs_t rcTime = 0;
-    timeMs_t ledTime = 0;
+    timeUs_t currentTime = 0;
+    timeUs_t controlloopTime = 0;
+    timeUs_t previousTime = 0;
+    timeUs_t rcTime = 0;
+    timeUs_t ledTime = 0;
 
-    timeMs_t rcCodeTime = 0;
-    timeMs_t imuCodeTime = 0;
-    timeMs_t restCodeTime = 0;
+    timeUs_t rcCodeTime = 0;
+    timeUs_t imuCodeTime = 0;
+    timeUs_t restCodeTime = 0;
 
-
-    f.ARMED = 1; // TODO use RCDATA
-    f.ANGLE_MODE = 1;
 
     /************************** Infinite Loop *******************************/
     while (true) {
@@ -383,49 +513,55 @@ int main(void)
             rcTime = currentTime + RCINPUT_LOOPTIME_US;
             mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand,mspFcProcessReply);
             rcCodeTime = micros();
-                sbusFrameStatus();
-                convertRCData();
+            sbusFrameStatus();
+            convertRCData();
             //DEBUG_SET(DEBUG_STACK, 3, micros() - rcCodeTime);
+
         }
 
         /* CONTROL LOOP AND SENSOR PROCESSING */
-        if (currentTime > controlloopTime) { // 400Hz
+        if (currentTime > controlloopTime) {
             controlloopTime = currentTime + MAINCONTROL_LOOPTIME_US;
             // Imu Update
             imuCodeTime = micros();
-                gyroUpdate(micros());
-                accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
-                imuUpdateAttitude(micros());
-            //DEBUG_SET(DEBUG_STACK, 1, micros()- imuCodeTime);
+            gyroUpdate(micros());
+            accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
 
-            restCodeTime = micros();
+            handleFlags(); // IMPORTANT
+
+
+            // Wait for Gyro to callibrate
+            port_pin_set_output_level(LED_GELB, isGyroCalibrationComplete());
+            if(isGyroCalibrationComplete()){
+                imuUpdateAttitude(micros());
+                //DEBUG_SET(DEBUG_STACK, 1, micros()- imuCodeTime);
+                restCodeTime = micros();
                 // Measure loop rate just afer reading the sensors
                 currentTime = micros();
                 cycleTime = currentTime - previousTime;
                 previousTime = currentTime;
 
-                //DEBUG_SET(DEBUG_STACK, 0, cycleTime);
-
                 annexCode();
-                pidMultiWii();
+                pidRewrite();
+                //pidMultiWii();
 
-                //DEBUG_SET(DEBUG_STACK, 0, axisPID[YAW]);
-                //DEBUG_SET(DEBUG_STACK, 1, axisPID[PITCH]);
-                //DEBUG_SET(DEBUG_STACK, 2, axisPID[ROLL]);
-                //DEBUG_SET(DEBUG_STACK, 3, rcCommand[3]);
-                mixTable();
-                writeMotors();
+            }
+
+            mixTable();
+            writeMotors();
+
+            DEBUG_SET(DEBUG_STACK, 0, axisPID[YAW]);
+            DEBUG_SET(DEBUG_STACK, 1, axisPID[PITCH]);
+            DEBUG_SET(DEBUG_STACK, 2, axisPID[ROLL]);
+
             //DEBUG_SET(DEBUG_STACK, 2, micros()- restCodeTime);
-
         }
 
         if(currentTime > ledTime){
             ledTime = currentTime + 100000; // 100ms
-            static uint32_t mst = 0;
             if(mst++ == 10){
-                static bool led2 = false;
                 led2 = !led2;
-                port_pin_set_output_level(PIN_PA24, led2);
+                port_pin_set_output_level(LED_ROT, led2);
                 mst = 0;
             }
 

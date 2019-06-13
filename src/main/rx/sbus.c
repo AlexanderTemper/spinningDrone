@@ -119,6 +119,8 @@ uint16_t sbusChannelData[SBUS_MAX_CHANNEL];
 
 uint16_t *rxCh = &sbusChannelData;
 
+uint16_t sbustimeout;
+
 static uint8_t mysbusChannelsDecode(const sbusChannels_t *channels)
 {
     sbusChannelData[0] = channels->chan0;
@@ -168,6 +170,7 @@ static uint8_t mysbusChannelsDecode(const sbusChannels_t *channels)
 void sbusDataReceive(uint16_t c)
 {
     sbusFrameData_t *sbusFrameData = &sbusd;
+    sbustimeout = 0;
 
     const uint32_t nowUs = micros();
 

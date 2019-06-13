@@ -20,6 +20,7 @@
 /************************************************************************/
 
 extern struct tc_module muTimer;
+extern uint32_t muTimerOverflow;
 extern struct tc_module waitTimer;
 
 /************************************************************************/

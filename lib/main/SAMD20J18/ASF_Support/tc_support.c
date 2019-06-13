@@ -4,6 +4,7 @@
 
 struct tc_module muTimer;
 struct tc_module waitTimer;
+uint32_t muTimerOverflow;
 
 static volatile bool waitTimer_callback_flag;
 //volatile bool tc6_callback_flag;
@@ -32,7 +33,7 @@ void muTimer_configure (void)
 	config_tc.clock_source = GCLK_GENERATOR_3;
 	/* set the initial counter register value */
 	config_tc.counter_32_bit.value = 0;
-
+	muTimerOverflow = 0;
 	tc_init(&muTimer,TC0,&config_tc);
 
 	/* enable the TC module */
@@ -48,6 +49,7 @@ void muTimer_configure_callbacks (void)
 void muTimer_callback (struct tc_module *const module_inst_ptr)
 {
 	/* Reset the counter register value */
+    muTimerOverflow++;
 	tc_set_count_value(&muTimer, 0);
 }
 
