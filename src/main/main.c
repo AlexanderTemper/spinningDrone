@@ -58,15 +58,15 @@ struct flags_struct f;
 
 static void checkFirstTime(uint8_t guiReset)
 {
-    conf.P8[ROLL] = 80;
-    conf.I8[ROLL] = 30;
-    conf.D8[ROLL] = 23;
-    conf.P8[PITCH] = 80;
-    conf.I8[PITCH] = 30;
-    conf.D8[PITCH] = 23;
-    conf.P8[YAW] = 85;
-    conf.I8[YAW] = 45;
-    conf.D8[YAW] = 0;
+    conf.P8[ROLL] = 120;
+    conf.I8[ROLL] = 60;
+    conf.D8[ROLL] = 30;
+    conf.P8[PITCH] = 120;
+    conf.I8[PITCH] = 60;
+    conf.D8[PITCH] = 30;
+    conf.P8[YAW] = 100;
+    conf.I8[YAW] = 50;
+    conf.D8[YAW] = 25;
     conf.P8[PIDALT] = 50;
     conf.I8[PIDALT] = 0;
     conf.D8[PIDALT] = 0;
@@ -79,8 +79,8 @@ static void checkFirstTime(uint8_t guiReset)
     conf.P8[PIDNAVR] = 14; // NAV_P * 10;
     conf.I8[PIDNAVR] = 20; // NAV_I * 100;
     conf.D8[PIDNAVR] = 80; // NAV_D * 1000;
-    conf.P8[PIDLEVEL] = 20;
-    conf.I8[PIDLEVEL] = 10;
+    conf.P8[PIDLEVEL] = 60;
+    conf.I8[PIDLEVEL] = 45;
     conf.D8[PIDLEVEL] = 100;
     conf.P8[PIDMAG] = 40;
     conf.P8[PIDVEL] = 120;
@@ -126,8 +126,8 @@ static void checkFirstTime(uint8_t guiReset)
         conf.s3DMIDDLE = 1500;
         conf.calibState = 0;
 
-        conf.deadband = 40;
-        conf.yawdeadband = 40;
+        conf.deadband = 20;
+        conf.yawdeadband = 20;
     }
 
 }
@@ -143,12 +143,13 @@ inline int16_t scaleRC(int16_t x){ // 1000 <-> 2000
     return constrain((int16_t)((float)x * rc_scale) + 1000,1000,2000);
 }
 
-
+//static int16_t testrc = 1000;
+//static bool dir = true;
 static void convertRCData()
 {
     sbustimeout++; // Count each time Called and no RC Update
 
-    if(rxCh[15]>500 && sbustimeout < 10) { // RSSI
+   if(rxCh[15]>500 && sbustimeout < 10) { // RSSI
         rcData[THROTTLE] = scaleRC(rxCh[0]);
         rcData[ROLL] = scaleRC(rxCh[1]);
         rcData[PITCH] = scaleRC(rxCh[2]);
@@ -163,6 +164,27 @@ static void convertRCData()
         rcData[AUX1] = 0;
         rcData[AUX2] = 0;
     }
+
+
+/*
+        rcData[THROTTLE] = testrc;
+        rcData[ROLL] = testrc;
+        rcData[PITCH] = testrc;
+        rcData[YAW] = testrc;
+        if(dir){
+            testrc++;
+        } else {
+            testrc--;
+        }
+
+        if(testrc == 2000){
+            dir = false;
+        }
+        if(testrc == 1000){
+            dir = true;
+        }
+*/
+
 }
 
 #define ARME_FORCE 0
@@ -189,7 +211,7 @@ static void handleFlags(){
     }
 
     // perform actions
-    if (!f.ARMED)
+    if (!f.ARMED || rcData[THROTTLE] < 1100)
     {
         errorGyroI[ROLL] = 0;
         errorGyroI[PITCH] = 0;
@@ -305,7 +327,7 @@ static void pidRewrite(void)
                     AngleRateTmp += (errorAngle * conf.I8[PIDLEVEL]) >> 8;
                 }
             } else { // it's the ANGLE mode - control is angle based, so control loop is needed
-                AngleRateTmp = (errorAngle * conf.P8[PIDLEVEL]) >> 2;
+                AngleRateTmp = (errorAngle * conf.P8[PIDLEVEL]) >> 4;
             }
         }
 
@@ -550,9 +572,9 @@ int main(void)
             mixTable();
             writeMotors();
 
-            DEBUG_SET(DEBUG_STACK, 0, axisPID[YAW]);
-            DEBUG_SET(DEBUG_STACK, 1, axisPID[PITCH]);
-            DEBUG_SET(DEBUG_STACK, 2, axisPID[ROLL]);
+            //DEBUG_SET(DEBUG_STACK, 0, axisPID[YAW]);
+            //DEBUG_SET(DEBUG_STACK, 1, axisPID[PITCH]);
+            //DEBUG_SET(DEBUG_STACK, 2, axisPID[ROLL]);
 
             //DEBUG_SET(DEBUG_STACK, 2, micros()- restCodeTime);
         }

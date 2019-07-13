@@ -27,7 +27,7 @@
 
 #include "msp.h"
 
-uint16_t test = 0;
+static uint16_t test = 0;
 // TODO besser machen ----
 static const char * const flightControllerIdentifier = BETAFLIGHT_IDENTIFIER; // 4 UPPER
 #define SIGNATURE_LENGTH 32
