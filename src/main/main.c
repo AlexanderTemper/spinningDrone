@@ -446,7 +446,7 @@ static void annexCode(void)
     tmp = constrain(rcData[THROTTLE], conf.MINCHECK, 2000);
     tmp = (uint32_t)(tmp - conf.MINCHECK) * 1000 / (2000 - conf.MINCHECK);       // [MINCHECK;2000] -> [0;1000]
     tmp2 = tmp / 100;
-    rcCommand[THROTTLE] = lookupThrottleRC[tmp2] + (tmp - tmp2 * 100) * (lookupThrottleRC[tmp2 + 1] - lookupThrottleRC[tmp2]) / 100;    // [0;1000] -> expo -> [MINTHROTTLE;MAXTHROTTLE]
+    rcCommand[THROTTLE] = constrain(rcData[THROTTLE], conf.MINCHECK, 2000);//lookupThrottleRC[tmp2] + (tmp - tmp2 * 100) * (lookupThrottleRC[tmp2 + 1] - lookupThrottleRC[tmp2]) / 100;    // [0;1000] -> expo -> [MINTHROTTLE;MAXTHROTTLE]
 
     /*if (f.HEADFREE_MODE) {
             float radDiff = (heading - headFreeModeHold) * M_PI / 180.0f;
