@@ -135,7 +135,8 @@ MCU_COMMON_SRC := \
 	$(SAM_LIB_PATH)/drivers/bmg160_support.c \
 	$(SAM_LIB_PATH)/drivers/bmg160.c \
 	$(SAM_LIB_PATH)/drivers/bmm050_support.c \
-	$(SAM_LIB_PATH)/drivers/bmm050.c
+	$(SAM_LIB_PATH)/drivers/bmm050.c \
+	$(SAM_LIB_PATH)/drivers/vl53l0x.c
 	
 MCU_COMMON_SRC := 	$(MCU_COMMON_SRC)\
 					$(ASF_CSRCS)

@@ -27,6 +27,7 @@ COMMON_SRC = \
             sensors/boardalignment.c \
             sensors/gyro.c \
             sensors/initialisation.c \
+            sensors/tof.c \
             flight/imu.c \
 			fc/rc_modes.c \
 

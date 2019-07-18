@@ -114,15 +114,15 @@ void usart_initialize(void)
 	
 	/* Configure the USART Module */
 	msp_usart_configure();
-	rx_usart_configure();
+	//rx_usart_configure();
 	
 	/* Configure USART callbacks */
 	msp_usart_configure_callbacks();
-	rx_usart_configure_callbacks();
+	//rx_usart_configure_callbacks();
 	
 	/* Enable the interrupt to receive the first byte */
 	usart_read_job(&msp_usart_instance, &usart_rx_byte);
-	usart_read_job(&rx_usart_instance, &rx_byte);
+	//usart_read_job(&rx_usart_instance, &rx_byte);
 }
 
 /*!

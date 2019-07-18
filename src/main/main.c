@@ -5,6 +5,7 @@
 #include "clock_support.h"
 #include "spi_support.h"
 #include "tc_support.h"
+#include "i2c_support.h"
 #include "usart_support.h"
 #include "telemetry/simbleeBridge.h"
 
@@ -25,6 +26,7 @@
 #include "fc/runtime_config.h"
 
 #include "drivers/accgyro/gyro_bmg160.h"
+#include "sensors/tof.h"
 
 #define LED_ROT PIN_PA24
 #define LED_GELB PIN_PB02
@@ -225,7 +227,7 @@ static void handleFlags(){
 
 
 
-static void pidMultiWii(void)
+/*static void pidMultiWii(void)
 {
     int axis, prop;
     int32_t error, errorAngle;
@@ -289,7 +291,7 @@ static void pidMultiWii(void)
         DTerm = (deltaSum * dynD8[axis]) / 32;
         axisPID[axis] = PTerm + ITerm - DTerm;
     }
-}
+}*/
 
 #define DEBUG_PID 0
 
@@ -458,10 +460,20 @@ static void annexCode(void)
     }*/
 }
 
-
+static void errorwait(enum status_code status){
+    if(status != STATUS_OK){
+        port_pin_set_output_level(LED_ROT, true);
+        port_pin_set_output_level(LED_GRUEN, false);
+        while(1);
+    } else {
+        port_pin_set_output_level(LED_ROT, false);
+        port_pin_set_output_level(LED_GRUEN, true);
+    }
+}
 
 int main(void)
 {
+    uint8_t status = STATUS_OK;
     /************************* Initializations ******************************/
     /*Initialize SAMD20 MCU*/
     system_init();
@@ -486,11 +498,18 @@ int main(void)
     /*Initialize UART */
     usart_initialize();
 
+    /*Initialize I2C for communication*/
+    status = i2c_initialize();
+    errorwait(status);
+
     serialInit();
     mspSerialInit();
 
     /*Enable the system interrupts*/
     system_interrupt_enable_global();/* All interrupts have a priority of level 0 which is the highest. */
+
+    tofInit();
+
 
     //Reset Configs
     pgResetAll();
@@ -537,8 +556,6 @@ int main(void)
             rcCodeTime = micros();
             sbusFrameStatus();
             convertRCData();
-            //DEBUG_SET(DEBUG_STACK, 3, micros() - rcCodeTime);
-
         }
 
         /* CONTROL LOOP AND SENSOR PROCESSING */
@@ -549,6 +566,8 @@ int main(void)
             gyroUpdate(micros());
             accUpdate(&accelerometerConfigMutable()->accelerometerTrims);
 
+            readTofData();// TOF Update
+
             handleFlags(); // IMPORTANT
 
 
@@ -556,7 +575,6 @@ int main(void)
             port_pin_set_output_level(LED_GELB, isGyroCalibrationComplete());
             if(isGyroCalibrationComplete()){
                 imuUpdateAttitude(micros());
-                //DEBUG_SET(DEBUG_STACK, 1, micros()- imuCodeTime);
                 restCodeTime = micros();
                 // Measure loop rate just afer reading the sensors
                 currentTime = micros();

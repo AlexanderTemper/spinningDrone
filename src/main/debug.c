@@ -13,9 +13,9 @@ void debugUart(uint32_t module, const char *format, ...) {
         vsnprintf(debugBuffer, MAX_STRING_LENGTH, format, arg_list);
         va_end(arg_list);
         //usart_write_buffer_wait(&usart_instance, (uint8_t *) "ABD ", 4);
-        usart_write_buffer_wait(&usart_instance, (uint8_t *) debugBuffer, sizeof(debugBuffer));
+        usart_write_buffer_wait(&msp_usart_instance, (uint8_t *) debugBuffer, sizeof(debugBuffer));
         //usart_write_buffer_wait(&usart_instance, (uint8_t *) "AB", 2);
-        usart_write_buffer_wait(&usart_instance, (uint8_t *) "\r\n", 2);
+        usart_write_buffer_wait(&msp_usart_instance, (uint8_t *) "\r\n", 2);
         memset(debugBuffer,0,sizeof(debugBuffer));
     }
 
