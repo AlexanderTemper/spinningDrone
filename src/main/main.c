@@ -39,7 +39,7 @@ uint8_t s3D = 0; // 3D an = 1 aus ist 0
 uint8_t NUMBER_MOTOR = 0;
 uint8_t MULTITYPE = 0;
 uint8_t throttleTest = 0;
-int16_t Zadd = 0;
+int16_t Zadd,heading,headFreeModeHold = 0;
 uint8_t dynP8[3], dynI8[3], dynD8[3];
 int16_t rcCommand[4]; // interval [1000;2000] for THROTTLE and [-500;+500] for
 #define THROTTLE_LOOKUP_LENGTH 12
@@ -190,6 +190,9 @@ static void convertRCData()
 #define ARME_FORCE 0
 static void handleFlags(){
     if(rcData[AUX1] > 1000){
+        if(f.ARMED == 0){
+            headFreeModeHold = heading;
+        }
         f.ARMED = 1;
         ENABLE_ARMING_FLAG(ARMED);
     } else {
@@ -225,7 +228,7 @@ static void handleFlags(){
 
 
 
-static void pidMultiWii(void)
+/*static void pidMultiWii(void)
 {
     int axis, prop;
     int32_t error, errorAngle;
@@ -289,7 +292,7 @@ static void pidMultiWii(void)
         DTerm = (deltaSum * dynD8[axis]) / 32;
         axisPID[axis] = PTerm + ITerm - DTerm;
     }
-}
+}*/
 
 #define DEBUG_PID 0
 
@@ -448,14 +451,17 @@ static void annexCode(void)
     tmp2 = tmp / 100;
     rcCommand[THROTTLE] = constrain(rcData[THROTTLE], conf.MINCHECK, 2000);//lookupThrottleRC[tmp2] + (tmp - tmp2 * 100) * (lookupThrottleRC[tmp2 + 1] - lookupThrottleRC[tmp2]) / 100;    // [0;1000] -> expo -> [MINTHROTTLE;MAXTHROTTLE]
 
-    /*if (f.HEADFREE_MODE) {
             float radDiff = (heading - headFreeModeHold) * M_PI / 180.0f;
             float cosDiff = cosf(radDiff);
             float sinDiff = sinf(radDiff);
             int16_t rcCommand_PITCH = rcCommand[PITCH] * cosDiff + rcCommand[ROLL] * sinDiff;
             rcCommand[ROLL] = rcCommand[ROLL] * cosDiff - rcCommand[PITCH] * sinDiff;
             rcCommand[PITCH] = rcCommand_PITCH;
-    }*/
+
+            //DEBUG_SET(DEBUG_ALTITUDE, 1, rcCommand[ROLL]);
+            //DEBUG_SET(DEBUG_ALTITUDE, 2, rcCommand[PITCH]);
+            //DEBUG_SET(DEBUG_ALTITUDE, 2, headFreeModeHold);
+
 }
 
 
@@ -556,7 +562,8 @@ int main(void)
             port_pin_set_output_level(LED_GELB, isGyroCalibrationComplete());
             if(isGyroCalibrationComplete()){
                 imuUpdateAttitude(micros());
-                //DEBUG_SET(DEBUG_STACK, 1, micros()- imuCodeTime);
+                heading = (int16_t)(attitude.values.yaw/10.0f);
+                //DEBUG_SET(DEBUG_ALTITUDE, 0, heading);
                 restCodeTime = micros();
                 // Measure loop rate just afer reading the sensors
                 currentTime = micros();
