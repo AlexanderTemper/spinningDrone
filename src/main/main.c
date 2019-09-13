@@ -451,12 +451,12 @@ static void annexCode(void)
     tmp2 = tmp / 100;
     rcCommand[THROTTLE] = constrain(rcData[THROTTLE], conf.MINCHECK, 2000);//lookupThrottleRC[tmp2] + (tmp - tmp2 * 100) * (lookupThrottleRC[tmp2 + 1] - lookupThrottleRC[tmp2]) / 100;    // [0;1000] -> expo -> [MINTHROTTLE;MAXTHROTTLE]
 
-            float radDiff = (heading - headFreeModeHold) * M_PI / 180.0f;
+       /*     float radDiff = (heading - headFreeModeHold) * M_PI / 180.0f;
             float cosDiff = cosf(radDiff);
             float sinDiff = sinf(radDiff);
             int16_t rcCommand_PITCH = rcCommand[PITCH] * cosDiff + rcCommand[ROLL] * sinDiff;
             rcCommand[ROLL] = rcCommand[ROLL] * cosDiff - rcCommand[PITCH] * sinDiff;
-            rcCommand[PITCH] = rcCommand_PITCH;
+            rcCommand[PITCH] = rcCommand_PITCH;*/
 
             //DEBUG_SET(DEBUG_ALTITUDE, 1, rcCommand[ROLL]);
             //DEBUG_SET(DEBUG_ALTITUDE, 2, rcCommand[PITCH]);

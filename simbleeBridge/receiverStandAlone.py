@@ -15,7 +15,7 @@ TCP_PORT = 5005
 # 2d30c083-f39f-4ce6-923f-3484ea480596 zum schreiben
 
 ADDRESS_TYPE   = pygatt.BLEAddressType.random
-DEVICE_ADDRESS = "C4:D0:0D:79:59:91"
+DEVICE_ADDRESS = "c0:08:80:00:08:80"
 adapter = pygatt.GATTToolBackend()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,7 +29,8 @@ print('Connected to :', addr[0], ':', addr[1])
 def sendControlData(device,data):
     try: 
         #print "ble send", data
-        device.char_write_handle(0x0014, bytearray(data)) 
+        device.char_write("00008882-0000-1000-8000-00805f9b34fb", bytearray(data), wait_for_response=False)
+        #device.char_write_handle(0x0014, bytearray(data)) 
         return True
     except pygatt.exceptions.NotConnectedError:
         print('error')
@@ -57,7 +58,7 @@ try:
     while not device:
         device = connect()
         
-    device.subscribe("2d30c082-f39f-4ce6-923f-3484ea480596",callback=handle_data)
+    device.subscribe("00008881-0000-1000-8000-00805f9b34fb",callback=handle_data)
     
     while True:
         time.sleep(0.01)
