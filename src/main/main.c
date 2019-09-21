@@ -39,7 +39,7 @@ uint8_t s3D = 0; // 3D an = 1 aus ist 0
 uint8_t NUMBER_MOTOR = 0;
 uint8_t MULTITYPE = 0;
 uint8_t throttleTest = 0;
-int16_t Zadd,heading,headFreeModeHold = 0;
+int16_t Zadd, heading, headFreeModeHold = 0;
 uint8_t dynP8[3], dynI8[3], dynD8[3];
 int16_t rcCommand[4]; // interval [1000;2000] for THROTTLE and [-500;+500] for
 #define THROTTLE_LOOKUP_LENGTH 12
@@ -47,14 +47,20 @@ int16_t lookupThrottleRC[THROTTLE_LOOKUP_LENGTH];
 #define PITCH_LOOKUP_LENGTH 7
 int16_t lookupPitchRollRC[PITCH_LOOKUP_LENGTH]; // lookup table for expo & RC rate
 timeUs_t cycleTime = 0; // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
-static int32_t errorGyroI[3] = { 0, 0, 0 };
-static int32_t errorAngleI[2] = { 0, 0 };
-
+static int32_t errorGyroI[3] = {
+        0,
+        0,
+        0 };
+static int32_t errorAngleI[2] = {
+        0,
+        0 };
 
 uint32_t mst = 0;
 bool led2 = false;
 struct config conf;
 struct flags_struct f;
+
+uint16_t msp_rc_timeout = 0;
 
 static void checkFirstTime(uint8_t guiReset)
 {
@@ -137,10 +143,11 @@ void mixerSetThrottleAngleCorrection(int16_t correctionValue)
     Zadd = correctionValue;
 }
 
-float rc_scale = 1000/(float)(RC_MAX - RC_MIN);
-inline int16_t scaleRC(int16_t x){ // 1000 <-> 2000
+float rc_scale = 1000 / (float) (RC_MAX - RC_MIN);
+inline int16_t scaleRC(int16_t x)
+{ // 1000 <-> 2000
     x = x - RC_MIN;
-    return constrain((int16_t)((float)x * rc_scale) + 1000,1000,2000);
+    return constrain((int16_t )((float )x * rc_scale) + 1000, 1000, 2000);
 }
 
 //static int16_t testrc = 1000;
@@ -149,7 +156,7 @@ static void convertRCData()
 {
     sbustimeout++; // Count each time Called and no RC Update
 
-   if(rxCh[15]>500 && sbustimeout < 10) { // RSSI
+    if (rxCh[15] > 500 && sbustimeout < 10) { // RSSI
         rcData[THROTTLE] = scaleRC(rxCh[0]);
         rcData[ROLL] = scaleRC(rxCh[1]);
         rcData[PITCH] = scaleRC(rxCh[2]);
@@ -165,32 +172,32 @@ static void convertRCData()
         rcData[AUX2] = 0;
     }
 
+    /*
+     rcData[THROTTLE] = testrc;
+     rcData[ROLL] = testrc;
+     rcData[PITCH] = testrc;
+     rcData[YAW] = testrc;
+     if(dir){
+     testrc++;
+     } else {
+     testrc--;
+     }
 
-/*
-        rcData[THROTTLE] = testrc;
-        rcData[ROLL] = testrc;
-        rcData[PITCH] = testrc;
-        rcData[YAW] = testrc;
-        if(dir){
-            testrc++;
-        } else {
-            testrc--;
-        }
-
-        if(testrc == 2000){
-            dir = false;
-        }
-        if(testrc == 1000){
-            dir = true;
-        }
-*/
+     if(testrc == 2000){
+     dir = false;
+     }
+     if(testrc == 1000){
+     dir = true;
+     }
+     */
 
 }
 
 #define ARME_FORCE 0
-static void handleFlags(){
-    if(rcData[AUX1] > 1000){
-        if(f.ARMED == 0){
+static void handleFlags()
+{
+    if (rcData[AUX1] > 1000) {
+        if (f.ARMED == 0) {
             headFreeModeHold = heading;
         }
         f.ARMED = 1;
@@ -200,7 +207,7 @@ static void handleFlags(){
         DISABLE_ARMING_FLAG(ARMED);
     }
 
-    if(rcData[AUX2] > 500){
+    if (rcData[AUX2] < 500) {
         f.ANGLE_MODE = 1;
         enableFlightMode(ANGLE_MODE);
     } else {
@@ -208,14 +215,13 @@ static void handleFlags(){
         disableFlightMode(ANGLE_MODE);
     }
 
-    if(ARME_FORCE){
+    if (ARME_FORCE) {
         f.ARMED = 1;
         ENABLE_ARMING_FLAG(ARMED);
     }
 
     // perform actions
-    if (!f.ARMED || rcData[THROTTLE] < 1100)
-    {
+    if (!f.ARMED || rcData[THROTTLE] < 1100) {
         errorGyroI[ROLL] = 0;
         errorGyroI[PITCH] = 0;
         errorGyroI[YAW] = 0;
@@ -226,73 +232,71 @@ static void handleFlags(){
     port_pin_set_output_level(LED_GRUEN, f.ARMED);
 }
 
-
-
 /*static void pidMultiWii(void)
-{
-    int axis, prop;
-    int32_t error, errorAngle;
-    int32_t PTerm, ITerm, PTermACC = 0, ITermACC = 0, PTermGYRO = 0, ITermGYRO = 0, DTerm;
-    static int16_t lastGyro[3] = { 0, 0, 0 };
-    static int32_t delta1[3], delta2[3];
-    int32_t deltaSum;
-    int32_t delta;
+ {
+ int axis, prop;
+ int32_t error, errorAngle;
+ int32_t PTerm, ITerm, PTermACC = 0, ITermACC = 0, PTermGYRO = 0, ITermGYRO = 0, DTerm;
+ static int16_t lastGyro[3] = { 0, 0, 0 };
+ static int32_t delta1[3], delta2[3];
+ int32_t deltaSum;
+ int32_t delta;
 
-    int16_t angle[2] = { 0, 0 };
-    angle[ROLL]= attitude.values.roll;
-    angle[PITCH]= attitude.values.pitch;
-    int16_t gyroData[3];
-    gyroData[0] = lrintf(gyro.gyroADCf[0]);
-    gyroData[1] = lrintf(gyro.gyroADCf[1]);
-    gyroData[2] = lrintf(gyro.gyroADCf[2]);
+ int16_t angle[2] = { 0, 0 };
+ angle[ROLL]= attitude.values.roll;
+ angle[PITCH]= attitude.values.pitch;
+ int16_t gyroData[3];
+ gyroData[0] = lrintf(gyro.gyroADCf[0]);
+ gyroData[1] = lrintf(gyro.gyroADCf[1]);
+ gyroData[2] = lrintf(gyro.gyroADCf[2]);
 
-    // **** PITCH & ROLL & YAW PID ****
-    prop = max(abs(rcCommand[PITCH]), abs(rcCommand[ROLL])); // range [0;500]
-    for (axis = 0; axis < 3; axis++) {
-        if ((f.ANGLE_MODE || f.HORIZON_MODE) && axis < 2) { // MODE relying on ACC
-            // 50 degrees max inclination
-            errorAngle = constrain(2 * rcCommand[axis], -((int)conf.max_angle_inclination), +conf.max_angle_inclination) - angle[axis] + conf.angleTrim[axis];
+ // **** PITCH & ROLL & YAW PID ****
+ prop = max(abs(rcCommand[PITCH]), abs(rcCommand[ROLL])); // range [0;500]
+ for (axis = 0; axis < 3; axis++) {
+ if ((f.ANGLE_MODE || f.HORIZON_MODE) && axis < 2) { // MODE relying on ACC
+ // 50 degrees max inclination
+ errorAngle = constrain(2 * rcCommand[axis], -((int)conf.max_angle_inclination), +conf.max_angle_inclination) - angle[axis] + conf.angleTrim[axis];
 
-            PTermACC = errorAngle * conf.P8[PIDLEVEL] / 100; // 32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
-            PTermACC = constrain(PTermACC, -conf.D8[PIDLEVEL] * 5, +conf.D8[PIDLEVEL] * 5);
+ PTermACC = errorAngle * conf.P8[PIDLEVEL] / 100; // 32 bits is needed for calculation: errorAngle*P8[PIDLEVEL] could exceed 32768   16 bits is ok for result
+ PTermACC = constrain(PTermACC, -conf.D8[PIDLEVEL] * 5, +conf.D8[PIDLEVEL] * 5);
 
-            errorAngleI[axis] = constrain(errorAngleI[axis] + errorAngle, -10000, +10000); // WindUp
-            ITermACC = (errorAngleI[axis] * conf.I8[PIDLEVEL]) >> 12;
-        }
-        if (!f.ANGLE_MODE || f.HORIZON_MODE || axis == 2) { // MODE relying on GYRO or YAW axis
-            error = (int32_t)rcCommand[axis] * 10 * 8 / conf.P8[axis];
-            error -= gyroData[axis];
+ errorAngleI[axis] = constrain(errorAngleI[axis] + errorAngle, -10000, +10000); // WindUp
+ ITermACC = (errorAngleI[axis] * conf.I8[PIDLEVEL]) >> 12;
+ }
+ if (!f.ANGLE_MODE || f.HORIZON_MODE || axis == 2) { // MODE relying on GYRO or YAW axis
+ error = (int32_t)rcCommand[axis] * 10 * 8 / conf.P8[axis];
+ error -= gyroData[axis];
 
-            PTermGYRO = rcCommand[axis];
+ PTermGYRO = rcCommand[axis];
 
-            errorGyroI[axis] = constrain(errorGyroI[axis] + error, -16000, +16000); // WindUp
-            if ((abs(gyroData[axis]) > 640) || ((axis == YAW) && (abs(rcCommand[axis]) > 100)))
-                errorGyroI[axis] = 0;
-            ITermGYRO = (errorGyroI[axis] / 125 * conf.I8[axis]) >> 6;
-        }
-        if (f.HORIZON_MODE && axis < 2) {
-            PTerm = (PTermACC * (500 - prop) + PTermGYRO * prop) / 500;
-            ITerm = (ITermACC * (500 - prop) + ITermGYRO * prop) / 500;
-        } else {
-            if (f.ANGLE_MODE && axis < 2) {
-                PTerm = PTermACC;
-                ITerm = ITermACC;
-            } else {
-                PTerm = PTermGYRO;
-                ITerm = ITermGYRO;
-            }
-        }
+ errorGyroI[axis] = constrain(errorGyroI[axis] + error, -16000, +16000); // WindUp
+ if ((abs(gyroData[axis]) > 640) || ((axis == YAW) && (abs(rcCommand[axis]) > 100)))
+ errorGyroI[axis] = 0;
+ ITermGYRO = (errorGyroI[axis] / 125 * conf.I8[axis]) >> 6;
+ }
+ if (f.HORIZON_MODE && axis < 2) {
+ PTerm = (PTermACC * (500 - prop) + PTermGYRO * prop) / 500;
+ ITerm = (ITermACC * (500 - prop) + ITermGYRO * prop) / 500;
+ } else {
+ if (f.ANGLE_MODE && axis < 2) {
+ PTerm = PTermACC;
+ ITerm = ITermACC;
+ } else {
+ PTerm = PTermGYRO;
+ ITerm = ITermGYRO;
+ }
+ }
 
-        PTerm -= (int32_t)gyroData[axis] * dynP8[axis] / 10 / 8; // 32 bits is needed for calculation
-        delta = gyroData[axis] - lastGyro[axis];
-        lastGyro[axis] = gyroData[axis];
-        deltaSum = delta1[axis] + delta2[axis] + delta;
-        delta2[axis] = delta1[axis];
-        delta1[axis] = delta;
-        DTerm = (deltaSum * dynD8[axis]) / 32;
-        axisPID[axis] = PTerm + ITerm - DTerm;
-    }
-}*/
+ PTerm -= (int32_t)gyroData[axis] * dynP8[axis] / 10 / 8; // 32 bits is needed for calculation
+ delta = gyroData[axis] - lastGyro[axis];
+ lastGyro[axis] = gyroData[axis];
+ deltaSum = delta1[axis] + delta2[axis] + delta;
+ delta2[axis] = delta1[axis];
+ delta1[axis] = delta;
+ DTerm = (deltaSum * dynD8[axis]) / 32;
+ axisPID[axis] = PTerm + ITerm - DTerm;
+ }
+ }*/
 
 #define DEBUG_PID 0
 
@@ -303,12 +307,17 @@ static void pidRewrite(void)
     int32_t delta, deltaSum;
     static int32_t delta1[3], delta2[3];
     int32_t PTerm, ITerm, DTerm;
-    static int32_t lastError[3] = { 0, 0, 0 };
+    static int32_t lastError[3] = {
+            0,
+            0,
+            0 };
     int32_t AngleRateTmp, RateError;
 
-    int16_t angle[2] = { 0, 0 };
-    angle[ROLL]= attitude.values.roll;
-    angle[PITCH]= attitude.values.pitch;
+    int16_t angle[2] = {
+            0,
+            0 };
+    angle[ROLL] = attitude.values.roll;
+    angle[PITCH] = attitude.values.pitch;
     int16_t gyroData[3];
     gyroData[0] = lrintf(gyro.gyroADCf[0]);
     gyroData[1] = lrintf(gyro.gyroADCf[1]);
@@ -318,12 +327,12 @@ static void pidRewrite(void)
     for (axis = 0; axis < 3; axis++) {
         // -----Get the desired angle rate depending on flight mode
         if (axis == 2) { // YAW is always gyro-controlled (MAG correction is applied to rcCommand)
-            AngleRateTmp = (((int32_t)(conf.yawRate + 27) * rcCommand[YAW]) >> 5);
+            AngleRateTmp = (((int32_t) (conf.yawRate + 27) * rcCommand[YAW]) >> 5);
         } else {
             // calculate error and limit the angle to 50 degrees max inclination
             errorAngle = (constrain(rcCommand[axis], -500, +500) - angle[axis] + conf.angleTrim[axis]) / 10.0f; // 16 bits is ok here
             if (!f.ANGLE_MODE) { //control is GYRO based (ACRO and HORIZON - direct sticks control is applied to rate PID
-                AngleRateTmp = ((int32_t)(conf.rollPitchRate[axis] + 27) * rcCommand[axis]) >> 4;
+                AngleRateTmp = ((int32_t) (conf.rollPitchRate[axis] + 27) * rcCommand[axis]) >> 4;
 
                 if (f.HORIZON_MODE) {
                     // mix up angle error to desired AngleRateTmp to add a little auto-level feel
@@ -347,7 +356,7 @@ static void pidRewrite(void)
         // Precision is critical, as I prevents from long-time drift. Thus, 32 bits integrator is used.
         // Time correction (to avoid different I scaling for different builds based on average cycle time)
         // is normalized to cycle time = 2048.
-        errorGyroI[axis] = errorGyroI[axis] + ((RateError * (int32_t)cycleTime) >> 11) * conf.I8[axis];
+        errorGyroI[axis] = errorGyroI[axis] + ((RateError * (int32_t) cycleTime) >> 11) * conf.I8[axis];
 
         // limit maximum integrator value to prevent WindUp - accumulating extreme values when system is saturated.
         // I coefficient (I8) moved before integration to make limiting independent from PID settings
@@ -360,7 +369,7 @@ static void pidRewrite(void)
 
         // Correct difference by cycle time. Cycle time is jittery (can be different 2 times), so calculated difference
         // would be scaled by different dt each time. Division by dT fixes that.
-        delta = (delta * ((uint16_t)0xFFFF / (cycleTime >> 4))) >> 6;
+        delta = (delta * ((uint16_t) 0xFFFF / (cycleTime >> 4))) >> 6;
         // add moving average here to reduce noise
         deltaSum = delta1[axis] + delta2[axis] + delta;
         delta2[axis] = delta1[axis];
@@ -368,7 +377,7 @@ static void pidRewrite(void)
         DTerm = (deltaSum * conf.D8[axis]) >> 8;
 
         // -----calculate total PID output
-        if(DEBUG_PID && axis == 0){
+        if (DEBUG_PID && axis == 0) {
             DEBUG_SET(DEBUG_STACK, 0, PTerm);
             DEBUG_SET(DEBUG_STACK, 1, ITerm);
             DEBUG_SET(DEBUG_STACK, 2, RateError);
@@ -382,7 +391,7 @@ static void activateConfig(void)
 {
     uint8_t i;
     for (i = 0; i < PITCH_LOOKUP_LENGTH; i++) {
-        lookupPitchRollRC[i] = (2500 + conf.rcExpo8 * (i * i - 25)) * i * (int32_t)conf.rcRate8 / 2500;
+        lookupPitchRollRC[i] = (2500 + conf.rcExpo8 * (i * i - 25)) * i * (int32_t) conf.rcRate8 / 2500;
     }
 
     for (i = 0; i < THROTTLE_LOOKUP_LENGTH; i++) {
@@ -392,8 +401,8 @@ static void activateConfig(void)
             y = 100 - conf.thrMid8;
         if (tmp < 0)
             y = conf.thrMid8;
-        lookupThrottleRC[i] = 10 * conf.thrMid8 + tmp * (100 - conf.thrExpo8 + (int32_t)conf.thrExpo8 * (tmp * tmp) / (y * y)) / 10;
-        lookupThrottleRC[i] = conf.MINTHROTTLE + (int32_t)(conf.MAXTHROTTLE - conf.MINTHROTTLE) * lookupThrottleRC[i] / 1000; // [MINTHROTTLE;MAXTHROTTLE]
+        lookupThrottleRC[i] = 10 * conf.thrMid8 + tmp * (100 - conf.thrExpo8 + (int32_t) conf.thrExpo8 * (tmp * tmp) / (y * y)) / 10;
+        lookupThrottleRC[i] = conf.MINTHROTTLE + (int32_t) (conf.MAXTHROTTLE - conf.MINTHROTTLE) * lookupThrottleRC[i] / 1000; // [MINTHROTTLE;MAXTHROTTLE]
     }
 }
 static void annexCode(void)
@@ -407,7 +416,7 @@ static void annexCode(void)
         prop2 = 100;
     } else {
         if (rcData[THROTTLE] < 2000) {
-            prop2 = 100 - (uint16_t)conf.dynThrPID * (rcData[THROTTLE] - conf.tpa_breakpoint) / (2000 - conf.tpa_breakpoint);
+            prop2 = 100 - (uint16_t) conf.dynThrPID * (rcData[THROTTLE] - conf.tpa_breakpoint) / (2000 - conf.tpa_breakpoint);
         } else {
             prop2 = 100 - conf.dynThrPID;
         }
@@ -426,8 +435,8 @@ static void annexCode(void)
 
             tmp2 = tmp / 100;
             rcCommand[axis] = lookupPitchRollRC[tmp2] + (tmp - tmp2 * 100) * (lookupPitchRollRC[tmp2 + 1] - lookupPitchRollRC[tmp2]) / 100;
-            prop1 = 100 - (uint16_t)conf.rollPitchRate[axis] * tmp / 500;
-            prop1 = (uint16_t)prop1 * prop2 / 100;
+            prop1 = 100 - (uint16_t) conf.rollPitchRate[axis] * tmp / 500;
+            prop1 = (uint16_t) prop1 * prop2 / 100;
         } else {                // YAW
             if (conf.yawdeadband) {
                 if (tmp > conf.yawdeadband) {
@@ -437,34 +446,31 @@ static void annexCode(void)
                 }
             }
             rcCommand[axis] = tmp * -conf.YAW_DIRECTION;
-            prop1 = 100 - (uint16_t)conf.yawRate * abs(tmp) / 500;
+            prop1 = 100 - (uint16_t) conf.yawRate * abs(tmp) / 500;
         }
-        dynP8[axis] = (uint16_t)conf.P8[axis] * prop1 / 100;
-        dynI8[axis] = (uint16_t)conf.I8[axis] * prop1 / 100;
-        dynD8[axis] = (uint16_t)conf.D8[axis] * prop1 / 100;
+        dynP8[axis] = (uint16_t) conf.P8[axis] * prop1 / 100;
+        dynI8[axis] = (uint16_t) conf.I8[axis] * prop1 / 100;
+        dynD8[axis] = (uint16_t) conf.D8[axis] * prop1 / 100;
         if (rcData[axis] < conf.MIDRC)
             rcCommand[axis] = -rcCommand[axis];
     }
 
     tmp = constrain(rcData[THROTTLE], conf.MINCHECK, 2000);
-    tmp = (uint32_t)(tmp - conf.MINCHECK) * 1000 / (2000 - conf.MINCHECK);       // [MINCHECK;2000] -> [0;1000]
+    tmp = (uint32_t) (tmp - conf.MINCHECK) * 1000 / (2000 - conf.MINCHECK);       // [MINCHECK;2000] -> [0;1000]
     tmp2 = tmp / 100;
-    rcCommand[THROTTLE] = constrain(rcData[THROTTLE], conf.MINCHECK, 2000);//lookupThrottleRC[tmp2] + (tmp - tmp2 * 100) * (lookupThrottleRC[tmp2 + 1] - lookupThrottleRC[tmp2]) / 100;    // [0;1000] -> expo -> [MINTHROTTLE;MAXTHROTTLE]
+    rcCommand[THROTTLE] = constrain(rcData[THROTTLE], conf.MINCHECK, 2000);       //lookupThrottleRC[tmp2] + (tmp - tmp2 * 100) * (lookupThrottleRC[tmp2 + 1] - lookupThrottleRC[tmp2]) / 100;    // [0;1000] -> expo -> [MINTHROTTLE;MAXTHROTTLE]
 
-       /*     float radDiff = (heading - headFreeModeHold) * M_PI / 180.0f;
-            float cosDiff = cosf(radDiff);
-            float sinDiff = sinf(radDiff);
-            int16_t rcCommand_PITCH = rcCommand[PITCH] * cosDiff + rcCommand[ROLL] * sinDiff;
-            rcCommand[ROLL] = rcCommand[ROLL] * cosDiff - rcCommand[PITCH] * sinDiff;
-            rcCommand[PITCH] = rcCommand_PITCH;*/
+    /*     float radDiff = (heading - headFreeModeHold) * M_PI / 180.0f;
+     float cosDiff = cosf(radDiff);
+     float sinDiff = sinf(radDiff);
+     int16_t rcCommand_PITCH = rcCommand[PITCH] * cosDiff + rcCommand[ROLL] * sinDiff;
+     rcCommand[ROLL] = rcCommand[ROLL] * cosDiff - rcCommand[PITCH] * sinDiff;
+     rcCommand[PITCH] = rcCommand_PITCH;*/
 
-            //DEBUG_SET(DEBUG_ALTITUDE, 1, rcCommand[ROLL]);
-            //DEBUG_SET(DEBUG_ALTITUDE, 2, rcCommand[PITCH]);
-            //DEBUG_SET(DEBUG_ALTITUDE, 2, headFreeModeHold);
-
+    //DEBUG_SET(DEBUG_ALTITUDE, 1, rcCommand[ROLL]);
+    //DEBUG_SET(DEBUG_ALTITUDE, 2, rcCommand[PITCH]);
+    //DEBUG_SET(DEBUG_ALTITUDE, 2, headFreeModeHold);
 }
-
-
 
 int main(void)
 {
@@ -530,19 +536,27 @@ int main(void)
     timeUs_t imuCodeTime = 0;
     timeUs_t restCodeTime = 0;
 
-
     /************************** Infinite Loop *******************************/
     while (true) {
         //mspSerialPush(MSP_API_VERSION, NULL, 0, MSP_DIRECTION_REQUEST);
         currentTime = micros();
 
         /* RC INPUT DATA PROCESSING */
-        if (currentTime > rcTime ) { // 50Hz
+        if (currentTime > rcTime) { // 50Hz
             rcTime = currentTime + RCINPUT_LOOPTIME_US;
-            mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand,mspFcProcessReply);
+            mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand, mspFcProcessReply);
             rcCodeTime = micros();
-            sbusFrameStatus();
-            convertRCData();
+            msp_rc_timeout++;
+            if (msp_rc_timeout > 10) {
+                rcData[THROTTLE] = 1000;
+                rcData[ROLL] = conf.MIDRC;
+                rcData[PITCH] = conf.MIDRC;
+                rcData[YAW] = conf.MIDRC;
+                rcData[AUX1] = 0;
+                rcData[AUX2] = 0;
+            }
+            //sbusFrameStatus();
+            //convertRCData();
             //DEBUG_SET(DEBUG_STACK, 3, micros() - rcCodeTime);
 
         }
@@ -557,12 +571,11 @@ int main(void)
 
             handleFlags(); // IMPORTANT
 
-
             // Wait for Gyro to callibrate
             port_pin_set_output_level(LED_GELB, isGyroCalibrationComplete());
-            if(isGyroCalibrationComplete()){
+            if (isGyroCalibrationComplete()) {
                 imuUpdateAttitude(micros());
-                heading = (int16_t)(attitude.values.yaw/10.0f);
+                heading = (int16_t) (attitude.values.yaw / 10.0f);
                 //DEBUG_SET(DEBUG_ALTITUDE, 0, heading);
                 restCodeTime = micros();
                 // Measure loop rate just afer reading the sensors
@@ -586,9 +599,9 @@ int main(void)
             //DEBUG_SET(DEBUG_STACK, 2, micros()- restCodeTime);
         }
 
-        if(currentTime > ledTime){
+        if (currentTime > ledTime) {
             ledTime = currentTime + 100000; // 100ms
-            if(mst++ == 10){
+            if (mst++ == 10) {
                 led2 = !led2;
                 port_pin_set_output_level(LED_ROT, led2);
                 mst = 0;

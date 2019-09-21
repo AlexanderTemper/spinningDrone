@@ -14,7 +14,6 @@
 #include "msp/msp_protocol.h"
 #include "msp/msp_serial.h"
 
-
 #include "fc/rc_modes.h"
 #include "fc/runtime_config.h"
 #include "sensors/sensors.h"
@@ -49,28 +48,28 @@ static uint32_t getFeatureMask(void)
     }
 }
 
+static bool mspCommonProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFnPtr *mspPostProcessFn)
+{
+    UNUSED(mspPostProcessFn);
 
-static bool mspCommonProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProcessFnPtr *mspPostProcessFn) {
-	UNUSED(mspPostProcessFn);
-
-	switch (cmdMSP) {
-	case MSP_BATTERY_CONFIG: //TODO
-	        sbufWriteU8(dst, (330 + 5) / 10);
-	        sbufWriteU8(dst, (430 + 5) / 10);
-	        sbufWriteU8(dst, (350 + 5) / 10);
-	        sbufWriteU16(dst, 2500 );
-	        sbufWriteU8(dst, 0);
-	        sbufWriteU8(dst, 0);
-	        sbufWriteU16(dst, 330);
-	        sbufWriteU16(dst, 430);
-	        sbufWriteU16(dst, 350);
-	break;
-	case MSP_API_VERSION:
-		sbufWriteU8(dst, MSP_PROTOCOL_VERSION);
-		sbufWriteU8(dst, API_VERSION_MAJOR);
-		sbufWriteU8(dst, API_VERSION_MINOR);
-		break;
-	case MSP_FC_VARIANT:
+    switch (cmdMSP) {
+    case MSP_BATTERY_CONFIG: //TODO
+        sbufWriteU8(dst, (330 + 5) / 10);
+        sbufWriteU8(dst, (430 + 5) / 10);
+        sbufWriteU8(dst, (350 + 5) / 10);
+        sbufWriteU16(dst, 2500);
+        sbufWriteU8(dst, 0);
+        sbufWriteU8(dst, 0);
+        sbufWriteU16(dst, 330);
+        sbufWriteU16(dst, 430);
+        sbufWriteU16(dst, 350);
+        break;
+    case MSP_API_VERSION:
+        sbufWriteU8(dst, MSP_PROTOCOL_VERSION);
+        sbufWriteU8(dst, API_VERSION_MAJOR);
+        sbufWriteU8(dst, API_VERSION_MINOR);
+        break;
+    case MSP_FC_VARIANT:
         sbufWriteData(dst, flightControllerIdentifier, FLIGHT_CONTROLLER_IDENTIFIER_LENGTH);
         break;
     case MSP_FC_VERSION:
@@ -79,8 +78,7 @@ static bool mspCommonProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProce
         sbufWriteU8(dst, FC_VERSION_PATCH_LEVEL);
         break;
 
-    case MSP_BOARD_INFO:
-    {
+    case MSP_BOARD_INFO: {
         sbufWriteData(dst, "BEBR", BOARD_IDENTIFIER_LENGTH);
         sbufWriteU16(dst, 0); // No other build targets currently have hardware revision detection
         sbufWriteU8(dst, 0);  // 0 == FC
@@ -110,18 +108,18 @@ static bool mspCommonProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProce
         sbufWriteU16(dst, test++);
         break;
     case MSP_DEBUG:
-            for (int i = 0; i < DEBUG16_VALUE_COUNT; i++) {
-                sbufWriteU16(dst, debug[i]);      // 4 variables are here for general monitoring purpose
-            }
-    break;
+        for (int i = 0; i < DEBUG16_VALUE_COUNT; i++) {
+            sbufWriteU16(dst, debug[i]);      // 4 variables are here for general monitoring purpose
+        }
+        break;
     case MSP_UID:
         sbufWriteU32(dst, 0);
         sbufWriteU32(dst, 1);
         sbufWriteU32(dst, 2);
         break;
     case MSP_FEATURE_CONFIG:
-            sbufWriteU32(dst, getFeatureMask());
-    break;
+        sbufWriteU32(dst, getFeatureMask());
+        break;
     default:
         return false;
     }
@@ -129,155 +127,166 @@ static bool mspCommonProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst, mspPostProce
 }
 
 int dummy;
-static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst) {
-	bool unsupportedCommand = false;
-	switch (cmdMSP) {
-	case MSP_STATUS_EX:
-	    case MSP_STATUS:
-	        {
-	        	boxBitmask_t flightModeFlags;
-	            const int flagBits = packFlightModeFlags(&flightModeFlags);
+static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst)
+{
+    bool unsupportedCommand = false;
+    switch (cmdMSP) {
+    case MSP_STATUS_EX:
+    case MSP_STATUS: {
+        boxBitmask_t flightModeFlags;
+        const int flagBits = packFlightModeFlags(&flightModeFlags);
 
-	            sbufWriteU16(dst, cycleTime);
-	#ifdef USE_I2C
-	            sbufWriteU16(dst, i2cGetErrorCounter());
-	#else
-	            sbufWriteU16(dst, 0);
-	#endif
-	            sbufWriteU16(dst, sensors(SENSOR_ACC) | sensors(SENSOR_BARO) << 1 | sensors(SENSOR_MAG) << 2 | sensors(SENSOR_GPS) << 3 | sensors(SENSOR_RANGEFINDER) << 4 | sensors(SENSOR_GYRO) << 5);
-	            sbufWriteData(dst, &flightModeFlags, 4);        // unconditional part of flags, first 32 bits
-	            sbufWriteU8(dst, 0);//getCurrentPidProfileIndex());
-	            sbufWriteU16(dst, 10);//constrain(averageSystemLoadPercent, 0, 100));
-	            if (cmdMSP == MSP_STATUS_EX) {
-	                sbufWriteU8(dst, 0);//PID_PROFILE_COUNT);
-	                sbufWriteU8(dst, 0);//getCurrentControlRateProfileIndex());
-	            } else {  // MSP_STATUS
-	                sbufWriteU16(dst, 0); // gyro cycle time
-	            }
+        sbufWriteU16(dst, cycleTime);
+#ifdef USE_I2C
+        sbufWriteU16(dst, i2cGetErrorCounter());
+#else
+        sbufWriteU16(dst, 0);
+#endif
+        sbufWriteU16(dst, sensors(SENSOR_ACC) | sensors(SENSOR_BARO) << 1 | sensors(SENSOR_MAG) << 2 | sensors(SENSOR_GPS) << 3 | sensors(SENSOR_RANGEFINDER) << 4 | sensors(SENSOR_GYRO) << 5);
+        sbufWriteData(dst, &flightModeFlags, 4);        // unconditional part of flags, first 32 bits
+        sbufWriteU8(dst, 0);        //getCurrentPidProfileIndex());
+        sbufWriteU16(dst, 10);        //constrain(averageSystemLoadPercent, 0, 100));
+        if (cmdMSP == MSP_STATUS_EX) {
+            sbufWriteU8(dst, 0);        //PID_PROFILE_COUNT);
+            sbufWriteU8(dst, 0);        //getCurrentControlRateProfileIndex());
+        } else {  // MSP_STATUS
+            sbufWriteU16(dst, 0); // gyro cycle time
+        }
 
-	            // write flightModeFlags header. Lowest 4 bits contain number of bytes that follow
-	            // header is emited even when all bits fit into 32 bits to allow future extension
-	            int byteCount = (flagBits - 32 + 7) / 8;        // 32 already stored, round up
-	            byteCount = constrain(byteCount, 0, 15);        // limit to 16 bytes (128 bits)
-	            sbufWriteU8(dst, byteCount);
-	            sbufWriteData(dst, ((uint8_t*)&flightModeFlags) + 4, byteCount);
+        // write flightModeFlags header. Lowest 4 bits contain number of bytes that follow
+        // header is emited even when all bits fit into 32 bits to allow future extension
+        int byteCount = (flagBits - 32 + 7) / 8;        // 32 already stored, round up
+        byteCount = constrain(byteCount, 0, 15);        // limit to 16 bytes (128 bits)
+        sbufWriteU8(dst, byteCount);
+        sbufWriteData(dst, ((uint8_t*) &flightModeFlags) + 4, byteCount);
 
-	            // Write arming disable flags
-	            // 1 byte, flag count
-	            sbufWriteU8(dst, 0);//ARMING_DISABLE_FLAGS_COUNT);
-	            // 4 bytes, flags
-	            //const uint32_t armingDisableFlags = getArmingDisableFlags();
-	            sbufWriteU32(dst, 0);//armingDisableFlags);
-	        }
-	        break;
+        // Write arming disable flags
+        // 1 byte, flag count
+        sbufWriteU8(dst, 0);	            //ARMING_DISABLE_FLAGS_COUNT);
+        // 4 bytes, flags
+        //const uint32_t armingDisableFlags = getArmingDisableFlags();
+        sbufWriteU32(dst, 0);	            //armingDisableFlags);
+    }
+        break;
 
-	case MSP_RAW_IMU: {
-		uint8_t scale;
-			if (acc.dev.acc_1G > 512 * 4) {
-				scale = 8;
-			} else if (acc.dev.acc_1G > 512 * 2) {
-				scale = 4;
-			} else if (acc.dev.acc_1G >= 512) {
-				scale = 2;
-			} else {
-				scale = 1;
-		}
-		for (int i = 0; i < 3; i++) {
-			sbufWriteU16(dst, lrintf(acc.accADC[i] / scale));
-		}
-		for (int i = 0; i < 3; i++) {
-			sbufWriteU16(dst, gyroRateDps(i));
-		}
-		for (int i = 0; i < 3; i++) {
-			sbufWriteU16(dst, 100);
-		}
-		break;
-	}
-	case MSP_NAME:
-	{
-	   const char pilotname[] = "AlexBETA";
-	   const int nameLen = strlen(pilotname);
-	   for (int i = 0; i < nameLen; i++) {
-		   sbufWriteU8(dst, pilotname[i]);
-	   }
-	}
-	break;
-	case MSP_MOTOR:
-	        for (unsigned i = 0; i < 4; i++) {
-	            sbufWriteU16(dst, motor[i]);
-	        }
+    case MSP_RAW_IMU: {
+        uint8_t scale;
+        if (acc.dev.acc_1G > 512 * 4) {
+            scale = 8;
+        } else if (acc.dev.acc_1G > 512 * 2) {
+            scale = 4;
+        } else if (acc.dev.acc_1G >= 512) {
+            scale = 2;
+        } else {
+            scale = 1;
+        }
+        for (int i = 0; i < 3; i++) {
+            sbufWriteU16(dst, lrintf(acc.accADC[i] / scale));
+        }
+        for (int i = 0; i < 3; i++) {
+            sbufWriteU16(dst, gyroRateDps(i));
+        }
+        for (int i = 0; i < 3; i++) {
+            sbufWriteU16(dst, 100);
+        }
+        break;
+    }
+    case MSP_NAME: {
+        const char pilotname[] = "AlexBETA";
+        const int nameLen = strlen(pilotname);
+        for (int i = 0; i < nameLen; i++) {
+            sbufWriteU8(dst, pilotname[i]);
+        }
+    }
+        break;
+    case MSP_MOTOR:
+        for (unsigned i = 0; i < 4; i++) {
+            sbufWriteU16(dst, motor[i]);
+        }
 
-	break;
-	/*case MSP_MOTOR_3D_CONFIG:
-	        sbufWriteU16(dst, conf.s3DMIDDLE-conf.MIDDLEDEADBAND);
-	        sbufWriteU16(dst, conf.s3DMIDDLE+conf.MIDDLEDEADBAND);
-	        sbufWriteU16(dst, conf.s3DMIDDLE);
-	break;*/
-	case MSP_MOTOR_CONFIG:
-	        sbufWriteU16(dst, conf.MINTHROTTLE);
-	        sbufWriteU16(dst, conf.MAXTHROTTLE);
-	        sbufWriteU16(dst, conf.MINCOMMAND);
-	break;
-	case MSP_RC:
-	        for (int i = 0; i < MAX_SUPPORTED_RC_CHANNEL_COUNT; i++) {
-	            sbufWriteU16(dst, rcData[i]);
-	        }
-	break;
-	case MSP_ATTITUDE:
-		sbufWriteU16(dst, attitude.values.roll);
-		sbufWriteU16(dst, attitude.values.pitch);
-		sbufWriteU16(dst, DECIDEGREES_TO_DEGREES(attitude.values.yaw));
-	break;
-	case MSP_ACC_TRIM: //TODO
-		sbufWriteU16(dst, 0);
-		sbufWriteU16(dst, 0);
-	break;
-	case MSP_MIXER_CONFIG: //TODO
-		sbufWriteU8(dst, 3); //QUADX
-		sbufWriteU8(dst, 0);
-	break;
-	default:
-		unsupportedCommand = true;
-	}
-	return !unsupportedCommand;
+        break;
+        /*case MSP_MOTOR_3D_CONFIG:
+         sbufWriteU16(dst, conf.s3DMIDDLE-conf.MIDDLEDEADBAND);
+         sbufWriteU16(dst, conf.s3DMIDDLE+conf.MIDDLEDEADBAND);
+         sbufWriteU16(dst, conf.s3DMIDDLE);
+         break;*/
+    case MSP_MOTOR_CONFIG:
+        sbufWriteU16(dst, conf.MINTHROTTLE);
+        sbufWriteU16(dst, conf.MAXTHROTTLE);
+        sbufWriteU16(dst, conf.MINCOMMAND);
+        break;
+    case MSP_RC:
+        for (int i = 0; i < MAX_SUPPORTED_RC_CHANNEL_COUNT; i++) {
+            sbufWriteU16(dst, rcData[i]);
+        }
+        break;
+    case MSP_ATTITUDE:
+        sbufWriteU16(dst, attitude.values.roll);
+        sbufWriteU16(dst, attitude.values.pitch);
+        sbufWriteU16(dst, DECIDEGREES_TO_DEGREES(attitude.values.yaw));
+        break;
+    case MSP_ACC_TRIM: //TODO
+        sbufWriteU16(dst, 0);
+        sbufWriteU16(dst, 0);
+        break;
+    case MSP_MIXER_CONFIG: //TODO
+        sbufWriteU8(dst, 3); //QUADX
+        sbufWriteU8(dst, 0);
+        break;
+    default:
+        unsupportedCommand = true;
+    }
+    return !unsupportedCommand;
 }
 
-static mspResult_e mspProcessInCommand(uint8_t cmdMSP, sbuf_t *src) {
-	/*uint32_t i;
-	uint8_t value;
-	const unsigned int dataSize = sbufBytesRemaining(src);*/
-	switch (cmdMSP) {
-		case MSP_SET_ARMING_DISABLED:
-		{
-			const uint8_t command = sbufReadU8(src);
-			uint8_t disableRunawayTakeoff = 0;
+static mspResult_e mspProcessInCommand(uint8_t cmdMSP, sbuf_t *src)
+{
+    //uint32_t i;
+    //uint8_t value;
+    const unsigned int dataSize = sbufBytesRemaining(src);
+    switch (cmdMSP) {
+    case MSP_SET_RAW_RC: {
+        msp_rc_timeout = 0;
+        uint8_t channelCount = dataSize / sizeof(uint16_t);
+        if (channelCount > MAX_SUPPORTED_RC_CHANNEL_COUNT) {
+            return MSP_RESULT_ERROR;
+        } else {
+            for (int i = 0; i < MAX_SUPPORTED_RC_CHANNEL_COUNT; i++) {
+                rcData[i] = sbufReadU16(src);
+            }
+        }
+    }
+        break;
+    case MSP_SET_ARMING_DISABLED: {
+        const uint8_t command = sbufReadU8(src);
+        uint8_t disableRunawayTakeoff = 0;
 #ifndef USE_RUNAWAY_TAKEOFF
-			UNUSED(disableRunawayTakeoff);
+        UNUSED(disableRunawayTakeoff);
 #endif
-			if (sbufBytesRemaining(src)) {
-				disableRunawayTakeoff = sbufReadU8(src);
-			}
-			if (command) {
-				setArmingDisabled(ARMING_DISABLED_MSP);
-				if (ARMING_FLAG(ARMED)) {
-					//disarm(); // TODO
-				}
+        if (sbufBytesRemaining(src)) {
+            disableRunawayTakeoff = sbufReadU8(src);
+        }
+        if (command) {
+            setArmingDisabled(ARMING_DISABLED_MSP);
+            if (ARMING_FLAG(ARMED)) {
+                //disarm(); // TODO
+            }
 #ifdef USE_RUNAWAY_TAKEOFF
-				runawayTakeoffTemporaryDisable(false);
+            runawayTakeoffTemporaryDisable(false);
 #endif
-			} else {
-				unsetArmingDisabled(ARMING_DISABLED_MSP);
+        } else {
+            unsetArmingDisabled(ARMING_DISABLED_MSP);
 #ifdef USE_RUNAWAY_TAKEOFF
-				runawayTakeoffTemporaryDisable(disableRunawayTakeoff);
+            runawayTakeoffTemporaryDisable(disableRunawayTakeoff);
 #endif
-			}
-		}
-	break;
-	default:
-		// we do not know how to handle the (valid) message, indicate error MSP $M!
-		return MSP_RESULT_ERROR;
-	}
-	return MSP_RESULT_ACK;
+        }
+    }
+        break;
+    default:
+        // we do not know how to handle the (valid) message, indicate error MSP $M!
+        return MSP_RESULT_ERROR;
+    }
+    return MSP_RESULT_ACK;
 }
 
 static mspResult_e mspCommonProcessInCommand(uint8_t cmdMSP, sbuf_t *src, mspPostProcessFnPtr *mspPostProcessFn)
@@ -296,48 +305,46 @@ static mspResult_e mspCommonProcessInCommand(uint8_t cmdMSP, sbuf_t *src, mspPos
 
 static mspResult_e mspFcProcessOutCommandWithArg(uint8_t cmdMSP, sbuf_t *src, sbuf_t *dst, mspPostProcessFnPtr *mspPostProcessFn)
 {
-	switch (cmdMSP) {
-	case MSP_BOXNAMES:
-	{
-		const int page = sbufBytesRemaining(src) ? sbufReadU8(src) : 0;
-		serializeBoxReply(dst, page, &serializeBoxNameFn);
-	}
-	break;
-	case MSP_BOXIDS:
-	{
-		const int page = sbufBytesRemaining(src) ? sbufReadU8(src) : 0;
-		serializeBoxReply(dst, page, &serializeBoxPermanentIdFn);
-	}
-	break;
-	default:
-		return MSP_RESULT_CMD_UNKNOWN;
-	}
-	return MSP_RESULT_ACK;
+    switch (cmdMSP) {
+    case MSP_BOXNAMES: {
+        const int page = sbufBytesRemaining(src) ? sbufReadU8(src) : 0;
+        serializeBoxReply(dst, page, &serializeBoxNameFn);
+    }
+        break;
+    case MSP_BOXIDS: {
+        const int page = sbufBytesRemaining(src) ? sbufReadU8(src) : 0;
+        serializeBoxReply(dst, page, &serializeBoxPermanentIdFn);
+    }
+        break;
+    default:
+        return MSP_RESULT_CMD_UNKNOWN;
+    }
+    return MSP_RESULT_ACK;
 }
 
 /*
  * Returns MSP_RESULT_ACK, MSP_RESULT_ERROR or MSP_RESULT_NO_REPLY
  */
-mspResult_e mspFcProcessCommand(mspPacket_t *cmd, mspPacket_t *reply, mspPostProcessFnPtr *mspPostProcessFn) {
-	int ret = MSP_RESULT_ACK;
-	sbuf_t *dst = &reply->buf;
-	sbuf_t *src = &cmd->buf;
-	const uint8_t cmdMSP = cmd->cmd;
-	// initialize reply by default
-	reply->cmd = cmd->cmd;
+mspResult_e mspFcProcessCommand(mspPacket_t *cmd, mspPacket_t *reply, mspPostProcessFnPtr *mspPostProcessFn)
+{
+    int ret = MSP_RESULT_ACK;
+    sbuf_t *dst = &reply->buf;
+    sbuf_t *src = &cmd->buf;
+    const uint8_t cmdMSP = cmd->cmd;
+    // initialize reply by default
+    reply->cmd = cmd->cmd;
 
-	if (mspCommonProcessOutCommand(cmdMSP, dst, mspPostProcessFn)) {
-		ret = MSP_RESULT_ACK;
-	} else if (mspProcessOutCommand(cmdMSP, dst)) {
-		ret = MSP_RESULT_ACK;
-	} else if ((ret = mspFcProcessOutCommandWithArg(cmdMSP, src, dst,
-			mspPostProcessFn)) != MSP_RESULT_CMD_UNKNOWN) {
-		/* ret */;
-	} else {
-		ret = mspCommonProcessInCommand(cmdMSP, src, mspPostProcessFn);
-	}
-	reply->result = ret;
-	return ret;
+    if (mspCommonProcessOutCommand(cmdMSP, dst, mspPostProcessFn)) {
+        ret = MSP_RESULT_ACK;
+    } else if (mspProcessOutCommand(cmdMSP, dst)) {
+        ret = MSP_RESULT_ACK;
+    } else if ((ret = mspFcProcessOutCommandWithArg(cmdMSP, src, dst, mspPostProcessFn)) != MSP_RESULT_CMD_UNKNOWN) {
+        /* ret */;
+    } else {
+        ret = mspCommonProcessInCommand(cmdMSP, src, mspPostProcessFn);
+    }
+    reply->result = ret;
+    return ret;
 }
 void mspFcProcessReply(mspPacket_t *reply)
 {
@@ -345,22 +352,21 @@ void mspFcProcessReply(mspPacket_t *reply)
     UNUSED(src); // potentially unused depending on compile options.
 
     switch (reply->cmd) {
-    case MSP_ANALOG:
-        {
-            uint8_t batteryVoltage = sbufReadU8(src);
-            uint16_t mAhDrawn = sbufReadU16(src);
-            uint16_t rssi = sbufReadU16(src);
-            uint16_t amperage = sbufReadU16(src);
+    case MSP_ANALOG: {
+        uint8_t batteryVoltage = sbufReadU8(src);
+        uint16_t mAhDrawn = sbufReadU16(src);
+        uint16_t rssi = sbufReadU16(src);
+        uint16_t amperage = sbufReadU16(src);
 
-            UNUSED(rssi);
-            UNUSED(batteryVoltage);
-            UNUSED(amperage);
-            UNUSED(mAhDrawn);
+        UNUSED(rssi);
+        UNUSED(batteryVoltage);
+        UNUSED(amperage);
+        UNUSED(mAhDrawn);
 
 #ifdef USE_MSP_CURRENT_METER
-            currentMeterMSPSet(amperage, mAhDrawn);
+        currentMeterMSPSet(amperage, mAhDrawn);
 #endif
-        }
+    }
         break;
     }
 }

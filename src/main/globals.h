@@ -139,6 +139,7 @@ extern uint8_t MULTITYPE;
 extern uint8_t throttleTest;
 extern uint8_t rcOptions[CHECKBOX_ITEM_COUNT];
 extern int16_t rcCommand[4]; // interval [1000;2000] for THROTTLE and [-500;+500] for
+extern uint16_t msp_rc_timeout;
 
 void mixerSetThrottleAngleCorrection(int16_t correctionValue);
 
