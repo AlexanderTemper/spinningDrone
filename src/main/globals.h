@@ -28,6 +28,7 @@
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 #define RCINPUT_LOOPTIME_US	20000	// 50Hz
+#define MSP_LOOPTIME_US 5000  // 200Hz
 #define MAINCONTROL_LOOPTIME_US	3000 // 333Hz
 #define ssin(val) (val)
 #define scos(val) 1.0f

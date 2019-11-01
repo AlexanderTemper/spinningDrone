@@ -530,6 +530,7 @@ int main(void)
     timeUs_t controlloopTime = 0;
     timeUs_t previousTime = 0;
     timeUs_t rcTime = 0;
+    timeUs_t mspTime = 0;
     timeUs_t ledTime = 0;
 
     timeUs_t rcCodeTime = 0;
@@ -541,11 +542,12 @@ int main(void)
         //mspSerialPush(MSP_API_VERSION, NULL, 0, MSP_DIRECTION_REQUEST);
         currentTime = micros();
 
-        /* RC INPUT DATA PROCESSING */
-        if (currentTime > rcTime) { // 50Hz
-            rcTime = currentTime + RCINPUT_LOOPTIME_US;
+
+        /* MSP DATA */
+        if (currentTime > mspTime) { // 200Hz
+            mspTime = currentTime + MSP_LOOPTIME_US;
             mspSerialProcess(MSP_EVALUATE_NON_MSP_DATA, mspFcProcessCommand, mspFcProcessReply);
-            rcCodeTime = micros();
+            //rcCodeTime = micros();
             msp_rc_timeout++;
             if (msp_rc_timeout > 10) {
                 rcData[THROTTLE] = 1000;
@@ -560,6 +562,13 @@ int main(void)
             //DEBUG_SET(DEBUG_STACK, 3, micros() - rcCodeTime);
 
         }
+        /* RC INPUT DATA PROCESSING */
+        //if (currentTime > rcTime) { // 50Hz
+            //rcCodeTime = micros();
+            //sbusFrameStatus();
+            //convertRCData();
+            //DEBUG_SET(DEBUG_STACK, 3, micros() - rcCodeTime);
+        //}
 
         /* CONTROL LOOP AND SENSOR PROCESSING */
         if (currentTime > controlloopTime) {

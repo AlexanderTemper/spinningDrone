@@ -131,6 +131,9 @@ static bool mspProcessOutCommand(uint8_t cmdMSP, sbuf_t *dst)
 {
     bool unsupportedCommand = false;
     switch (cmdMSP) {
+    case MSP_DEBUGMSG:
+        sbufWriteU16(dst, cycleTime);
+        break;
     case MSP_STATUS_EX:
     case MSP_STATUS: {
         boxBitmask_t flightModeFlags;
