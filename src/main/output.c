@@ -186,18 +186,11 @@ void mixTable(void)
             motor[i] -= maxMotor - conf.MAXTHROTTLE;
         }
 
-        if (conf.F3D) {
-            if ((rcData[THROTTLE]) > conf.MIDRC) {
-                motor[i] = constrain(motor[i], conf.deadband3d_high, conf.MAXTHROTTLE);
-            } else {
-                motor[i] = constrain(motor[i], conf.MINCOMMAND, conf.deadband3d_low);
-            }
-        } else {
-            motor[i] = constrain(motor[i], conf.MINTHROTTLE, conf.MAXTHROTTLE);
-            if ((rcData[THROTTLE]) < conf.MINCHECK) {
-                motor[i] = conf.MINCOMMAND;
-            }
+        motor[i] = constrain(motor[i], conf.MINTHROTTLE, conf.MAXTHROTTLE);
+        if ((rcData[THROTTLE]) < conf.MINCHECK) {
+            motor[i] = conf.MINCOMMAND;
         }
+
         if (!f.ARMED) {
             motor[i] = motor_disarmed[i];
         }
