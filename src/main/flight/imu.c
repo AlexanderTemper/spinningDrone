@@ -168,19 +168,8 @@ void imuConfigure(uint16_t throttle_correction_angle, uint8_t throttle_correctio
 
 void imuInit(void)
 {
-#ifdef USE_GPS
-    canUseGPSHeading = true;
-#else
     canUseGPSHeading = false;
-#endif
-
     imuComputeRotationMatrix();
-
-#if defined(SIMULATOR_BUILD) && defined(SIMULATOR_MULTITHREAD)
-    if (pthread_mutex_init(&imuUpdateLock, NULL) != 0) {
-        printf("Create imuUpdateLock error!\n");
-    }
-#endif
 }
 
 void imuResetAccelerationSum(void)
@@ -523,13 +512,6 @@ void imuUpdateAttitude(timeUs_t currentTimeUs)
 {
     if (sensors(SENSOR_ACC) && acc.isAccelUpdatedAtLeastOnce) {
         IMU_LOCK;
-#if defined(SIMULATOR_BUILD) && defined(SIMULATOR_IMU_SYNC)
-        if (imuUpdated == false) {
-            IMU_UNLOCK;
-            return;
-        }
-        imuUpdated = false;
-#endif
         imuCalculateEstimatedAttitude(currentTimeUs);
         IMU_UNLOCK;
 
@@ -617,43 +599,6 @@ void imuComputeQuaternionFromRPY(quaternionProducts *quatProd, int16_t initialRo
     imuComputeRotationMatrix();
 }
 
-#ifdef SIMULATOR_BUILD
-void imuSetAttitudeRPY(float roll, float pitch, float yaw)
-{
-    IMU_LOCK;
-
-    attitude.values.roll = roll * 10;
-    attitude.values.pitch = pitch * 10;
-    attitude.values.yaw = yaw * 10;
-
-    IMU_UNLOCK;
-}
-void imuSetAttitudeQuat(float w, float x, float y, float z)
-{
-    IMU_LOCK;
-
-    q.w = w;
-    q.x = x;
-    q.y = y;
-    q.z = z;
-
-    imuComputeRotationMatrix();
-    imuUpdateEulerAngles();
-
-    IMU_UNLOCK;
-}
-#endif
-#if defined(SIMULATOR_BUILD) && defined(SIMULATOR_IMU_SYNC)
-void imuSetHasNewData(uint32_t dt)
-{
-    IMU_LOCK;
-
-    imuUpdated = true;
-    imuDeltaT = dt;
-
-    IMU_UNLOCK;
-}
-#endif
 
 void imuQuaternionComputeProducts(quaternion *quat, quaternionProducts *quatProd)
 {

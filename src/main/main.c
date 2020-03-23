@@ -34,17 +34,11 @@
 // motor and servo functions
 // *************************
 int16_t axisPID[3];
-int16_t motor[MAX_MOTORS];
-uint8_t s3D = 0; // 3D an = 1 aus ist 0
-uint8_t NUMBER_MOTOR = 0;
-uint8_t MULTITYPE = 0;
-uint8_t throttleTest = 0;
+
 int16_t Zadd, heading, headFreeModeHold = 0;
 uint8_t dynP8[3], dynI8[3], dynD8[3];
 int16_t rcCommand[4]; // interval [1000;2000] for THROTTLE and [-500;+500] for
 
-#define PITCH_LOOKUP_LENGTH 7
-int16_t lookupPitchRollRC[PITCH_LOOKUP_LENGTH]; // lookup table for expo & RC rate
 timeUs_t cycleTime = 0; // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
 static int32_t errorGyroI[3] = {
         0,
@@ -72,48 +66,13 @@ static void checkFirstTime(uint8_t guiReset)
     conf.P8[YAW] = 100;
     conf.I8[YAW] = 50;
     conf.D8[YAW] = 25;
-    conf.P8[PIDALT] = 50;
-    conf.I8[PIDALT] = 0;
-    conf.D8[PIDALT] = 0;
-    conf.P8[PIDPOS] = 11; // POSHOLD_P * 100;
-    conf.I8[PIDPOS] = 0; // POSHOLD_I * 100;
-    conf.D8[PIDPOS] = 0;
-    conf.P8[PIDPOSR] = 20; // POSHOLD_RATE_P * 10;
-    conf.I8[PIDPOSR] = 8; // POSHOLD_RATE_I * 100;
-    conf.D8[PIDPOSR] = 45; // POSHOLD_RATE_D * 1000;
-    conf.P8[PIDNAVR] = 14; // NAV_P * 10;
-    conf.I8[PIDNAVR] = 20; // NAV_I * 100;
-    conf.D8[PIDNAVR] = 80; // NAV_D * 1000;
     conf.P8[PIDLEVEL] = 60;
     conf.I8[PIDLEVEL] = 45;
     conf.D8[PIDLEVEL] = 100;
     conf.P8[PIDMAG] = 40;
-    conf.P8[PIDVEL] = 120;
-    conf.I8[PIDVEL] = 45;
-    conf.D8[PIDVEL] = 1;
-    conf.rcRate8 = 90;
-    conf.rcExpo8 = 65;
-    conf.yawRate = 0;
-    conf.dynThrPID = 0;
-    conf.thrMid8 = 50;
-    conf.thrExpo8 = 0;
     conf.max_angle_inclination = 500; // 50 degrees
 
-    for (uint8_t i = 0; i < CHECKBOX_ITEM_COUNT; i++) {
-        conf.activate[i] = 0;
-    }
-    conf.activate[BOXARM] = 3;
-    conf.angleTrim[0] = 0;
-    conf.angleTrim[1] = 0;
-
     if (guiReset == 0) {
-        conf.sOneShot = 1; //0=normaler betrieb (4xxhz) 1 ist oneshot 125
-
-        conf.copterType = 3; //0=Bi,1=Tri,2=QUADP,3=QUADX,4=Y4,5=Y6,6=H6P,7=H6X,8=Vtail4
-
-        conf.RxType = 2; //0StandardRX,1sat1024-DSM2,2sat2048-DSMX,3PPMGrSp,4PPMRobHiFu,5PPMHiSanOthers
-
-        conf.tpa_breakpoint = 1500;
         conf.MINTHROTTLE = 1020;
         conf.MAXTHROTTLE = 2000;
         conf.MINCOMMAND = 1000;
@@ -121,18 +80,6 @@ static void checkFirstTime(uint8_t guiReset)
         conf.MINCHECK = 1000;
         conf.MAXCHECK = 1900;
         conf.YAW_DIRECTION = 1;
-
-        conf.F3D = 0; // ESC's are set to 3D Mode
-        conf.MIDDLEDEADBAND = 40; //nur für 3D
-        conf.deadband3d_high = conf.MIDRC + conf.MIDDLEDEADBAND;
-        conf.deadband3d_low = conf.MIDRC - conf.MIDDLEDEADBAND;
-
-        conf.ArmRoll = 0;  // arm und disarm über roll statt yaw
-        conf.s3DMIDDLE = 1500;
-        conf.calibState = 0;
-
-        conf.deadband = 20;
-        conf.yawdeadband = 20;
     }
 
 }
@@ -237,12 +184,12 @@ static void pidRewrite(void)
     for (axis = 0; axis < 3; axis++) {
         // -----Get the desired angle rate depending on flight mode
         if (axis == 2) { // YAW is always gyro-controlled (MAG correction is applied to rcCommand)
-            AngleRateTmp = (((int32_t) (conf.yawRate + 27) * rcCommand[YAW]) >> 5);
+            AngleRateTmp = (((int32_t) (27) * rcCommand[YAW]) >> 5);
         } else {
             // calculate error and limit the angle to 50 degrees max inclination
             errorAngle = (constrain(rcCommand[axis], -500, +500) - angle[axis] + conf.angleTrim[axis]) / 10.0f; // 16 bits is ok here
             if (!f.ANGLE_MODE) { //control is GYRO based (ACRO and HORIZON - direct sticks control is applied to rate PID
-                AngleRateTmp = ((int32_t) (conf.rollPitchRate[axis] + 27) * rcCommand[axis]) >> 4;
+                AngleRateTmp = ((int32_t) (27) * rcCommand[axis]) >> 4;
 
                 if (f.HORIZON_MODE) {
                     // mix up angle error to desired AngleRateTmp to add a little auto-level feel
@@ -358,10 +305,7 @@ int main(void)
 
     // Multiwii Stuff
     checkFirstTime(0);
-    if (conf.copterType == 3) {
-        MULTITYPE = 3;
-        NUMBER_MOTOR = 4;
-    }
+
     mixerInit();
     initOutput();
 
@@ -443,11 +387,6 @@ int main(void)
 
             mixTable();
             writeMotors();
-
-            //DEBUG_SET(DEBUG_STACK, 0, axisPID[YAW]);
-            //DEBUG_SET(DEBUG_STACK, 1, axisPID[PITCH]);
-            //DEBUG_SET(DEBUG_STACK, 2, axisPID[ROLL]);
-
             //DEBUG_SET(DEBUG_STACK, 2, micros()- restCodeTime);
         }
 
@@ -458,9 +397,6 @@ int main(void)
                 port_pin_set_output_level(LED_ROT, led2);
                 mst = 0;
             }
-
-            //port_pin_set_output_level(PIN_PA28, true);
-            //port_pin_set_output_level(PIN_PB02, true);
         }
 
     } /* !while (true) */

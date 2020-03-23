@@ -23,8 +23,11 @@
 #include "globals.h"
 #include "rx/rx.h"
 
-int16_t motor_disarmed[MAX_MOTORS];
 
+#define MAX_MOTORS 4
+
+int16_t motor_disarmed[MAX_MOTORS];
+int16_t motor[MAX_MOTORS];
 struct tc_module tc_instance1,tc_instance2;
 
 volatile bool tc_instance1_callback_flag;
@@ -38,7 +41,6 @@ void writeMotors() {
 	if(tc_instance1_callback_flag && tc_instance2_callback_flag){
 
 		uint16_t timer_val = COUNT_MAX_16BIT-ONESHOT_MIN_PULSE;
-		if(conf.sOneShot != 1) timer_val=COUNT_MAX_16BIT-PWM_MIN_PULSE; 
 
 		tc_set_count_value(&tc_instance1,timer_val);
 		tc_set_count_value(&tc_instance2,timer_val);
@@ -46,17 +48,12 @@ void writeMotors() {
 		tc_instance1_callback_flag = false;
 		tc_instance2_callback_flag = false;
 
-		if(conf.sOneShot == 0){
-			tc_set_compare_value(&tc_instance1,0,COUNT_MAX_16BIT-PWM_MIN_PULSE+(motor[0]<<3));
-			tc_set_compare_value(&tc_instance1,1,COUNT_MAX_16BIT-PWM_MIN_PULSE+(motor[1]<<3));
-			tc_set_compare_value(&tc_instance2,0,COUNT_MAX_16BIT-PWM_MIN_PULSE+(motor[2]<<3));
-			tc_set_compare_value(&tc_instance2,1,COUNT_MAX_16BIT-PWM_MIN_PULSE+(motor[3]<<3));
-		}else{
-			tc_set_compare_value(&tc_instance1,0,COUNT_MAX_16BIT-ONESHOT_MIN_PULSE+motor[0]);
-			tc_set_compare_value(&tc_instance1,1,COUNT_MAX_16BIT-ONESHOT_MIN_PULSE+motor[1]);
-			tc_set_compare_value(&tc_instance2,0,COUNT_MAX_16BIT-ONESHOT_MIN_PULSE+motor[2]);
-			tc_set_compare_value(&tc_instance2,1,COUNT_MAX_16BIT-ONESHOT_MIN_PULSE+motor[3]);
-		}
+
+        tc_set_compare_value(&tc_instance1,0,COUNT_MAX_16BIT-ONESHOT_MIN_PULSE+motor[0]);
+        tc_set_compare_value(&tc_instance1,1,COUNT_MAX_16BIT-ONESHOT_MIN_PULSE+motor[1]);
+        tc_set_compare_value(&tc_instance2,0,COUNT_MAX_16BIT-ONESHOT_MIN_PULSE+motor[2]);
+        tc_set_compare_value(&tc_instance2,1,COUNT_MAX_16BIT-ONESHOT_MIN_PULSE+motor[3]);
+
 
 		tc_enable(&tc_instance1); 
 		tc_enable(&tc_instance2);
@@ -130,29 +127,18 @@ static void mixerResetMotors(void)
     int i;
     // set disarmed motor values
     for (i = 0; i < MAX_MOTORS; i++){
-        motor_disarmed[i] = conf.F3D ? conf.s3DMIDDLE : conf.MINCOMMAND;
+        motor_disarmed[i] = conf.MINCOMMAND;
     }
 }
 
 void mixerInit(void)
 {
     int i;
-    numberMotor = 4;
+    numberMotor = MAX_MOTORS;
     // copy motor-based mixers
-    for (i = 0; i < numberMotor; i++) {
+    for (i = 0; i < MAX_MOTORS; i++) {
         currentMixer[i] = mixerQuadX[i];
     }
-    // in 3D mode, mixer gain has to be halved
-    if (conf.F3D) {
-        if (numberMotor > 1) {
-            for (i = 0; i < numberMotor; i++) {
-                currentMixer[i].pitch *= 0.5f;
-                currentMixer[i].roll *= 0.5f;
-                currentMixer[i].yaw *= 0.5f;
-            }
-        }
-    }
-
     mixerResetMotors();
 }
 
